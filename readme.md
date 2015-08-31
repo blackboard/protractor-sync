@@ -9,5 +9,5 @@
 
 # Make code changes (make sure you run `grunt pre-commit` to update the contents of "dist"), and create a PR / push changes
 # Increment version # in package.json (use semantic versioning)
-# Publish a tag with the version number (`git tag v0.0.1; git push origin --tags;`)
+# Publish a tag with the version number (`git tag v0.0.1; git push --tags;`)
 # (To use new version from another project, update reference in package.json to point to the new tag)
