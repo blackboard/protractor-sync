@@ -19,7 +19,7 @@ module.exports = function(grunt) {
       dist: {
         expand: true,
         cwd: 'build/develop/app',
-        src: '*.js',
+        src: ['*.js', '*.d.ts'],
         dest: 'dist'
       },
       jquery: {
@@ -50,6 +50,7 @@ module.exports = function(grunt) {
     ts: {
       options: {
         compiler: 'node_modules/typescript/bin/tsc',
+        declaration: true,
         module: 'commonjs',
         removeComments: false,
         target: 'es5',
