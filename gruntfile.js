@@ -27,6 +27,18 @@ module.exports = function(grunt) {
         cwd: 'app',
         src: 'jquery-1.11.3.js',
         dest: 'build/develop/app/'
+      },
+      prepareModuleDefinition: {
+        expand: true,
+        cwd: 'dist',
+        src: 'protractor_sync.d.ts',
+        dest: 'dist',
+        options: {
+          process: function (content, srcpath) {
+            //Convert to an ambient module, which will allow it to be "required"
+            return content.replace(/export declare module protractor_sync/, 'declare module "protractor_sync"');
+          }
+        }
       }
     },
 
@@ -97,7 +109,8 @@ module.exports = function(grunt) {
     'tests',
     'copy:jquery',
     'clean:dist',
-    'copy:dist'
+    'copy:dist',
+    'copy:prepareModuleDefinition'
   ]);
 
   grunt.registerTask('tests', [
