@@ -1,7 +1,7 @@
 {
-  "name": "protractor-sync",
-  "version": "0.0.2",
-  "main": "dist/protractor-sync.js",
+  "name": "protractor_sync",
+  "version": "0.0.3",
+  "main": "index.js",
   "dependencies": {
   },
   "devDependencies": {

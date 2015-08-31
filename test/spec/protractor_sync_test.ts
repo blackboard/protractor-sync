@@ -1,7 +1,9 @@
 /// <reference path='../../node_modules/node-shared-typescript-defs/jasmine/jasmine.d.ts'/>
 import ab = require('asyncblock');
-import protractorSync = require('../../app/protractor-sync');
+import _protractorSync = require('../../app/protractor_sync');
 'use strict';
+
+var protractorSync = _protractorSync.protractor_sync;
 
 protractorSync.patch();
 protractorSync.disallowMethods();
