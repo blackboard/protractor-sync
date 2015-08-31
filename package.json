@@ -1,0 +1,22 @@
+{
+  "name": "protractor-sync",
+  "version": "0.0.1",
+  "main": "dist/protractor-sync.js",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "asyncblock": "2.1.24",
+    "grunt": "0.4.5",
+    "grunt-contrib-clean": "0.4.0",
+    "grunt-contrib-copy": "0.6.0",
+    "grunt-protractor-runner": "2.0.0",
+    "grunt-shell": "0.7.0",
+    "grunt-ts": "4.1.0",
+    "grunt-tslint": "0.4.4",
+    "jasmine-reporters": "2.0.7",
+    "jasmine-spec-reporter": "2.4.0",
+    "load-grunt-tasks": "0.6.0",
+    "node-shared-typescript-defs": "git+ssh://git@stash.bbpd.io/cloud/node-shared-typescript-defs.git#c79caec3d410ff3ef11c49415729aa91647e08dc",
+    "typescript": "git+ssh://git@stash.bbpd.io/shared/typescript.git#1.4.3-bb"
+  }
+}

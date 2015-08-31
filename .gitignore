@@ -1,0 +1,15 @@
+node_modules
+build
+
+tmp
+.DS_Store
+.tscache
+/.idea/*
+*.tmp.txt
+
+.tscache
+.baseDir.ts
+
+npm-debug.log
+
+atlassian-ide-plugin.xml
