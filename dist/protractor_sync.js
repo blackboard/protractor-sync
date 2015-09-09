@@ -383,13 +383,13 @@ var protractor_sync;
         patchBrowser();
     }
     function patchBrowser() {
-        patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep']);
+        patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get']);
         browser.waitFor = function (condition, waitTimeMs) {
             _polledWait(function () {
                 return { data: null, keepPolling: !condition() };
             }, null, waitTimeMs);
         };
-        var PAUSE_DEBUGGER_DELAY_MS = 1;
+        var PAUSE_DEBUGGER_DELAY_MS = 500;
         _patch(browser, ['pause', 'debugger'], function (returnValue) {
             var flow = ab.getCurrentFlow();
             if (flow) {

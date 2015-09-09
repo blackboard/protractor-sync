@@ -426,7 +426,7 @@ export module protractor_sync {
   }
 
   function patchBrowser() {
-    patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep']);
+    patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get']);
 
     browser.waitFor = function (condition: () => boolean, waitTimeMs?: number) {
       _polledWait(() => {
@@ -434,7 +434,7 @@ export module protractor_sync {
       }, null, waitTimeMs);
     };
 
-    var PAUSE_DEBUGGER_DELAY_MS = 1;
+    var PAUSE_DEBUGGER_DELAY_MS = 500;
     _patch(browser, ['pause', 'debugger'], (returnValue: any) => {
       var flow = ab.getCurrentFlow();
       if (flow) {
