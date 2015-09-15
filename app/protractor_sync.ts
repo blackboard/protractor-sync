@@ -587,12 +587,18 @@ export module protractor_sync {
   })();
 
   export function injectjQuery() {
-    var jquery = fs.readFileSync(path.join(__dirname, './jquery-1.11.3.js'), 'utf8');
+    var jQuery = browser.executeScript(function() {
+      return (<any>window).jQuery;
+    });
 
-    browser.executeScript((jquery: string) => {
-      eval(jquery);
+    if (!jQuery) {
+      var jquerySource = fs.readFileSync(path.join(__dirname, './jquery-1.11.3.js'), 'utf8');
 
-      (<any>window).$.noConflict();
-    }, jquery);
+      browser.executeScript((jquerySource: string) => {
+        eval(jquerySource);
+
+        (<any>window).$.noConflict();
+      }, jquerySource);
+    }
   }
 }
