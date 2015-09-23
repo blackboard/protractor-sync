@@ -592,7 +592,7 @@ export module protractor_sync {
 
   export function injectjQuery() {
     var jQuery = browser.executeScript(function() {
-      return (<any>window).jQuery;
+      return !!(<any>window).jQuery;
     });
 
     if (!jQuery) {

@@ -526,7 +526,7 @@ var protractor_sync;
     })();
     function injectjQuery() {
         var jQuery = browser.executeScript(function () {
-            return window.jQuery;
+            return !!window.jQuery;
         });
         if (!jQuery) {
             var jquerySource = fs.readFileSync(path.join(__dirname, './jquery-1.11.3.js'), 'utf8');
