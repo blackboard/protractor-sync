@@ -10,4 +10,5 @@ declare module "protractor_sync" {
     function patch(): void;
     var disallowMethods: () => void;
     function injectjQuery(): void;
+    function waitForNewWindow(action: Function, waitTimeMs?: number): void;
 }

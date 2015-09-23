@@ -383,7 +383,10 @@ var protractor_sync;
         patchBrowser();
     }
     function patchBrowser() {
-        patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get']);
+        patchWithExec(browser, ['getAllWindowHandles']);
+        patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close']);
+        var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
+        patchWithExec(targetLocatorPrototype, ['window']);
         browser.waitFor = function (condition, waitTimeMs) {
             _polledWait(function () {
                 return { data: null, keepPolling: !condition() };
@@ -522,12 +525,33 @@ var protractor_sync;
         };
     })();
     function injectjQuery() {
-        var jquery = fs.readFileSync(path.join(__dirname, './jquery-1.11.3.js'), 'utf8');
-        browser.executeScript(function (jquery) {
-            eval(jquery);
-            window.$.noConflict();
-        }, jquery);
+        var jQuery = browser.executeScript(function () {
+            return window.jQuery;
+        });
+        if (!jQuery) {
+            var jquerySource = fs.readFileSync(path.join(__dirname, './jquery-1.11.3.js'), 'utf8');
+            browser.executeScript(function (jquerySource) {
+                eval(jquerySource);
+                window.$.noConflict();
+            }, jquerySource);
+        }
     }
     protractor_sync.injectjQuery = injectjQuery;
+    function waitForNewWindow(action, waitTimeMs) {
+        var handlesBefore = browser.getAllWindowHandles();
+        var handles;
+        action();
+        browser.waitFor(function () {
+            handles = browser.getAllWindowHandles();
+            return handles.length > handlesBefore.length;
+        }, waitTimeMs);
+        var newWindowHandle = handles[handles.length - 1];
+        browser.switchTo().window(newWindowHandle);
+        browser.waitFor(function () {
+            return browser.driver.getCurrentUrl() !== '';
+        }, waitTimeMs);
+    }
+    protractor_sync.waitForNewWindow = waitForNewWindow;
+    ;
 })(protractor_sync = exports.protractor_sync || (exports.protractor_sync = {}));
 //# sourceMappingURL=protractor_sync.js.map

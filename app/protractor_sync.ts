@@ -426,7 +426,11 @@ export module protractor_sync {
   }
 
   function patchBrowser() {
-    patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get']);
+    patchWithExec(browser, ['getAllWindowHandles']);
+    patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close']);
+
+    var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
+    patchWithExec(targetLocatorPrototype, ['window']);
 
     browser.waitFor = function (condition: () => boolean, waitTimeMs?: number) {
       _polledWait(() => {
@@ -601,4 +605,25 @@ export module protractor_sync {
       }, jquerySource);
     }
   }
+
+  export function waitForNewWindow(action: Function, waitTimeMs?: number) {
+    var handlesBefore: string[] = (<any>browser).getAllWindowHandles();
+    var handles: string[];
+
+    action();
+
+    browser.waitFor(() => {
+      handles = (<any>browser).getAllWindowHandles();
+      return handles.length > handlesBefore.length;
+    }, waitTimeMs);
+
+    var newWindowHandle = handles[handles.length - 1];
+
+    browser.switchTo().window(newWindowHandle);
+
+    browser.waitFor(() => {
+      return (<any>browser.driver).getCurrentUrl() !== '';
+    }, waitTimeMs);
+  };
+
 }
