@@ -386,7 +386,7 @@ var protractor_sync;
         patchWithExec(browser, ['getAllWindowHandles']);
         patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close']);
         var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
-        patchWithExec(targetLocatorPrototype, ['window']);
+        patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
         browser.waitFor = function (condition, waitTimeMs) {
             _polledWait(function () {
                 return { data: null, keepPolling: !condition() };

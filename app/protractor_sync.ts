@@ -430,7 +430,7 @@ export module protractor_sync {
     patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close']);
 
     var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
-    patchWithExec(targetLocatorPrototype, ['window']);
+    patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
 
     browser.waitFor = function (condition: () => boolean, waitTimeMs?: number) {
       _polledWait(() => {
