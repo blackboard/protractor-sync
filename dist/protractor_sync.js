@@ -543,7 +543,7 @@ var protractor_sync;
         action();
         browser.waitFor(function () {
             handles = browser.getAllWindowHandles();
-            return handles.length > handlesBefore.length;
+            return handles.length === handlesBefore.length + 1;
         }, waitTimeMs);
         var newWindowHandle = handles[handles.length - 1];
         browser.switchTo().window(newWindowHandle);

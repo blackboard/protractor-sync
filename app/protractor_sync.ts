@@ -614,7 +614,7 @@ export module protractor_sync {
 
     browser.waitFor(() => {
       handles = (<any>browser).getAllWindowHandles();
-      return handles.length > handlesBefore.length;
+      return handles.length === handlesBefore.length + 1;
     }, waitTimeMs);
 
     var newWindowHandle = handles[handles.length - 1];
