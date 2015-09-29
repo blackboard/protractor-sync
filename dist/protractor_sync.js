@@ -167,6 +167,37 @@ var protractor_sync;
         }, onTimeout);
     }
     /**
+     * Determines whether an element is present on the page. Returns instantly. If you want to wait for an element that
+     * should become present, use findElement or findVisible instead.
+     * @param selector A CSS selector or element locator
+     * @param rootElement If specified, only find descendants of this element
+     * @returns {boolean} Whether the element is present or not
+     */
+    function assertElementDoesNotExist(selector, rootElement) {
+        var locator = selector;
+        if (typeof selector === 'string') {
+            locator = by.css(selector);
+        }
+        var elements;
+        if (rootElement) {
+            elements = rootElement.all(locator);
+        }
+        else {
+            elements = element.all(locator);
+        }
+        var flow = ab.getCurrentFlow();
+        //Force the elements to resolve immediately
+        var resolveElementsCb = flow.add();
+        var resolved = flow.sync(elements.getWebElements().then(function (result) {
+            resolveElementsCb(null, result);
+        }, function (err) {
+            resolveElementsCb(err);
+        }));
+        if (resolved.length > 0) {
+            throw new Error(selector + ' was found when it should not exist!');
+        }
+    }
+    /**
      * Finds a single visible instance of an element. If more than one visible elements match the locator,
      * and error is thrown. If no visible elements match the locator, an error is thrown. Implicitly waits until there is exactly one
      * visible element.
@@ -277,6 +308,10 @@ var protractor_sync;
         elPrototype.findElements = function (selector) {
             return findElements(selector, this);
         };
+        //Add in assertElementDoesNotExist
+        elPrototype.assertElementDoesNotExist = function (selector) {
+            return assertElementDoesNotExist(selector, this);
+        };
         //Polled waiting
         elPrototype.waitUntil = function (condition) {
             var _this = this;
@@ -380,6 +415,7 @@ var protractor_sync;
         global.element.findVisibles = findVisibles;
         global.element.findElement = findElement;
         global.element.findElements = findElements;
+        global.element.assertElementDoesNotExist = assertElementDoesNotExist;
         patchBrowser();
     }
     function patchBrowser() {
