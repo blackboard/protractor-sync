@@ -371,6 +371,12 @@ var protractor_sync;
         elPrototype.scrollTop = function () {
             return executeJQueryElementMethod(this, 'scrollTop');
         };
+        elPrototype.scrollIntoView = function () {
+            browser.executeScript(function (element) {
+                element.scrollIntoView();
+            }, this.getWebElement());
+            return this;
+        };
     }
     /**
      * Extend global element variable

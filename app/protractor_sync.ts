@@ -408,6 +408,13 @@ export module protractor_sync {
     elPrototype.scrollTop = function () {
       return executeJQueryElementMethod(this, 'scrollTop');
     };
+
+    elPrototype.scrollIntoView = function () {
+      browser.executeScript(function (element: HTMLElement) {
+        element.scrollIntoView();
+      }, this.getWebElement());
+      return this;
+    };
   }
 
   /**
