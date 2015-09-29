@@ -401,4 +401,53 @@ describe('Protractor extensions', () => {
       expect(testSpan.scrollTop()).toEqual(0);
     }));
   });
+
+  describe('assertElementDoesNotExist', () => {
+    var testArea: protractor.ElementFinder;
+    var testSpan: protractor.ElementFinder;
+    var TEST_AREA_ID = 'protractor_sync-test-area';
+
+    function createTest(fn: Function, errorMsg?: string) {
+      return function(done: Function) {
+        ab(() => {
+          fn();
+        }, function(err: any) {
+          if (errorMsg) {
+            expect(err.message).toEqual(errorMsg);
+          } else {
+            expect(err || undefined).toBeUndefined();
+          }
+          done();
+        });
+      };
+    }
+
+    beforeAll(createTest(() => {
+      //Make sure we are starting on a fresh page
+      browser.get('data:;');
+
+      protractorSync.injectjQuery();
+
+      browser.executeScript((id: string) => {
+        var testArea = document.createElement('div');
+        testArea.setAttribute('id', id);
+        testArea.innerHTML =
+            '<span class="test-span">test span 1</span>' +
+            '<span class="test-span-2">test span 2</span>';
+
+        document.body.appendChild(testArea);
+      }, TEST_AREA_ID);
+
+      testArea = element.findVisible('#' + TEST_AREA_ID);
+      testSpan = element.findVisible('.test-span');
+    }));
+
+    it('throws an error if the element exists', createTest(() => {
+      testArea.assertElementDoesNotExist('.test-span-2');
+    }, '.test-span-2 was found when it should not exist!'));
+
+    it('does not throw an error if the element does not exist', createTest(() => {
+      testArea.assertElementDoesNotExist('.does-not-exist');
+    }));
+  });
 });

@@ -17,7 +17,7 @@
     "jasmine-reporters": "2.0.7",
     "jasmine-spec-reporter": "2.4.0",
     "load-grunt-tasks": "0.6.0",
-    "node-shared-typescript-defs": "git+ssh://git@stash.bbpd.io/cloud/node-shared-typescript-defs.git#c79caec3d410ff3ef11c49415729aa91647e08dc",
+    "node-shared-typescript-defs": "git+ssh://git@stash.bbpd.io/cloud/node-shared-typescript-defs.git#8c47172f4708598ba135994d22daca0d7a7aab8c",
     "typescript": "git+ssh://git@stash.bbpd.io/shared/typescript.git#1.4.3-bb"
   }
 }

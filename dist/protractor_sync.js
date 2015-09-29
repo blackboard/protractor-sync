@@ -167,11 +167,9 @@ var protractor_sync;
         }, onTimeout);
     }
     /**
-     * Determines whether an element is present on the page. Returns instantly. If you want to wait for an element that
-     * should become present, use findElement or findVisible instead.
+     * Asserts that an element is NOT present and throws an error if the element is found. Returns instantly (no polling).
      * @param selector A CSS selector or element locator
-     * @param rootElement If specified, only find descendants of this element
-     * @returns {boolean} Whether the element is present or not
+     * @param rootElement If specified, only search for descendants of this element
      */
     function assertElementDoesNotExist(selector, rootElement) {
         var locator = selector;
