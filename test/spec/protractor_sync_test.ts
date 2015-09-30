@@ -8,6 +8,47 @@ var protractorSync = _protractorSync.protractor_sync;
 protractorSync.patch();
 protractorSync.disallowMethods();
 
+var TEST_AREA_ID = 'protractor_sync-test-area';
+
+interface IAppendTestAreaOptions {
+  style?: { [name: string]: string; };
+  innerHtml?: string;
+}
+
+function appendTestArea(options?: IAppendTestAreaOptions) {
+  browser.executeScript((id: string, options?: IAppendTestAreaOptions) => {
+    var testArea = document.createElement('div');
+    testArea.setAttribute('id', id);
+
+    if (options && options.innerHtml) {
+      testArea.innerHTML = options.innerHtml;
+    }
+
+    if (options && options.style) {
+      Object.keys(options.style).forEach((item) => {
+        (<any>testArea.style)[item] = options.style[item];
+      });
+    }
+
+    document.body.appendChild(testArea);
+  }, TEST_AREA_ID, options);
+}
+
+function createTest(fn: Function, errorMsg?: string) {
+  return function(done: Function) {
+    ab(() => {
+      fn();
+    }, function(err: any) {
+      if (errorMsg) {
+        expect(err.message).toEqual(errorMsg);
+      } else {
+        expect(err || undefined).toBeUndefined();
+      }
+      done();
+    });
+  };
+}
+
 describe('Protractor extensions', () => {
 
   describe('disallowed methods', () => {
@@ -293,41 +334,26 @@ describe('Protractor extensions', () => {
   describe('jQuery methods', () => {
     var testArea: protractor.ElementFinder;
     var testSpan: protractor.ElementFinder;
-    var TEST_AREA_ID = 'protractor_sync-test-area';
-
-    function createTest(fn: Function) {
-      return function(done: Function) {
-        ab(() => {
-          fn();
-        }, function(err: any) {
-          expect(err || undefined).toBeUndefined();
-
-          done();
-        });
-      };
-    }
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
-      browser.get('data:;');
+      browser.get('data:,');
 
       protractorSync.injectjQuery();
 
-      browser.executeScript((id: string) => {
-        var testArea = document.createElement('div');
-        testArea.setAttribute('id', id);
-        testArea.style.position = 'absolute';
-        testArea.style.left = '15px';
-        testArea.style.top = '15px';
-        testArea.style.boxSizing = 'context-box';
-        testArea.innerHTML =
-          '<span ' +
+      appendTestArea({
+          style: {
+            position: 'absolute',
+            left: '15px',
+            top: '15px',
+            boxSizing: 'context-box'
+          },
+          innerHtml: '<span ' +
           '  style="height:50px; width:30px; display:block; position: absolute; left:10px; top:10px; border:black solid 2px;" ' +
           '  class="test-span">test span 1</span>' +
-          '<span class="test-span-2">test span 2</span>';
-
-        document.body.appendChild(testArea);
-      }, TEST_AREA_ID);
+          '<span class="test-span-2">test span 2</span>'
+        }
+      );
 
       testArea = element.findVisible('#' + TEST_AREA_ID);
       testSpan = element.findVisible('.test-span');
@@ -402,49 +428,44 @@ describe('Protractor extensions', () => {
     }));
   });
 
-  describe('assertElementDoesNotExist', () => {
-    var testArea: protractor.ElementFinder;
-    var testSpan: protractor.ElementFinder;
-    var TEST_AREA_ID = 'protractor_sync-test-area';
-
-    function createTest(fn: Function, errorMsg?: string) {
-      return function(done: Function) {
-        ab(() => {
-          fn();
-        }, function(err: any) {
-          if (errorMsg) {
-            expect(err.message).toEqual(errorMsg);
-          } else {
-            expect(err || undefined).toBeUndefined();
-          }
-          done();
-        });
-      };
-    }
-
-    beforeAll(createTest(() => {
+  describe('Other element finder extensions', () => {
+    it('can scroll to an element', createTest(() => {
       //Make sure we are starting on a fresh page
-      browser.get('data:;');
+      browser.get('data:,');
 
       protractorSync.injectjQuery();
 
-      browser.executeScript((id: string) => {
-        var testArea = document.createElement('div');
-        testArea.setAttribute('id', id);
-        testArea.innerHTML =
-            '<span class="test-span">test span 1</span>' +
-            '<span class="test-span-2">test span 2</span>';
+      appendTestArea({
+        style: { height: '100px', overflow: 'scroll' },
+        innerHtml: '<div class="target" style="margin-top: 500px; margin-bottom: 500px;">World</div>'
+      });
 
-        document.body.appendChild(testArea);
-      }, TEST_AREA_ID);
+      var el = element.findElement('#' + TEST_AREA_ID + ' .target');
+      expect(el.parent().scrollTop()).toEqual(0);
+      el.scrollIntoView();
+      expect(el.parent().scrollTop()).toEqual(500);
+    }));
+  });
 
-      testArea = element.findVisible('#' + TEST_AREA_ID);
-      testSpan = element.findVisible('.test-span');
+  describe('assertElementDoesNotExist', () => {
+    var testArea: protractor.ElementFinder;
+
+    beforeAll(createTest(() => {
+      //Make sure we are starting on a fresh page
+      browser.get('data:,');
+
+      protractorSync.injectjQuery();
+
+      appendTestArea({
+        innerHtml: '<span class="element-does-exist"></span>'
+      });
+
+      testArea = element.findElement('#' + TEST_AREA_ID);
     }));
 
     it('throws an error if the element exists', createTest(() => {
-      testArea.assertElementDoesNotExist('.test-span-2');
-    }, '.test-span-2 was found when it should not exist!'));
+      testArea.assertElementDoesNotExist('.element-does-exist');
+    }, '.element-does-exist was found when it should not exist!'));
 
     it('does not throw an error if the element does not exist', createTest(() => {
       testArea.assertElementDoesNotExist('.does-not-exist');
