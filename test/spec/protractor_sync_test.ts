@@ -454,8 +454,6 @@ describe('Protractor extensions', () => {
       //Make sure we are starting on a fresh page
       browser.get('data:,');
 
-      protractorSync.injectjQuery();
-
       appendTestArea({
         innerHtml: '<span class="element-does-exist"></span>'
       });
