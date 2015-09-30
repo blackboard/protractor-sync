@@ -162,6 +162,40 @@ export module protractor_sync {
   }
 
   /**
+   * Asserts that an element is NOT present and throws an error if the element is found. Returns instantly (no polling).
+   * @param selector A CSS selector or element locator
+   * @param rootElement If specified, only search for descendants of this element
+   */
+  function assertElementDoesNotExist(selector: any, rootElement?: protractor.ElementFinder) {
+    var locator = selector;
+    if (typeof selector === 'string') {
+      locator = by.css(selector);
+    }
+
+    var elements: protractor.ElementArrayFinder;
+
+    if (rootElement) {
+      elements = rootElement.all(locator);
+    } else {
+      elements = element.all(locator);
+    }
+
+    var flow = ab.getCurrentFlow();
+
+    //Force the elements to resolve immediately
+    var resolveElementsCb = flow.add();
+    var resolved = flow.sync(elements.getWebElements().then(function (result: any) {
+      resolveElementsCb(null, result);
+    }, function (err: any) {
+      resolveElementsCb(err);
+    }));
+
+    if (resolved.length > 0) {
+      throw new Error(selector + ' was found when it should not exist!');
+    }
+  }
+
+  /**
    * Finds a single visible instance of an element. If more than one visible elements match the locator,
    * and error is thrown. If no visible elements match the locator, an error is thrown. Implicitly waits until there is exactly one
    * visible element.
@@ -291,6 +325,11 @@ export module protractor_sync {
 
     elPrototype.findElements = function (selector: any) {
       return findElements(selector, this);
+    };
+
+    //Add in assertElementDoesNotExist
+    elPrototype.assertElementDoesNotExist = function(selector: any) {
+      return assertElementDoesNotExist(selector, this);
     };
 
     //Polled waiting
@@ -428,6 +467,8 @@ export module protractor_sync {
     global.element.findElement = findElement;
 
     global.element.findElements = findElements;
+
+    global.element.assertElementDoesNotExist = assertElementDoesNotExist;
 
     patchBrowser();
   }

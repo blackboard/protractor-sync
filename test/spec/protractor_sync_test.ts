@@ -446,4 +446,27 @@ describe('Protractor extensions', () => {
       expect(el.parent().scrollTop()).toEqual(500);
     }));
   });
+
+  describe('assertElementDoesNotExist', () => {
+    var testArea: protractor.ElementFinder;
+
+    beforeAll(createTest(() => {
+      //Make sure we are starting on a fresh page
+      browser.get('data:,');
+
+      appendTestArea({
+        innerHtml: '<span class="element-does-exist"></span>'
+      });
+
+      testArea = element.findElement('#' + TEST_AREA_ID);
+    }));
+
+    it('throws an error if the element exists', createTest(() => {
+      testArea.assertElementDoesNotExist('.element-does-exist');
+    }, '.element-does-exist was found when it should not exist!'));
+
+    it('does not throw an error if the element does not exist', createTest(() => {
+      testArea.assertElementDoesNotExist('.does-not-exist');
+    }));
+  });
 });
