@@ -258,7 +258,7 @@ var protractor_sync;
     function findElements(selector, rootElement) {
         var elements = _getElements({
             selector: selector,
-            single: true,
+            single: false,
             requireVisible: false,
             rootElement: rootElement
         });

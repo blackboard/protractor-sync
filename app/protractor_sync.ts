@@ -265,7 +265,7 @@ export module protractor_sync {
   function findElements(selector: any, rootElement?: protractor.ElementFinder) {
     var elements = _getElements({
       selector: selector,
-      single: true,
+      single: false,
       requireVisible: false,
       rootElement: rootElement
     });
