@@ -658,9 +658,8 @@ describe('Protractor extensions', () => {
         }, 500);
       });
 
-      protractorSync.polledExpect(() => {
-        return element.findElement('#' + TEST_AREA_ID).hasClass('expect-test');
-      }).toEqual(true);
+      var testArea = element.findElement('#' + TEST_AREA_ID);
+      protractorSync.polledExpect(() => testArea.hasClass('expect-test')).toEqual(true);
     }));
   });
 });
