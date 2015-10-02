@@ -598,4 +598,69 @@ describe('Protractor extensions', () => {
       expect(el.hasClass('second')).toEqual(true);
     }));
   });
+
+  describe('expect', () => {
+    it('retries until the expectation passes', createTest(() => {
+      var counter = 0;
+
+      protractorSync.polledExpect(() => 'test' + counter++).toEqual('test5');
+    }));
+
+    it('is also available as a global variable', createTest(() => {
+      var counter = 0;
+
+      polledExpect(() => 'test' + counter++).toEqual('test5');
+    }));
+
+    it('works with not', createTest(() => {
+      var counter = 0;
+
+      protractorSync.polledExpect(() => 'test' + counter++).not.toEqual('test0');
+    }));
+
+    it('works with the toBeGreaterThan matcher', createTest(() => {
+      var counter = 0;
+
+      protractorSync.polledExpect(() => counter++).toBeGreaterThan(3);
+    }));
+
+    it('works with multiple expectations', createTest(() => {
+      var counter = 0;
+
+      protractorSync.polledExpect(() => counter++).toBeGreaterThan(3);
+      protractorSync.polledExpect(() => counter++).toBeGreaterThan(7);
+      protractorSync.polledExpect(() => counter++).toBeGreaterThan(10);
+    }));
+
+    it('times out', createTest(() => {
+      var counter = 0;
+      var catchRan = false;
+
+      //Can't use expect().toThrow() to check this because it doesn't run from the Fiber when patched by jasminewd
+      try {
+        protractorSync.polledExpect(() => counter++, { timeoutMS: 100 }).toBeLessThan(0);
+      } catch (e) {
+        catchRan = true;
+        expect(e.message).toMatch(/Expected \d+ to be less than 0\./);
+      }
+
+      expect(catchRan).toEqual(true);
+    }));
+
+    it('works in conjunction with element finders', createTest(() => {
+      browser.get('data:,');
+      protractorSync.injectjQuery();
+      appendTestArea();
+
+      browser.executeScript(() => {
+        setTimeout(function() {
+          (<any>window).jQuery('#protractor_sync-test-area').addClass('expect-test');
+        }, 500);
+      });
+
+      protractorSync.polledExpect(() => {
+        return element.findElement('#' + TEST_AREA_ID).hasClass('expect-test');
+      }).toEqual(true);
+    }));
+  });
 });

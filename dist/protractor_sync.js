@@ -702,6 +702,84 @@ var protractor_sync;
         }, waitTimeMs);
     }
     protractor_sync.waitForNewWindow = waitForNewWindow;
-    ;
+    function polledExpect(func, args) {
+        var jasmine = global.jasmine;
+        if (jasmine == null) {
+            throw new Error('jasmine is required to use polledExpect');
+        }
+        var timeout = args && args.timeoutMS || protractor_sync.IMPLICIT_WAIT_MS;
+        var startTime = new Date().getTime();
+        var flow = ab.getCurrentFlow();
+        var expectation;
+        var options = {
+            actual: func(),
+            addExpectationResult: function (passed, info) {
+                var recheck = function () {
+                    expectation.actual = func();
+                    expectation[info.matcherName](info.expected);
+                };
+                if (!passed) {
+                    if (new Date().getTime() - startTime <= timeout) {
+                        //We have to do some funny things with the flow control because jasminewd (included w/ protractor)
+                        //patches expect and makes it async (and therefore not execute in the current Fiber).
+                        //We use flow.queue to get the recheck code to execute under the Fiber.
+                        //We patch the jasmine matchers (like .toEqual, .toBeGreaterThan) to wait for the verification to finish
+                        //before allowing the code to continue.
+                        flow.queue(function (callback) {
+                            flow.sync(setTimeout(flow.add(), protractor_sync.RETRY_INTERVAL));
+                            recheck();
+                            callback();
+                        });
+                    }
+                    else {
+                        //If we throw the error directly the caller can't catch it b/c this is a different context
+                        //However, returning it to the flow.queue will throw it on the Fiber running the test
+                        flow.queue(function (callback) {
+                            return callback(new Error(info.message));
+                        });
+                        flow.doneAdding(); //asyncblock will wait at flow.forceWait() until this is called
+                    }
+                }
+                else {
+                    flow.doneAdding(); //asyncblock will wait at flow.forceWait() until this is called
+                }
+            },
+            util: jasmine.matchersUtil
+        };
+        //We create both the normal expectation class, and the one that will be used if the user uses ".not"
+        //We pre-create them both here so the proper one can be referenced when rerunning the expectation later
+        var plainExpectation = new jasmine.Expectation(options);
+        var notExpectation = new jasmine.Expectation({
+            isNot: true,
+            actual: plainExpectation.actual,
+            addExpectationResult: plainExpectation.addExpectationResult,
+            util: plainExpectation.util
+        });
+        patchExpectation(plainExpectation);
+        patchExpectation(notExpectation);
+        Object.defineProperty(plainExpectation, 'not', {
+            get: function () {
+                expectation = notExpectation;
+                return notExpectation;
+            }
+        });
+        expectation = plainExpectation;
+        return plainExpectation;
+    }
+    protractor_sync.polledExpect = polledExpect;
+    //Expose global variable so callers can call "polledExpect" similar to just calling "expect"
+    global.polledExpect = polledExpect;
+    /** This patch will force the expectation to block execution until it passes or throws an error. */
+    function patchExpectation(expectation) {
+        var _waitingOnExpectation = false;
+        _patch(expectation, Object.keys(jasmine.matchers), function (result) {
+            var flow = ab.getCurrentFlow();
+            //Calling forceWait more than once seems to deadlock things
+            if (!flow._forceWait) {
+                flow.forceWait();
+            }
+            return result;
+        });
+    }
 })(protractor_sync = exports.protractor_sync || (exports.protractor_sync = {}));
 //# sourceMappingURL=protractor_sync.js.map
