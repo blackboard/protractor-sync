@@ -14,21 +14,29 @@ export module protractor_sync {
   export var IMPLICIT_WAIT_MS = 5000;
   export var RETRY_INTERVAL = 10;
 
-//Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
-//The prototypes can be used to augment all instances of ElementFinder and ElementArrayFinder.
+  export var autoReselectStaleElements = true;
+
+  //Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
+  //The prototypes can be used to augment all instances of ElementFinder and ElementArrayFinder.
   var elPrototype = Object.getPrototypeOf(element(by.css('')));
   var elArrayPrototype = Object.getPrototypeOf(element.all(by.css('')));
 
-//Get access to the ElementFinder type
+  //Get access to the ElementFinder type
   var ElementFinder: any = element(by.css('')).constructor;
 
-  var elementPatches = [
+  var ELEMENT_PATCHES = [
     'isPresent', 'evaluate', 'allowAnimations', //These 3 are added by protractor
 
     'isElementPresent', 'click', 'sendKeys', //The rest of these are part of the core selenium webdriver
     'getTagName', 'getCssValue', 'getAttribute', 'getText', 'getSize', 'getLocation', 'isEnabled',
     'isSelected', 'submit', 'clear', 'isDisplayed', 'getOuterHtml', 'getInnerHtml', 'getId', 'getRawId'
   ];
+
+  var RETRY_ON_STALE = ELEMENT_PATCHES.concat([
+    'closest', 'hasClass', 'innerHeight', 'innerWidth', 'is', 'outerHeight', 'outerWidth', 'next', 'offset', 'parent',
+    'parents', 'position', 'prev', 'prop', 'scrollLeft', 'scrollTop', 'scrollIntoView',
+    'waitUntil'
+  ]);
 
   /**
    * Executes a function repeatedly until it returns a value other than undefined. Waits RETRY_INTERVAL ms between function calls.
@@ -39,14 +47,18 @@ export module protractor_sync {
    * @param waitTimeMs Override the amount of time to wait before timing out
    * @returns {any} The last value the function returned, as long as it did not time out
    */
-  function _polledWait(fn: () => { keepPolling: boolean; data: any; }, onTimeout?: (data: any) => void, waitTimeMs?: number) {
+  function _polledWait(
+    fn: () => { keepPolling: boolean; data: any; },
+    onTimeout?: (data: any) => void,
+    waitTimeMs?: number
+  ) {
     var startTime = new Date();
-    var timeout = waitTimeMs || IMPLICIT_WAIT_MS;
+    var timeout = waitTimeMs != null ? waitTimeMs : IMPLICIT_WAIT_MS;
     var result: any;
     var flow = ab.getCurrentFlow();
 
     while (true) {
-      if (new Date().getTime() - startTime.getTime() < timeout) {
+      if (result == null || new Date().getTime() - startTime.getTime() < timeout) {
         result = fn();
 
         if (result.keepPolling) {
@@ -77,7 +89,15 @@ export module protractor_sync {
    * @returns {protractor.ElementFinder[]}
    * @private
    */
-  function _getElements(args: { selector: any; single: boolean; requireVisible: boolean; rootElement: protractor.ElementFinder }) {
+  function _getElements(
+    args: {
+      selector: any;
+      single: boolean;
+      requireVisible: boolean;
+      rootElement: protractor.ElementFinder;
+      poll: boolean
+    }
+  ) {
     function extractResult(elements: protractor.ElementFinder[]) {
       var filteredCount = elements && elements.length || 0;
 
@@ -127,15 +147,27 @@ export module protractor_sync {
 
       //Force the elements to resolve immediately (we want to make sure elements selected with findElement are present before continuing)
       var resolveElementsCb = flow.add();
-      var resolved = flow.sync(elements.getWebElements().then(function (result: any) {
-        resolveElementsCb(null, result);
-      }, function (err: any) {
-        resolveElementsCb(err);
-      }));
+      var resolved: any[] = [];
+
+      try {
+        resolved = flow.sync(elements.getWebElements().then(function (result: any) {
+          resolveElementsCb(null, result);
+        }, function (err: any) {
+          resolveElementsCb(err);
+        }));
+      } catch (e) {
+        if (e.state === 'stale element reference' && args.rootElement) {
+          //Try with the new root element on the next poll
+          args.rootElement = args.rootElement.reselect();
+        }
+      }
 
       //Convert from an array of selenium web elements to an array of protractor element finders
-      resolved = resolved.map((webElement: any) => {
-        return ElementFinder.fromWebElement_((<any>elements).ptor_, webElement, locator);
+      resolved = resolved.map((webElement: any, i: number) => {
+        var elementFinder = ElementFinder.fromWebElement_((<any>elements).ptor_, webElement, locator);
+        elementFinder.__psync_selection_args = args;
+        elementFinder.__psync_selection_ordinal = i;
+        return elementFinder;
       });
 
       if (args.requireVisible) {
@@ -158,7 +190,7 @@ export module protractor_sync {
       }
 
       return extractResult(filtered);
-    }, onTimeout);
+    }, onTimeout, args.poll ? IMPLICIT_WAIT_MS : 0);
   }
 
   /**
@@ -167,30 +199,21 @@ export module protractor_sync {
    * @param rootElement If specified, only search for descendants of this element
    */
   function assertElementDoesNotExist(selector: any, rootElement?: protractor.ElementFinder) {
-    var locator = selector;
-    if (typeof selector === 'string') {
-      locator = by.css(selector);
+    var elements: any[] = [];
+
+    try {
+      elements = _getElements({
+        selector: selector,
+        rootElement: rootElement,
+        poll: false,
+        requireVisible: false,
+        single: false
+      });
+    } catch (e) {
+      //Ignore the case where the element isn't found
     }
 
-    var elements: protractor.ElementArrayFinder;
-
-    if (rootElement) {
-      elements = rootElement.all(locator);
-    } else {
-      elements = element.all(locator);
-    }
-
-    var flow = ab.getCurrentFlow();
-
-    //Force the elements to resolve immediately
-    var resolveElementsCb = flow.add();
-    var resolved = flow.sync(elements.getWebElements().then(function (result: any) {
-      resolveElementsCb(null, result);
-    }, function (err: any) {
-      resolveElementsCb(err);
-    }));
-
-    if (resolved.length > 0) {
+    if (elements.length > 0) {
       throw new Error(selector + ' was found when it should not exist!');
     }
   }
@@ -209,7 +232,8 @@ export module protractor_sync {
       selector: selector,
       single: true,
       requireVisible: true,
-      rootElement: rootElement
+      rootElement: rootElement,
+      poll: true
     });
 
     return displayed[0];
@@ -228,7 +252,8 @@ export module protractor_sync {
       selector: selector,
       single: false,
       requireVisible: true,
-      rootElement: rootElement
+      rootElement: rootElement,
+      poll: true
     });
 
     return displayed;
@@ -247,7 +272,8 @@ export module protractor_sync {
       selector: selector,
       single: true,
       requireVisible: false,
-      rootElement: rootElement
+      rootElement: rootElement,
+      poll: true
     });
 
     return elements[0];
@@ -267,21 +293,32 @@ export module protractor_sync {
       selector: selector,
       single: false,
       requireVisible: false,
-      rootElement: rootElement
+      rootElement: rootElement,
+      poll: true
     });
 
     return elements;
   }
 
   function wrapElementFinder(elementFinder: protractor.ElementFinder) {
-    //We have to patch individual ElementFinder instances instead of just updating the prototype because
-    //these methods are added to the ElementFinder instances explicitly and are not a part of the prototype.
-    patchWithExec(elementFinder, elementPatches);
+    if (!(<any>elementFinder).__psync_wrapped) {
+      //We have to patch individual ElementFinder instances instead of just updating the prototype because
+      //these methods are added to the ElementFinder instances explicitly and are not a part of the prototype.
+      patchWithExec(elementFinder, ELEMENT_PATCHES);
 
-    //For the methods which don't return a value, we want to change the return value to allow chaining (field.clear().sendKeys())
-    _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], function (returnValue: any) {
-      return elementFinder;
-    });
+      //For the methods which don't return a value, we want to change the return value to allow chaining (field.clear().sendKeys())
+      _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], function (returnValue: any) {
+        return elementFinder;
+      });
+
+      if (autoReselectStaleElements) {
+        RETRY_ON_STALE.forEach(func => {
+          (<any>elementFinder)[func] = retryOnStale(elementFinder, func);
+        });
+      }
+
+      (<any>elementFinder).__psync_wrapped = true;
+    }
 
     return elementFinder;
   }
@@ -332,6 +369,55 @@ export module protractor_sync {
       return assertElementDoesNotExist(selector, this);
     };
 
+    elPrototype.getSelectionPath = function() {
+      var path = '';
+      var args = this.__psync_selection_args;
+      if (args) {
+        if (args.rootElement) {
+          path += args.rootElement.getSelectionPath() + ' -> ';
+        }
+
+        if (args.selector) {
+          path += args.selector;
+        } else if (args.method) {
+          path += args.method + '(' + (args.arg || '') + ')';
+        }
+
+        if (this.__psync_selection_ordinal > 0 || args.single === false) {
+          path += '[' + this.__psync_selection_ordinal + ']';
+        }
+      }
+
+      return path;
+    };
+
+    elPrototype.reselect = function() {
+      var args = this.__psync_selection_args;
+      if (args) {
+        var elements: any;
+
+        if (args.selector) {
+          console.log('(Protractor-sync): Re-selecting stale element: ' + this.getSelectionPath());
+
+          elements = _getElements(args);
+        } else if (args.method) {
+          console.log('(Protractor-sync): Re-selecting stale element: ' + this.getSelectionPath());
+
+          elements = args.rootElement[args.method](args.arg);
+        } else {
+          console.error('(Protractor-sync): Attempting to re-select stale element, but selection info is incomplete');
+        }
+
+        if (Array.isArray(elements)) {
+          return elements[this.__psync_selection_ordinal];
+        } else {
+          return elements;
+        }
+      } else {
+        console.error('(Protractor-sync): Attempting to re-select stale element, but selection info is missing');
+      }
+    };
+
     //Polled waiting
 
     elPrototype.waitUntil = function (condition: string) {
@@ -374,8 +460,17 @@ export module protractor_sync {
       }, element.getWebElement(), method, arg);
 
       if (Array.isArray(result)) {
-        return result.map((webElement: any) => {
-          return ElementFinder.fromWebElement_((<any>element).ptor_, webElement, method, arg);
+        return result.map((webElement: any, i: number) => {
+          var elementFinder = ElementFinder.fromWebElement_((<any>element).ptor_, webElement, method, arg);
+
+          elementFinder.__psync_selection_args = {
+            rootElement: element,
+            method: method,
+            arg: arg
+          };
+          elementFinder.__psync_selection_ordinal = i;
+
+          return elementFinder;
         });
       } else {
         return result;
@@ -549,6 +644,24 @@ export module protractor_sync {
     } else {
       return obj;
     }
+  }
+
+  function retryOnStale(obj: any, func: string) {
+    var original = obj[func];
+
+    return function attempt() {
+      try {
+        return original.apply(this, arguments);
+      } catch (e) {
+        if (e.state === 'stale element reference') {
+          var reselected = this.reselect();
+
+          return reselected[func].apply(reselected, arguments);
+        } else {
+          throw e;
+        }
+      }
+    };
   }
 
   /**

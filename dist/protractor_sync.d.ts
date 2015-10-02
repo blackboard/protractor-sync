@@ -4,6 +4,7 @@
 declare module "protractor_sync" {
     var IMPLICIT_WAIT_MS: number;
     var RETRY_INTERVAL: number;
+    var autoReselectStaleElements: boolean;
     /**
      * Apply synchronous patches to protractor
      */

@@ -17,6 +17,11 @@ interface IAppendTestAreaOptions {
 
 function appendTestArea(options?: IAppendTestAreaOptions) {
   browser.executeScript((id: string, options?: IAppendTestAreaOptions) => {
+    var existing = document.querySelector('#' + id);
+    if (existing) {
+      existing.parentNode.removeChild(existing);
+    }
+
     var testArea = document.createElement('div');
     testArea.setAttribute('id', id);
 
@@ -467,6 +472,130 @@ describe('Protractor extensions', () => {
 
     it('does not throw an error if the element does not exist', createTest(() => {
       testArea.assertElementDoesNotExist('.does-not-exist');
+    }));
+  });
+
+  describe('stale element prevention', () => {
+    function appendStaleTestArea(extraClass = '') {
+      appendTestArea({
+        innerHtml: '<div class="stale-test ' + extraClass + '">' +
+                   '  <div class="inner-stale ' + extraClass + '">' +
+                   '    <div class="inner-stale-2 ' + extraClass +  '">test</div>' +
+                   '  </div>' +
+                   '</div>' +
+                   '<div class="stale-test-2 ' + extraClass + '">test</div>'
+      });
+    }
+
+    beforeAll(createTest(() => {
+      browser.get('data:,');
+
+      protractorSync.injectjQuery();
+    }));
+
+    beforeEach(() => {
+      appendStaleTestArea();
+    });
+
+    it('re-selects a stale element', createTest(() => {
+      var el = element.findElement('.stale-test');
+
+      browser.executeScript(() => {
+        (<any>window).jQuery('.stale-test').remove();
+      });
+
+      appendStaleTestArea('second');
+
+      expect(el.hasClass('second')).toEqual(true);
+    }));
+
+    it('re-selects a stale element using findElements', createTest(() => {
+      var el = element.findElements('.stale-test');
+
+      browser.executeScript(() => {
+        (<any>window).jQuery('.stale-test').remove();
+      });
+
+      appendStaleTestArea('second');
+
+      expect(el[0].hasClass('second')).toEqual(true);
+    }));
+
+    it('re-selects a stale element with a stale parent', createTest(() => {
+      var parent = element.findElement('.stale-test');
+      var el = parent.findElement('.inner-stale');
+
+      browser.executeScript(() => {
+        (<any>window).jQuery('.stale-test').remove();
+      });
+
+      appendStaleTestArea('second');
+
+      expect(el.getText()).toEqual('test');
+    }));
+
+    it('re-selects a stale element with two stale parents', createTest(() => {
+      var parent = element.findElement('.stale-test');
+      var inner = parent.findElement('.inner-stale');
+      var el = inner.findElement('.inner-stale-2');
+
+      browser.executeScript(() => {
+        (<any>window).jQuery('.stale-test').remove();
+      });
+
+      appendStaleTestArea('second');
+
+      expect(el.getText()).toEqual('test');
+    }));
+
+    it('re-selects a stale element selected using next', createTest(() => {
+      var el = element.findElement('.stale-test').next();
+
+      browser.executeScript(() => {
+        (<any>window).jQuery('.stale-test-2').remove();
+      });
+
+      appendStaleTestArea('second');
+
+      expect(el.hasClass('second')).toEqual(true);
+    }));
+
+    it('re-selects a stale element selected using closest', createTest(() => {
+      var el = element.findVisible('.inner-stale').closest('.stale-test');
+
+      browser.executeScript(() => {
+        (<any>window).jQuery('.stale-test').remove();
+      });
+
+      appendStaleTestArea('second');
+
+      expect(el.hasClass('second')).toEqual(true);
+    }));
+
+    it('re-selects a stale element selected using parents', createTest(() => {
+      var el = element.findVisible('.inner-stale-2').parents()[1];
+
+      browser.executeScript(() => {
+        (<any>window).jQuery('.stale-test').remove();
+      });
+
+      appendStaleTestArea('second');
+
+      expect(el.hasClass('second')).toEqual(true);
+    }));
+
+    it('waits to re-select a stale element', createTest(() => {
+      var el = element.findElement('.stale-test');
+
+      browser.executeScript(() => {
+        (<any>window).jQuery('.stale-test').remove();
+
+        setTimeout(() => {
+          (<any>window).jQuery('#protractor_sync-test-area').append('<div class="stale-test second">test</div>');
+        }, 500);
+      });
+
+      expect(el.hasClass('second')).toEqual(true);
     }));
   });
 });
