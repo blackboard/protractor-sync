@@ -12,13 +12,14 @@ var protractor_sync;
     'use strict';
     protractor_sync.IMPLICIT_WAIT_MS = 5000;
     protractor_sync.RETRY_INTERVAL = 10;
+    protractor_sync.autoReselectStaleElements = true;
     //Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
     //The prototypes can be used to augment all instances of ElementFinder and ElementArrayFinder.
     var elPrototype = Object.getPrototypeOf(element(by.css('')));
     var elArrayPrototype = Object.getPrototypeOf(element.all(by.css('')));
     //Get access to the ElementFinder type
     var ElementFinder = element(by.css('')).constructor;
-    var elementPatches = [
+    var ELEMENT_PATCHES = [
         'isPresent',
         'evaluate',
         'allowAnimations',
@@ -41,6 +42,26 @@ var protractor_sync;
         'getId',
         'getRawId'
     ];
+    var RETRY_ON_STALE = ELEMENT_PATCHES.concat([
+        'closest',
+        'hasClass',
+        'innerHeight',
+        'innerWidth',
+        'is',
+        'outerHeight',
+        'outerWidth',
+        'next',
+        'offset',
+        'parent',
+        'parents',
+        'position',
+        'prev',
+        'prop',
+        'scrollLeft',
+        'scrollTop',
+        'scrollIntoView',
+        'waitUntil'
+    ]);
     /**
      * Executes a function repeatedly until it returns a value other than undefined. Waits RETRY_INTERVAL ms between function calls.
      *
@@ -52,11 +73,11 @@ var protractor_sync;
      */
     function _polledWait(fn, onTimeout, waitTimeMs) {
         var startTime = new Date();
-        var timeout = waitTimeMs || protractor_sync.IMPLICIT_WAIT_MS;
+        var timeout = waitTimeMs != null ? waitTimeMs : protractor_sync.IMPLICIT_WAIT_MS;
         var result;
         var flow = ab.getCurrentFlow();
         while (true) {
-            if (new Date().getTime() - startTime.getTime() < timeout) {
+            if (result == null || new Date().getTime() - startTime.getTime() < timeout) {
                 result = fn();
                 if (result.keepPolling) {
                     flow.sync(setTimeout(flow.add(), protractor_sync.RETRY_INTERVAL)); //Wait a bit before checking again
@@ -133,14 +154,29 @@ var protractor_sync;
             }
             //Force the elements to resolve immediately (we want to make sure elements selected with findElement are present before continuing)
             var resolveElementsCb = flow.add();
-            var resolved = flow.sync(elements.getWebElements().then(function (result) {
-                resolveElementsCb(null, result);
-            }, function (err) {
-                resolveElementsCb(err);
-            }));
+            var resolved = [];
+            try {
+                resolved = flow.sync(elements.getWebElements().then(function (result) {
+                    resolveElementsCb(null, result);
+                }, function (err) {
+                    resolveElementsCb(err);
+                }));
+            }
+            catch (e) {
+                if (protractor_sync.autoReselectStaleElements && e.state === 'stale element reference' && args.rootElement) {
+                    //Try with the new root element on the next poll
+                    args.rootElement = args.rootElement.reselect();
+                }
+                else {
+                    throw e;
+                }
+            }
             //Convert from an array of selenium web elements to an array of protractor element finders
-            resolved = resolved.map(function (webElement) {
-                return ElementFinder.fromWebElement_(elements.ptor_, webElement, locator);
+            resolved = resolved.map(function (webElement, i) {
+                var elementFinder = ElementFinder.fromWebElement_(elements.ptor_, webElement, locator);
+                elementFinder.__psync_selection_args = args;
+                elementFinder.__psync_selection_ordinal = i;
+                return elementFinder;
             });
             if (args.requireVisible) {
                 filtered = resolved.filter(function (element) {
@@ -164,7 +200,7 @@ var protractor_sync;
                 filtered = resolved;
             }
             return extractResult(filtered);
-        }, onTimeout);
+        }, onTimeout, args.poll ? protractor_sync.IMPLICIT_WAIT_MS : 0);
     }
     /**
      * Asserts that an element is NOT present and throws an error if the element is found. Returns instantly (no polling).
@@ -172,26 +208,19 @@ var protractor_sync;
      * @param rootElement If specified, only search for descendants of this element
      */
     function assertElementDoesNotExist(selector, rootElement) {
-        var locator = selector;
-        if (typeof selector === 'string') {
-            locator = by.css(selector);
+        var elements = [];
+        try {
+            elements = _getElements({
+                selector: selector,
+                rootElement: rootElement,
+                poll: false,
+                requireVisible: false,
+                single: false
+            });
         }
-        var elements;
-        if (rootElement) {
-            elements = rootElement.all(locator);
+        catch (e) {
         }
-        else {
-            elements = element.all(locator);
-        }
-        var flow = ab.getCurrentFlow();
-        //Force the elements to resolve immediately
-        var resolveElementsCb = flow.add();
-        var resolved = flow.sync(elements.getWebElements().then(function (result) {
-            resolveElementsCb(null, result);
-        }, function (err) {
-            resolveElementsCb(err);
-        }));
-        if (resolved.length > 0) {
+        if (elements.length > 0) {
             throw new Error(selector + ' was found when it should not exist!');
         }
     }
@@ -209,7 +238,8 @@ var protractor_sync;
             selector: selector,
             single: true,
             requireVisible: true,
-            rootElement: rootElement
+            rootElement: rootElement,
+            poll: true
         });
         return displayed[0];
     }
@@ -226,7 +256,8 @@ var protractor_sync;
             selector: selector,
             single: false,
             requireVisible: true,
-            rootElement: rootElement
+            rootElement: rootElement,
+            poll: true
         });
         return displayed;
     }
@@ -243,7 +274,8 @@ var protractor_sync;
             selector: selector,
             single: true,
             requireVisible: false,
-            rootElement: rootElement
+            rootElement: rootElement,
+            poll: true
         });
         return elements[0];
     }
@@ -260,18 +292,27 @@ var protractor_sync;
             selector: selector,
             single: false,
             requireVisible: false,
-            rootElement: rootElement
+            rootElement: rootElement,
+            poll: true
         });
         return elements;
     }
     function wrapElementFinder(elementFinder) {
-        //We have to patch individual ElementFinder instances instead of just updating the prototype because
-        //these methods are added to the ElementFinder instances explicitly and are not a part of the prototype.
-        patchWithExec(elementFinder, elementPatches);
-        //For the methods which don't return a value, we want to change the return value to allow chaining (field.clear().sendKeys())
-        _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], function (returnValue) {
-            return elementFinder;
-        });
+        if (!elementFinder.__psync_wrapped) {
+            //We have to patch individual ElementFinder instances instead of just updating the prototype because
+            //these methods are added to the ElementFinder instances explicitly and are not a part of the prototype.
+            patchWithExec(elementFinder, ELEMENT_PATCHES);
+            //For the methods which don't return a value, we want to change the return value to allow chaining (field.clear().sendKeys())
+            _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], function (returnValue) {
+                return elementFinder;
+            });
+            if (protractor_sync.autoReselectStaleElements) {
+                RETRY_ON_STALE.forEach(function (func) {
+                    elementFinder[func] = retryOnStale(elementFinder, func);
+                });
+            }
+            elementFinder.__psync_wrapped = true;
+        }
         return elementFinder;
     }
     function wrapElementFinderArray(elementFinders) {
@@ -310,6 +351,51 @@ var protractor_sync;
         elPrototype.assertElementDoesNotExist = function (selector) {
             return assertElementDoesNotExist(selector, this);
         };
+        elPrototype.getSelectionPath = function () {
+            var path = '';
+            var args = this.__psync_selection_args;
+            if (args) {
+                if (args.rootElement) {
+                    path += args.rootElement.getSelectionPath() + ' -> ';
+                }
+                if (args.selector) {
+                    path += args.selector;
+                }
+                else if (args.method) {
+                    path += args.method + '(' + (args.arg || '') + ')';
+                }
+                if (this.__psync_selection_ordinal > 0 || args.single === false) {
+                    path += '[' + this.__psync_selection_ordinal + ']';
+                }
+            }
+            return path;
+        };
+        elPrototype.reselect = function () {
+            var args = this.__psync_selection_args;
+            if (args) {
+                var elements;
+                if (args.selector) {
+                    console.log('(Protractor-sync): Re-selecting stale element: ' + this.getSelectionPath());
+                    elements = _getElements(args);
+                }
+                else if (args.method) {
+                    console.log('(Protractor-sync): Re-selecting stale element: ' + this.getSelectionPath());
+                    elements = args.rootElement[args.method](args.arg);
+                }
+                else {
+                    console.error('(Protractor-sync): Attempting to re-select stale element, but selection info is incomplete');
+                }
+                if (Array.isArray(elements)) {
+                    return elements[this.__psync_selection_ordinal];
+                }
+                else {
+                    return elements;
+                }
+            }
+            else {
+                console.error('(Protractor-sync): Attempting to re-select stale element, but selection info is missing');
+            }
+        };
         //Polled waiting
         elPrototype.waitUntil = function (condition) {
             var _this = this;
@@ -346,8 +432,15 @@ var protractor_sync;
                 }
             }, element.getWebElement(), method, arg);
             if (Array.isArray(result)) {
-                return result.map(function (webElement) {
-                    return ElementFinder.fromWebElement_(element.ptor_, webElement, method, arg);
+                return result.map(function (webElement, i) {
+                    var elementFinder = ElementFinder.fromWebElement_(element.ptor_, webElement, method, arg);
+                    elementFinder.__psync_selection_args = {
+                        rootElement: element,
+                        method: method,
+                        arg: arg
+                    };
+                    elementFinder.__psync_selection_ordinal = i;
+                    return elementFinder;
                 });
             }
             else {
@@ -487,6 +580,23 @@ var protractor_sync;
         else {
             return obj;
         }
+    }
+    function retryOnStale(obj, func) {
+        var original = obj[func];
+        return function attempt() {
+            try {
+                return original.apply(this, arguments);
+            }
+            catch (e) {
+                if (e.state === 'stale element reference') {
+                    var reselected = this.reselect();
+                    return reselected[func].apply(reselected, arguments);
+                }
+                else {
+                    throw e;
+                }
+            }
+        };
     }
     /**
      * Apply synchronous patches to protractor
