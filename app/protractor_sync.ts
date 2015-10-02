@@ -156,9 +156,11 @@ export module protractor_sync {
           resolveElementsCb(err);
         }));
       } catch (e) {
-        if (e.state === 'stale element reference' && args.rootElement) {
+        if (autoReselectStaleElements && e.state === 'stale element reference' && args.rootElement) {
           //Try with the new root element on the next poll
           args.rootElement = args.rootElement.reselect();
+        } else {
+          throw e;
         }
       }
 

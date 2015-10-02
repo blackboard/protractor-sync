@@ -163,9 +163,12 @@ var protractor_sync;
                 }));
             }
             catch (e) {
-                if (e.state === 'stale element reference' && args.rootElement) {
+                if (protractor_sync.autoReselectStaleElements && e.state === 'stale element reference' && args.rootElement) {
                     //Try with the new root element on the next poll
                     args.rootElement = args.rootElement.reselect();
+                }
+                else {
+                    throw e;
                 }
             }
             //Convert from an array of selenium web elements to an array of protractor element finders
