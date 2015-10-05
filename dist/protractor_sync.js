@@ -627,13 +627,14 @@ var protractor_sync;
                 }
             };
         }
-        return function () {
+        return function (options) {
             var SELECTOR_GLOBAL_SINGLE_ADVICE = 'Use element.findVisible() or element.findElement() instead.';
             var SELECTOR_GLOBAL_MULTI_ADVICE = 'Use element.findVisibles() or element.findElements() instead.';
             var SELECTOR_INSTANCE_SINGLE_ADVICE = 'Use instance.findVisible() or instance.findElement() instead';
             var SELECTOR_INSTANCE_MULTI_ADVICE = 'Use instance.findVisibles() or instance.findElements() instead.';
             var SLEEP_ADVICE = 'Use browser.waitFor(), element.waitUntil(), element.waitUntilRemove() etc. instead of browser.sleep().';
             var WAIT_ADVICE = 'Use browser.waitFor() instead.';
+            var EXPECT_ADVICE = 'Use polledExpect instead of expect.';
             disableMethod(browser, '$', SELECTOR_GLOBAL_SINGLE_ADVICE);
             disableMethod(browser, '$$', SELECTOR_GLOBAL_MULTI_ADVICE);
             disableMethod(browser, 'element', SELECTOR_GLOBAL_SINGLE_ADVICE);
@@ -651,6 +652,9 @@ var protractor_sync;
             disableMethod(browser, 'findElement', SELECTOR_GLOBAL_SINGLE_ADVICE);
             disableMethod(browser, 'findElements', SELECTOR_GLOBAL_MULTI_ADVICE);
             disableMethod(browser, 'sleep', SLEEP_ADVICE);
+            if (options && options.expect) {
+                disableMethod(global, 'expect', EXPECT_ADVICE);
+            }
             var LOCATOR_ADVICE = 'Use a css selector or by.model instead.';
             [
                 'binding',
