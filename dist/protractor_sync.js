@@ -771,7 +771,7 @@ var protractor_sync;
     global.polledExpect = polledExpect;
     /** This patch will force the expectation to block execution until it passes or throws an error. */
     function patchExpectation(expectation) {
-        var _waitingOnExpectation = false;
+        //jasmine.matchers contains all the matchers, like toEqual, toBeGreaterThan, etc.
         _patch(expectation, Object.keys(jasmine.matchers), function (result) {
             var flow = ab.getCurrentFlow();
             //Calling forceWait more than once seems to deadlock things

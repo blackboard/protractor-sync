@@ -601,9 +601,13 @@ describe('Protractor extensions', () => {
 
   describe('expect', () => {
     it('retries until the expectation passes', createTest(() => {
-      var counter = 0;
+      var counter = 1;
+      var expectation = protractorSync.polledExpect(() => 'test' + counter++);
 
-      protractorSync.polledExpect(() => 'test' + counter++).toEqual('test5');
+      spyOn(expectation, 'toEqual').and.callThrough();
+      expectation.toEqual('test5');
+
+      expect(expectation.toEqual.calls.count()).toEqual(5);
     }));
 
     it('is also available as a global variable', createTest(() => {
@@ -614,22 +618,41 @@ describe('Protractor extensions', () => {
 
     it('works with not', createTest(() => {
       var counter = 0;
+      var expectation = protractorSync.polledExpect(() => 'test' + counter++).not;
 
-      protractorSync.polledExpect(() => 'test' + counter++).not.toEqual('test0');
+      spyOn(expectation, 'toEqual').and.callThrough();
+      expectation.toEqual('test0');
+
+      expect(expectation.toEqual.calls.count()).toEqual(2);
     }));
 
     it('works with the toBeGreaterThan matcher', createTest(() => {
-      var counter = 0;
+      var counter = 1;
+      var expectation = protractorSync.polledExpect(() => counter++);
 
-      protractorSync.polledExpect(() => counter++).toBeGreaterThan(3);
+      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation.toBeGreaterThan(3);
+
+      expect(expectation.toBeGreaterThan.calls.count()).toEqual(4);
     }));
 
     it('works with multiple expectations', createTest(() => {
-      var counter = 0;
+      var counter = 1;
 
-      protractorSync.polledExpect(() => counter++).toBeGreaterThan(3);
-      protractorSync.polledExpect(() => counter++).toBeGreaterThan(7);
-      protractorSync.polledExpect(() => counter++).toBeGreaterThan(10);
+      var expectation = protractorSync.polledExpect(() => counter++);
+      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation.toBeGreaterThan(3);
+      expect(expectation.toBeGreaterThan.calls.count()).toEqual(4);
+
+      expectation = protractorSync.polledExpect(() => counter++);
+      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation.toBeGreaterThan(7);
+      expect(expectation.toBeGreaterThan.calls.count()).toEqual(4);
+
+      expectation = protractorSync.polledExpect(() => counter++);
+      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation.toBeGreaterThan(10);
+      expect(expectation.toBeGreaterThan.calls.count()).toEqual(3);
     }));
 
     it('times out', createTest(() => {
