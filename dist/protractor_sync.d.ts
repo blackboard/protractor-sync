@@ -9,7 +9,9 @@ declare module "protractor_sync" {
      * Apply synchronous patches to protractor
      */
     function patch(): void;
-    var disallowMethods: () => void;
+    var disallowMethods: (options?: {
+        expect: boolean;
+    }) => void;
     function injectjQuery(): void;
     function waitForNewWindow(action: Function, waitTimeMs?: number): void;
     function polledExpect(func: Function, args?: {
