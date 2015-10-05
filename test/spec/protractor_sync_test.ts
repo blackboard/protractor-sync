@@ -675,14 +675,26 @@ describe('Protractor extensions', () => {
       protractorSync.injectjQuery();
       appendTestArea();
 
-      browser.executeScript(() => {
-        setTimeout(function() {
+      var testArea = element.findElement('#' + TEST_AREA_ID);
+      var addClass = jasmine.createSpy('addClass').and.callFake(() => {
+        browser.executeScript(() => {
           (<any>window).jQuery('#protractor_sync-test-area').addClass('expect-test');
-        }, 500);
+        });
       });
 
-      var testArea = element.findElement('#' + TEST_AREA_ID);
-      protractorSync.polledExpect(() => testArea.hasClass('expect-test')).toEqual(true);
+      var classCheck = jasmine.createSpy('classCheck').and.callFake(() => {
+        var hasClass = testArea.hasClass('expect-test');
+        if (!hasClass) {
+          addClass();
+        }
+
+        return hasClass;
+      });
+
+      protractorSync.polledExpect(classCheck).toEqual(true);
+
+      expect(classCheck.calls.count()).toEqual(2);
+      expect(addClass.calls.count()).toEqual(1);
     }));
   });
 });
