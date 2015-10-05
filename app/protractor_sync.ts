@@ -14,6 +14,13 @@ export module protractor_sync {
   export var IMPLICIT_WAIT_MS = 5000;
   export var RETRY_INTERVAL = 10;
 
+  export var LARGE_BREAKPOINT_WIDTH = 1366;
+  export var MEDIUM_BREAKPOINT_WIDTH = 768;
+  export var SMALL_BREAKPOINT_WIDTH = 320;
+
+  export var DEFAULT_BREAKPOINT_WIDTH = LARGE_BREAKPOINT_WIDTH;
+  export var DEFAULT_BREAKPOINT_HEIGHT = 1024;
+
   export var autoReselectStaleElements = true;
 
   //Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
@@ -47,11 +54,9 @@ export module protractor_sync {
    * @param waitTimeMs Override the amount of time to wait before timing out
    * @returns {any} The last value the function returned, as long as it did not time out
    */
-  function _polledWait(
-    fn: () => { keepPolling: boolean; data: any; },
-    onTimeout?: (data: any) => void,
-    waitTimeMs?: number
-  ) {
+  function _polledWait(fn: () => { keepPolling: boolean; data: any; },
+                       onTimeout?: (data: any) => void,
+                       waitTimeMs?: number) {
     var startTime = new Date();
     var timeout = waitTimeMs != null ? waitTimeMs : IMPLICIT_WAIT_MS;
     var result: any;
@@ -89,15 +94,13 @@ export module protractor_sync {
    * @returns {protractor.ElementFinder[]}
    * @private
    */
-  function _getElements(
-    args: {
-      selector: any;
-      single: boolean;
-      requireVisible: boolean;
-      rootElement: protractor.ElementFinder;
-      poll: boolean
-    }
-  ) {
+  function _getElements(args: {
+    selector: any;
+    single: boolean;
+    requireVisible: boolean;
+    rootElement: protractor.ElementFinder;
+    poll: boolean
+  }) {
     function extractResult(elements: protractor.ElementFinder[]) {
       var filteredCount = elements && elements.length || 0;
 
@@ -367,11 +370,11 @@ export module protractor_sync {
     };
 
     //Add in assertElementDoesNotExist
-    elPrototype.assertElementDoesNotExist = function(selector: any) {
+    elPrototype.assertElementDoesNotExist = function (selector: any) {
       return assertElementDoesNotExist(selector, this);
     };
 
-    elPrototype.getSelectionPath = function() {
+    elPrototype.getSelectionPath = function () {
       var path = '';
       var args = this.__psync_selection_args;
       if (args) {
@@ -393,7 +396,7 @@ export module protractor_sync {
       return path;
     };
 
-    elPrototype.reselect = function() {
+    elPrototype.reselect = function () {
       var args = this.__psync_selection_args;
       if (args) {
         var elements: any;
@@ -748,13 +751,13 @@ export module protractor_sync {
         'tagName',
         'xpath'
       ].forEach(locator => {
-            disableMethod(by, locator, LOCATOR_ADVICE);
-          });
+        disableMethod(by, locator, LOCATOR_ADVICE);
+      });
     };
   })();
 
   export function injectjQuery() {
-    var jQuery = browser.executeScript(function() {
+    var jQuery = browser.executeScript(function () {
       return !!(<any>window).jQuery;
     });
 
@@ -789,4 +792,56 @@ export module protractor_sync {
     }, waitTimeMs);
   };
 
+  /**
+   * Takes a screenshot and saves a .png file in the configured screenshot directory.
+   *
+   * @param filename The name of the file to save
+   */
+  export function takeScreenshot(filename: string) {
+    var basePath = path.dirname(filename);
+    if (!fs.existsSync(basePath)) {
+      throw new Error('Error taking screenshot, output directory does not exist: ' + basePath);
+    }
+
+    if (!(/\.png$/i).test(filename)) {
+      filename += '.png';
+    }
+    browser.takeScreenshot().then(function (base64png: string) {
+      fs.writeFileSync(filename, base64png, 'base64');
+    });
+  }
+
+  function calculateDimension(dimension: number, window: number, viewport: number) {
+    return dimension + (window - viewport);
+  }
+
+  export function resizeViewport(size: { width?: number; height?: number; }, callback: Function) {
+    ab((flow) => {
+      var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({firstArgIsError: false})));
+      var viewportSize: any = browser.driver.executeScript(function () {
+        return {
+          height: window.document.documentElement.clientHeight,
+          width: window.document.documentElement.clientWidth
+        };
+      });
+
+      var calcWidth = (width: number) => calculateDimension(width, windowSize.width, viewportSize.width);
+      var calcHeight = (height: number) => calculateDimension(height, windowSize.height, viewportSize.height);
+
+      var width = windowSize.width;
+      var height = windowSize.height;
+
+      if (size) {
+        width = calcHeight(size.width || DEFAULT_BREAKPOINT_WIDTH);
+        height = calcHeight(size.height || DEFAULT_BREAKPOINT_HEIGHT);
+      } else if (windowSize.width < DEFAULT_BREAKPOINT_WIDTH) {
+        width = calcWidth(DEFAULT_BREAKPOINT_WIDTH);
+      } else {
+        // No size set and width is wider than the minimum.  We can return early without resizing the browser
+        return;
+      }
+
+      flow.sync(browser.manage().window().setSize(width, height).then(flow.add()));
+    }, callback);
+  }
 }

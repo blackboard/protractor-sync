@@ -5,6 +5,14 @@ declare module "protractor_sync" {
     var IMPLICIT_WAIT_MS: number;
     var RETRY_INTERVAL: number;
     var autoReselectStaleElements: boolean;
+
+    var LARGE_BREAKPOINT_WIDTH: number;
+    var MEDIUM_BREAKPOINT_WIDTH: number;
+    var SMALL_BREAKPOINT_WIDTH: number;
+
+    var DEFAULT_BREAKPOINT_WIDTH: number;
+    var DEFAULT_BREAKPOINT_HEIGHT: number;
+
     /**
      * Apply synchronous patches to protractor
      */
@@ -12,4 +20,7 @@ declare module "protractor_sync" {
     var disallowMethods: () => void;
     function injectjQuery(): void;
     function waitForNewWindow(action: Function, waitTimeMs?: number): void;
+
+    function takeScreenshot(filename: string): void;
+    function resizeViewport(size: { width?: number; height?: number; }, callback: Function): void;
 }
