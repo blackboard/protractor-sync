@@ -12,4 +12,7 @@ declare module "protractor_sync" {
     var disallowMethods: () => void;
     function injectjQuery(): void;
     function waitForNewWindow(action: Function, waitTimeMs?: number): void;
+    function polledExpect(func: Function, args?: {
+        timeoutMS?: number;
+    }): any;
 }
