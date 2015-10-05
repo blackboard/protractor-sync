@@ -22,7 +22,7 @@ describe('disallowed methods, including expect', () => {
       expect('test');
     } catch (e) {
       catchRan = true;
-      assert(e.message, 'expect() has been disabled in this project! Use polledExpect instead of expect.');
+      assert.equal(e.message, 'expect() has been disabled in this project! Use polledExpect instead of expect.');
     }
 
     assert(catchRan);
