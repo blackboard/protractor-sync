@@ -805,6 +805,8 @@ export module protractor_sync {
 
     var flow = ab.getCurrentFlow();
     var expectation: any;
+    var matcherCalled = false;
+    var originalContext = new Error(); //used to keep the original stack trace
 
     var options = {
       actual: func(),
@@ -854,8 +856,8 @@ export module protractor_sync {
       addExpectationResult: plainExpectation.addExpectationResult,
       util: plainExpectation.util
     });
-    patchExpectation(plainExpectation);
-    patchExpectation(notExpectation);
+    patchExpectation(plainExpectation, () => { matcherCalled = true; });
+    patchExpectation(notExpectation, () => { matcherCalled = true; });
 
     Object.defineProperty(plainExpectation, 'not', {
       get: function() {
@@ -866,6 +868,20 @@ export module protractor_sync {
     });
 
     expectation = plainExpectation;
+
+    setTimeout(() => {
+      if (!matcherCalled) {
+        try {
+          originalContext.message = 'polledExpect() was called without calling a matcher';
+          console.error((<any>originalContext).stack);
+        } finally {
+          //There's no way to fail the current test because the afterEach has already run by this point
+          //Exiting the process is the only way to guarantee a developer will notice the problem
+          process.exit(1);
+        }
+      }
+    });
+
     return plainExpectation;
   }
 
@@ -873,9 +889,11 @@ export module protractor_sync {
   global.polledExpect = polledExpect;
 
   /** This patch will force the expectation to block execution until it passes or throws an error. */
-  function patchExpectation(expectation: any) {
+  function patchExpectation(expectation: any, post: Function) {
     //jasmine.matchers contains all the matchers, like toEqual, toBeGreaterThan, etc.
     _patch(expectation, Object.keys((<any>jasmine).matchers), (result: any) => {
+      post();
+
       var flow = ab.getCurrentFlow();
 
       //Calling forceWait more than once seems to deadlock things

@@ -715,6 +715,8 @@ var protractor_sync;
         var startTime = new Date().getTime();
         var flow = ab.getCurrentFlow();
         var expectation;
+        var matcherCalled = false;
+        var originalContext = new Error(); //used to keep the original stack trace
         var options = {
             actual: func(),
             addExpectationResult: function (passed, info) {
@@ -759,8 +761,12 @@ var protractor_sync;
             addExpectationResult: plainExpectation.addExpectationResult,
             util: plainExpectation.util
         });
-        patchExpectation(plainExpectation);
-        patchExpectation(notExpectation);
+        patchExpectation(plainExpectation, function () {
+            matcherCalled = true;
+        });
+        patchExpectation(notExpectation, function () {
+            matcherCalled = true;
+        });
         Object.defineProperty(plainExpectation, 'not', {
             get: function () {
                 expectation = notExpectation;
@@ -768,15 +774,29 @@ var protractor_sync;
             }
         });
         expectation = plainExpectation;
+        setTimeout(function () {
+            if (!matcherCalled) {
+                try {
+                    originalContext.message = 'polledExpect() was called without calling a matcher';
+                    console.error(originalContext.stack);
+                }
+                finally {
+                    //There's no way to fail the current test because the afterEach has already run by this point
+                    //Exiting the process is the only way to guarantee a developer will notice the problem
+                    process.exit(1);
+                }
+            }
+        });
         return plainExpectation;
     }
     protractor_sync.polledExpect = polledExpect;
     //Expose global variable so callers can call "polledExpect" similar to just calling "expect"
     global.polledExpect = polledExpect;
     /** This patch will force the expectation to block execution until it passes or throws an error. */
-    function patchExpectation(expectation) {
+    function patchExpectation(expectation, post) {
         //jasmine.matchers contains all the matchers, like toEqual, toBeGreaterThan, etc.
         _patch(expectation, Object.keys(jasmine.matchers), function (result) {
+            post();
             var flow = ab.getCurrentFlow();
             //Calling forceWait more than once seems to deadlock things
             if (!flow._forceWait) {

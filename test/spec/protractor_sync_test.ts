@@ -696,5 +696,24 @@ describe('Protractor extensions', () => {
       expect(classCheck.calls.count()).toEqual(2);
       expect(addClass.calls.count()).toEqual(1);
     }));
+
+    it('errors if no matcher is called', createTest(() => {
+      try {
+        jasmine.clock().install();
+
+        spyOn(console, 'error');
+        spyOn(process, 'exit');
+
+        polledExpect(() => 'something');
+        jasmine.clock().tick(1);
+
+        expect((<any>console.error).calls.count()).toEqual(1);
+        expect((<any>console.error).calls.argsFor(0)[0]).toContain('polledExpect() was called without calling a matcher');
+        expect((<any>process.exit).calls.count()).toEqual(1);
+        expect((<any>process.exit).calls.argsFor(0)[0]).toEqual(1);
+      } finally {
+        jasmine.clock().uninstall();
+      }
+    }));
   });
 });
