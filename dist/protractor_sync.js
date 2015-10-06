@@ -776,15 +776,11 @@ var protractor_sync;
         expectation = plainExpectation;
         setTimeout(function () {
             if (!matcherCalled) {
-                try {
-                    originalContext.message = 'polledExpect() was called without calling a matcher';
-                    console.error(originalContext.stack);
-                }
-                finally {
-                    //There's no way to fail the current test because the afterEach has already run by this point
-                    //Exiting the process is the only way to guarantee a developer will notice the problem
-                    process.exit(1);
-                }
+                originalContext.message = 'polledExpect() was called without calling a matcher';
+                console.error(originalContext.stack);
+                //There's no way to fail the current test because the afterEach has already run by this point
+                //Exiting the process is the only way to guarantee a developer will notice the problem
+                process.exit(1);
             }
         });
         return plainExpectation;
