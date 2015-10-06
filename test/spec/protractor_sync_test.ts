@@ -598,4 +598,122 @@ describe('Protractor extensions', () => {
       expect(el.hasClass('second')).toEqual(true);
     }));
   });
+
+  describe('expect', () => {
+    it('retries until the expectation passes', createTest(() => {
+      var counter = 1;
+      var expectation = protractorSync.polledExpect(() => 'test' + counter++);
+
+      spyOn(expectation, 'toEqual').and.callThrough();
+      expectation.toEqual('test5');
+
+      expect(expectation.toEqual.calls.count()).toEqual(5);
+    }));
+
+    it('is also available as a global variable', createTest(() => {
+      var counter = 0;
+
+      polledExpect(() => 'test' + counter++).toEqual('test5');
+    }));
+
+    it('works with not', createTest(() => {
+      var counter = 0;
+      var expectation = protractorSync.polledExpect(() => 'test' + counter++).not;
+
+      spyOn(expectation, 'toEqual').and.callThrough();
+      expectation.toEqual('test0');
+
+      expect(expectation.toEqual.calls.count()).toEqual(2);
+    }));
+
+    it('works with the toBeGreaterThan matcher', createTest(() => {
+      var counter = 1;
+      var expectation = protractorSync.polledExpect(() => counter++);
+
+      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation.toBeGreaterThan(3);
+
+      expect(expectation.toBeGreaterThan.calls.count()).toEqual(4);
+    }));
+
+    it('works with multiple expectations', createTest(() => {
+      var counter = 1;
+
+      var expectation = protractorSync.polledExpect(() => counter++);
+      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation.toBeGreaterThan(3);
+      expect(expectation.toBeGreaterThan.calls.count()).toEqual(4);
+
+      expectation = protractorSync.polledExpect(() => counter++);
+      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation.toBeGreaterThan(7);
+      expect(expectation.toBeGreaterThan.calls.count()).toEqual(4);
+
+      expectation = protractorSync.polledExpect(() => counter++);
+      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation.toBeGreaterThan(10);
+      expect(expectation.toBeGreaterThan.calls.count()).toEqual(3);
+    }));
+
+    it('times out', createTest(() => {
+      var counter = 0;
+      var catchRan = false;
+
+      //Can't use expect().toThrow() to check this because it doesn't run from the Fiber when patched by jasminewd
+      try {
+        protractorSync.polledExpect(() => counter++, { timeoutMS: 100 }).toBeLessThan(0);
+      } catch (e) {
+        catchRan = true;
+        expect(e.message).toMatch(/Expected \d+ to be less than 0\./);
+      }
+
+      expect(catchRan).toEqual(true);
+    }));
+
+    it('works in conjunction with element finders', createTest(() => {
+      browser.get('data:,');
+      protractorSync.injectjQuery();
+      appendTestArea();
+
+      var testArea = element.findElement('#' + TEST_AREA_ID);
+      var addClass = jasmine.createSpy('addClass').and.callFake(() => {
+        browser.executeScript(() => {
+          (<any>window).jQuery('#protractor_sync-test-area').addClass('expect-test');
+        });
+      });
+
+      var classCheck = jasmine.createSpy('classCheck').and.callFake(() => {
+        var hasClass = testArea.hasClass('expect-test');
+        if (!hasClass) {
+          addClass();
+        }
+
+        return hasClass;
+      });
+
+      protractorSync.polledExpect(classCheck).toEqual(true);
+
+      expect(classCheck.calls.count()).toEqual(2);
+      expect(addClass.calls.count()).toEqual(1);
+    }));
+
+    it('errors if no matcher is called', createTest(() => {
+      try {
+        jasmine.clock().install();
+
+        spyOn(console, 'error');
+        spyOn(process, 'exit');
+
+        polledExpect(() => 'something');
+        jasmine.clock().tick(1);
+
+        expect((<any>console.error).calls.count()).toEqual(1);
+        expect((<any>console.error).calls.argsFor(0)[0]).toContain('polledExpect() was called without calling a matcher');
+        expect((<any>process.exit).calls.count()).toEqual(1);
+        expect((<any>process.exit).calls.argsFor(0)[0]).toEqual(1);
+      } finally {
+        jasmine.clock().uninstall();
+      }
+    }));
+  });
 });

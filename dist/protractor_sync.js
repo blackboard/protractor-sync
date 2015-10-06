@@ -12,6 +12,11 @@ var protractor_sync;
     'use strict';
     protractor_sync.IMPLICIT_WAIT_MS = 5000;
     protractor_sync.RETRY_INTERVAL = 10;
+    protractor_sync.LARGE_BREAKPOINT_WIDTH = 1366;
+    protractor_sync.MEDIUM_BREAKPOINT_WIDTH = 768;
+    protractor_sync.SMALL_BREAKPOINT_WIDTH = 320;
+    protractor_sync.DEFAULT_BREAKPOINT_WIDTH = protractor_sync.LARGE_BREAKPOINT_WIDTH;
+    protractor_sync.DEFAULT_BREAKPOINT_HEIGHT = 1024;
     protractor_sync.autoReselectStaleElements = true;
     //Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
     //The prototypes can be used to augment all instances of ElementFinder and ElementArrayFinder.
@@ -627,13 +632,14 @@ var protractor_sync;
                 }
             };
         }
-        return function () {
+        return function (options) {
             var SELECTOR_GLOBAL_SINGLE_ADVICE = 'Use element.findVisible() or element.findElement() instead.';
             var SELECTOR_GLOBAL_MULTI_ADVICE = 'Use element.findVisibles() or element.findElements() instead.';
             var SELECTOR_INSTANCE_SINGLE_ADVICE = 'Use instance.findVisible() or instance.findElement() instead';
             var SELECTOR_INSTANCE_MULTI_ADVICE = 'Use instance.findVisibles() or instance.findElements() instead.';
             var SLEEP_ADVICE = 'Use browser.waitFor(), element.waitUntil(), element.waitUntilRemove() etc. instead of browser.sleep().';
             var WAIT_ADVICE = 'Use browser.waitFor() instead.';
+            var EXPECT_ADVICE = 'Use polledExpect instead of expect.';
             disableMethod(browser, '$', SELECTOR_GLOBAL_SINGLE_ADVICE);
             disableMethod(browser, '$$', SELECTOR_GLOBAL_MULTI_ADVICE);
             disableMethod(browser, 'element', SELECTOR_GLOBAL_SINGLE_ADVICE);
@@ -651,6 +657,9 @@ var protractor_sync;
             disableMethod(browser, 'findElement', SELECTOR_GLOBAL_SINGLE_ADVICE);
             disableMethod(browser, 'findElements', SELECTOR_GLOBAL_MULTI_ADVICE);
             disableMethod(browser, 'sleep', SLEEP_ADVICE);
+            if (options && options.expect) {
+                disableMethod(global, 'expect', EXPECT_ADVICE);
+            }
             var LOCATOR_ADVICE = 'Use a css selector or by.model instead.';
             [
                 'binding',
@@ -702,6 +711,149 @@ var protractor_sync;
         }, waitTimeMs);
     }
     protractor_sync.waitForNewWindow = waitForNewWindow;
-    ;
+    function polledExpect(func, args) {
+        var jasmine = global.jasmine;
+        if (jasmine == null) {
+            throw new Error('jasmine is required to use polledExpect');
+        }
+        var timeout = args && args.timeoutMS || protractor_sync.IMPLICIT_WAIT_MS;
+        var startTime = new Date().getTime();
+        var flow = ab.getCurrentFlow();
+        var expectation;
+        var matcherCalled = false;
+        var originalContext = new Error(); //used to keep the original stack trace
+        var options = {
+            actual: func(),
+            addExpectationResult: function (passed, info) {
+                var recheck = function () {
+                    expectation.actual = func();
+                    expectation[info.matcherName](info.expected);
+                };
+                if (!passed) {
+                    if (new Date().getTime() - startTime <= timeout) {
+                        //We have to do some funny things with the flow control because jasminewd (included w/ protractor)
+                        //patches expect and makes it async (and therefore not execute in the current Fiber).
+                        //We use flow.queue to get the recheck code to execute under the Fiber.
+                        //We patch the jasmine matchers (like .toEqual, .toBeGreaterThan) to wait for the verification to finish
+                        //before allowing the code to continue.
+                        flow.queue(function (callback) {
+                            flow.sync(setTimeout(flow.add(), protractor_sync.RETRY_INTERVAL));
+                            recheck();
+                            callback();
+                        });
+                    }
+                    else {
+                        //If we throw the error directly the caller can't catch it b/c this is a different context
+                        //However, returning it to the flow.queue will throw it on the Fiber running the test
+                        flow.queue(function (callback) {
+                            return callback(new Error(info.message));
+                        });
+                        flow.doneAdding(); //asyncblock will wait at flow.forceWait() until this is called
+                    }
+                }
+                else {
+                    flow.doneAdding(); //asyncblock will wait at flow.forceWait() until this is called
+                }
+            },
+            util: jasmine.matchersUtil
+        };
+        //We create both the normal expectation class, and the one that will be used if the user uses ".not"
+        //We pre-create them both here so the proper one can be referenced when rerunning the expectation later
+        var plainExpectation = new jasmine.Expectation(options);
+        var notExpectation = new jasmine.Expectation({
+            isNot: true,
+            actual: plainExpectation.actual,
+            addExpectationResult: plainExpectation.addExpectationResult,
+            util: plainExpectation.util
+        });
+        patchExpectation(plainExpectation, function () {
+            matcherCalled = true;
+        });
+        patchExpectation(notExpectation, function () {
+            matcherCalled = true;
+        });
+        Object.defineProperty(plainExpectation, 'not', {
+            get: function () {
+                expectation = notExpectation;
+                return notExpectation;
+            }
+        });
+        expectation = plainExpectation;
+        setTimeout(function () {
+            if (!matcherCalled) {
+                originalContext.message = 'polledExpect() was called without calling a matcher';
+                console.error(originalContext.stack);
+                //There's no way to fail the current test because the afterEach has already run by this point
+                //Exiting the process is the only way to guarantee a developer will notice the problem
+                process.exit(1);
+            }
+        });
+        return plainExpectation;
+    }
+    protractor_sync.polledExpect = polledExpect;
+    //Expose global variable so callers can call "polledExpect" similar to just calling "expect"
+    global.polledExpect = polledExpect;
+    /** This patch will force the expectation to block execution until it passes or throws an error. */
+    function patchExpectation(expectation, post) {
+        //jasmine.matchers contains all the matchers, like toEqual, toBeGreaterThan, etc.
+        _patch(expectation, Object.keys(jasmine.matchers), function (result) {
+            post();
+            var flow = ab.getCurrentFlow();
+            //Calling forceWait more than once seems to deadlock things
+            if (!flow._forceWait) {
+                flow.forceWait();
+            }
+            return result;
+        });
+    }
+    /**
+     * Takes a screenshot and saves a .png file in the configured screenshot directory.
+     *
+     * @param filename The name of the file to save
+     */
+    function takeScreenshot(filename) {
+        var basePath = path.dirname(filename);
+        if (!fs.existsSync(basePath)) {
+            throw new Error('Error taking screenshot, output directory does not exist: ' + basePath);
+        }
+        if (!(/\.png$/i).test(filename)) {
+            filename += '.png';
+        }
+        browser.takeScreenshot().then(function (base64png) {
+            fs.writeFileSync(filename, base64png, 'base64');
+        });
+    }
+    protractor_sync.takeScreenshot = takeScreenshot;
+    function calculateDimension(dimension, window, viewport) {
+        return dimension + (window - viewport);
+    }
+    function resizeViewport(size, callback) {
+        ab(function (flow) {
+            var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({ firstArgIsError: false })));
+            var viewportSize = browser.driver.executeScript(function () {
+                return {
+                    height: window.document.documentElement.clientHeight,
+                    width: window.document.documentElement.clientWidth
+                };
+            });
+            var calcWidth = function (width) { return calculateDimension(width, windowSize.width, viewportSize.width); };
+            var calcHeight = function (height) { return calculateDimension(height, windowSize.height, viewportSize.height); };
+            var width = windowSize.width;
+            var height = windowSize.height;
+            if (size) {
+                width = calcHeight(size.width || protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
+                height = calcHeight(size.height || protractor_sync.DEFAULT_BREAKPOINT_HEIGHT);
+            }
+            else if (windowSize.width < protractor_sync.DEFAULT_BREAKPOINT_WIDTH) {
+                width = calcWidth(protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
+            }
+            else {
+                // No size set and width is wider than the minimum.  We can return early without resizing the browser
+                return;
+            }
+            flow.sync(browser.manage().window().setSize(width, height).then(flow.add()));
+        }, callback);
+    }
+    protractor_sync.resizeViewport = resizeViewport;
 })(protractor_sync = exports.protractor_sync || (exports.protractor_sync = {}));
 //# sourceMappingURL=protractor_sync.js.map
