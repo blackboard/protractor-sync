@@ -1,10 +1,12 @@
 /// <reference path='../node_modules/node-shared-typescript-defs/angular-protractor-sync/angular-protractor-sync.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/asyncblock/asyncblock.d.ts'/>
+/// <reference path='../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/node/node.d.ts'/>
 /* tslint:disable: no-var-requires no-eval */
-var ab = require('asyncblock');
 var fs = require('fs');
 var path = require('path');
+var ab = require('asyncblock');
+var mkdirp = require('mkdirp');
 var webdriver = require('grunt-protractor-runner/node_modules/protractor/node_modules/selenium-webdriver');
 'use strict';
 var protractor_sync;
@@ -12,6 +14,11 @@ var protractor_sync;
     'use strict';
     protractor_sync.IMPLICIT_WAIT_MS = 5000;
     protractor_sync.RETRY_INTERVAL = 10;
+    protractor_sync.LARGE_BREAKPOINT_WIDTH = 1366;
+    protractor_sync.MEDIUM_BREAKPOINT_WIDTH = 768;
+    protractor_sync.SMALL_BREAKPOINT_WIDTH = 320;
+    protractor_sync.DEFAULT_BREAKPOINT_WIDTH = protractor_sync.LARGE_BREAKPOINT_WIDTH;
+    protractor_sync.DEFAULT_BREAKPOINT_HEIGHT = 1024;
     protractor_sync.autoReselectStaleElements = true;
     //Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
     //The prototypes can be used to augment all instances of ElementFinder and ElementArrayFinder.
@@ -801,5 +808,57 @@ var protractor_sync;
             return result;
         });
     }
+    /**
+     * Takes a screenshot and saves a .png file in the configured screenshot directory.
+     *
+     * @param filename The name of the file to save
+     */
+    function takeScreenshot(filename, callback) {
+        var basePath = path.dirname(filename);
+        if (!fs.existsSync(basePath)) {
+            mkdirp.sync(basePath);
+        }
+        if (!(/\.png$/i).test(filename)) {
+            filename += '.png';
+        }
+        browser.takeScreenshot().then(function (base64png) {
+            fs.writeFileSync(filename, base64png, 'base64');
+            if (callback) {
+                return callback();
+            }
+        });
+    }
+    protractor_sync.takeScreenshot = takeScreenshot;
+    function calculateDimension(dimension, window, viewport) {
+        return dimension + (window - viewport);
+    }
+    function resizeViewport(size, callback) {
+        ab(function (flow) {
+            var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({ firstArgIsError: false })));
+            var viewportSize = browser.driver.executeScript(function () {
+                return {
+                    height: window.document.documentElement.clientHeight,
+                    width: window.document.documentElement.clientWidth
+                };
+            });
+            var calcWidth = function (width) { return calculateDimension(width, windowSize.width, viewportSize.width); };
+            var calcHeight = function (height) { return calculateDimension(height, windowSize.height, viewportSize.height); };
+            var width = windowSize.width;
+            var height = windowSize.height;
+            if (size) {
+                width = calcWidth(size.width || protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
+                height = calcHeight(size.height || protractor_sync.DEFAULT_BREAKPOINT_HEIGHT);
+            }
+            else if (windowSize.width < protractor_sync.DEFAULT_BREAKPOINT_WIDTH) {
+                width = calcWidth(protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
+            }
+            else {
+                // No size set and width is wider than the minimum.  We can return early without resizing the browser
+                return;
+            }
+            flow.sync(browser.manage().window().setSize(width, height).then(flow.add()));
+        }, callback);
+    }
+    protractor_sync.resizeViewport = resizeViewport;
 })(protractor_sync = exports.protractor_sync || (exports.protractor_sync = {}));
 //# sourceMappingURL=protractor_sync.js.map
