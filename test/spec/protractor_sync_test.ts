@@ -1,5 +1,10 @@
 /// <reference path='../../node_modules/node-shared-typescript-defs/jasmine/jasmine.d.ts'/>
+/// <reference path='../../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
+import fs = require('fs');
+
 import ab = require('asyncblock');
+import mkdirp = require('mkdirp');
+
 import _protractorSync = require('../../app/protractor_sync');
 'use strict';
 
@@ -9,6 +14,7 @@ protractorSync.patch();
 protractorSync.disallowMethods();
 
 var TEST_AREA_ID = 'protractor_sync-test-area';
+var PNG_HEADER_BASE_64 = 'iVBORw0KGgo';
 
 interface IAppendTestAreaOptions {
   style?: { [name: string]: string; };
@@ -714,6 +720,71 @@ describe('Protractor extensions', () => {
       } finally {
         jasmine.clock().uninstall();
       }
+    }));
+  });
+
+  describe('Screenshots', () => {
+    it('takes a screenshot', createTest(() => {
+      spyOn(fs, 'writeFileSync');
+      spyOn(fs, 'existsSync').and.returnValue(true);
+
+      browser.get('data:,');
+      var flow = ab.getCurrentFlow();
+      flow.sync(protractorSync.takeScreenshot('test', flow.add()));
+
+      expect((<any>fs.writeFileSync).calls.count()).toEqual(1);
+      expect((<any>fs.writeFileSync).calls.argsFor(0)[0]).toEqual('test.png');
+      expect((<any>fs.writeFileSync).calls.argsFor(0)[1].slice(0, PNG_HEADER_BASE_64.length)).toEqual(PNG_HEADER_BASE_64);
+      expect((<any>fs.writeFileSync).calls.argsFor(0)[2]).toEqual('base64');
+    }));
+
+    it ('creates the screenshot dir if it doesn\'t exist', createTest(() => {
+      spyOn(mkdirp, 'sync');
+      spyOn(fs, 'writeFileSync');
+      spyOn(fs, 'existsSync').and.returnValue(false);
+
+      browser.get('data:,');
+      protractorSync.takeScreenshot('test/path');
+
+      expect((<any>mkdirp.sync).calls.count()).toEqual(1);
+      expect((<any>mkdirp.sync).calls.argsFor(0)[0]).toEqual('test');
+    }));
+  });
+
+  describe('Window size', () => {
+    it('resizes the window', createTest((done: Function) => {
+      browser.get('data:,');
+      var viewportSize: any = browser.driver.executeScript(function () {
+        return {
+          height: window.document.documentElement.clientHeight,
+          width: window.document.documentElement.clientWidth
+        };
+      });
+
+      var flow = ab.getCurrentFlow();
+      var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({firstArgIsError: false})));
+
+      flow.sync(protractorSync.resizeViewport({ width: 400, height: 200 }, flow.add()));
+      var newSize: any = browser.driver.executeScript(function () {
+        return {
+          height: window.document.documentElement.clientHeight,
+          width: window.document.documentElement.clientWidth
+        };
+      });
+
+      expect(newSize.width).toEqual(400);
+      expect(newSize.height).toEqual(200);
+
+      flow.sync(protractorSync.resizeViewport(viewportSize, flow.add()));
+      newSize = browser.driver.executeScript(function () {
+        return {
+          height: window.document.documentElement.clientHeight,
+          width: window.document.documentElement.clientWidth
+        };
+      });
+
+      expect(newSize.width).toEqual(viewportSize.width);
+      expect(newSize.height).toEqual(viewportSize.height);
     }));
   });
 });

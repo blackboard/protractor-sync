@@ -1,5 +1,6 @@
 /// <reference path="../../../node_modules/node-shared-typescript-defs/angular-protractor-sync/angular-protractor-sync.d.ts" />
 /// <reference path="../../../node_modules/node-shared-typescript-defs/asyncblock/asyncblock.d.ts" />
+/// <reference path="../../../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts" />
 /// <reference path="../../../node_modules/node-shared-typescript-defs/node/node.d.ts" />
 declare module "protractor_sync" {
     var IMPLICIT_WAIT_MS: number;
@@ -27,7 +28,7 @@ declare module "protractor_sync" {
      *
      * @param filename The name of the file to save
      */
-    function takeScreenshot(filename: string): void;
+    function takeScreenshot(filename: string, callback?: Function): void;
     function resizeViewport(size: {
         width?: number;
         height?: number;

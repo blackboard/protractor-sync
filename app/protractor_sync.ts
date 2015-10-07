@@ -1,10 +1,14 @@
 /// <reference path='../node_modules/node-shared-typescript-defs/angular-protractor-sync/angular-protractor-sync.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/asyncblock/asyncblock.d.ts'/>
+/// <reference path='../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/node/node.d.ts'/>
 /* tslint:disable: no-var-requires no-eval */
-import ab = require('asyncblock');
 import fs = require('fs');
 import path = require('path');
+
+import ab = require('asyncblock');
+import mkdirp = require('mkdirp');
+
 import baseDir = require('../base_dir');
 var webdriver = require('grunt-protractor-runner/node_modules/protractor/node_modules/selenium-webdriver');
 'use strict';
@@ -915,10 +919,10 @@ export module protractor_sync {
    *
    * @param filename The name of the file to save
    */
-  export function takeScreenshot(filename: string) {
+  export function takeScreenshot(filename: string, callback?: Function) {
     var basePath = path.dirname(filename);
     if (!fs.existsSync(basePath)) {
-      throw new Error('Error taking screenshot, output directory does not exist: ' + basePath);
+      mkdirp.sync(basePath);
     }
 
     if (!(/\.png$/i).test(filename)) {
@@ -926,6 +930,9 @@ export module protractor_sync {
     }
     browser.takeScreenshot().then(function (base64png: string) {
       fs.writeFileSync(filename, base64png, 'base64');
+      if (callback) {
+        return callback();
+      }
     });
   }
 
@@ -950,7 +957,7 @@ export module protractor_sync {
       var height = windowSize.height;
 
       if (size) {
-        width = calcHeight(size.width || DEFAULT_BREAKPOINT_WIDTH);
+        width = calcWidth(size.width || DEFAULT_BREAKPOINT_WIDTH);
         height = calcHeight(size.height || DEFAULT_BREAKPOINT_HEIGHT);
       } else if (windowSize.width < DEFAULT_BREAKPOINT_WIDTH) {
         width = calcWidth(DEFAULT_BREAKPOINT_WIDTH);

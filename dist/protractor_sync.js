@@ -1,10 +1,12 @@
 /// <reference path='../node_modules/node-shared-typescript-defs/angular-protractor-sync/angular-protractor-sync.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/asyncblock/asyncblock.d.ts'/>
+/// <reference path='../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/node/node.d.ts'/>
 /* tslint:disable: no-var-requires no-eval */
-var ab = require('asyncblock');
 var fs = require('fs');
 var path = require('path');
+var ab = require('asyncblock');
+var mkdirp = require('mkdirp');
 var webdriver = require('grunt-protractor-runner/node_modules/protractor/node_modules/selenium-webdriver');
 'use strict';
 var protractor_sync;
@@ -811,16 +813,19 @@ var protractor_sync;
      *
      * @param filename The name of the file to save
      */
-    function takeScreenshot(filename) {
+    function takeScreenshot(filename, callback) {
         var basePath = path.dirname(filename);
         if (!fs.existsSync(basePath)) {
-            throw new Error('Error taking screenshot, output directory does not exist: ' + basePath);
+            mkdirp.sync(basePath);
         }
         if (!(/\.png$/i).test(filename)) {
             filename += '.png';
         }
         browser.takeScreenshot().then(function (base64png) {
             fs.writeFileSync(filename, base64png, 'base64');
+            if (callback) {
+                return callback();
+            }
         });
     }
     protractor_sync.takeScreenshot = takeScreenshot;
@@ -841,7 +846,7 @@ var protractor_sync;
             var width = windowSize.width;
             var height = windowSize.height;
             if (size) {
-                width = calcHeight(size.width || protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
+                width = calcWidth(size.width || protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
                 height = calcHeight(size.height || protractor_sync.DEFAULT_BREAKPOINT_HEIGHT);
             }
             else if (windowSize.width < protractor_sync.DEFAULT_BREAKPOINT_WIDTH) {
