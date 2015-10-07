@@ -584,6 +584,10 @@ export module protractor_sync {
   function patchBrowser() {
     patchWithExec(browser, ['getAllWindowHandles']);
     patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close']);
+    patchWithExec(
+      Object.getPrototypeOf(browser.manage()),
+      ['addCookie', 'deleteAllCookies', 'deleteCookie', 'getCookies', 'getCookie']
+    );
 
     var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
     patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
