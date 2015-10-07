@@ -54,9 +54,11 @@ export module protractor_sync {
    * @param waitTimeMs Override the amount of time to wait before timing out
    * @returns {any} The last value the function returned, as long as it did not time out
    */
-  function _polledWait(fn: () => { keepPolling: boolean; data: any; },
-                       onTimeout?: (data: any) => void,
-                       waitTimeMs?: number) {
+  function _polledWait(
+    fn: () => { keepPolling: boolean; data: any; },
+    onTimeout?: (data: any) => void,
+    waitTimeMs?: number
+  ) {
     var startTime = new Date();
     var timeout = waitTimeMs != null ? waitTimeMs : IMPLICIT_WAIT_MS;
     var result: any;
@@ -94,13 +96,15 @@ export module protractor_sync {
    * @returns {protractor.ElementFinder[]}
    * @private
    */
-  function _getElements(args: {
-    selector: any;
-    single: boolean;
-    requireVisible: boolean;
-    rootElement: protractor.ElementFinder;
-    poll: boolean
-  }) {
+  function _getElements(
+    args: {
+      selector: any;
+      single: boolean;
+      requireVisible: boolean;
+      rootElement: protractor.ElementFinder;
+      poll: boolean
+    }
+  ) {
     function extractResult(elements: protractor.ElementFinder[]) {
       var filteredCount = elements && elements.length || 0;
 
@@ -370,11 +374,11 @@ export module protractor_sync {
     };
 
     //Add in assertElementDoesNotExist
-    elPrototype.assertElementDoesNotExist = function (selector: any) {
+    elPrototype.assertElementDoesNotExist = function(selector: any) {
       return assertElementDoesNotExist(selector, this);
     };
 
-    elPrototype.getSelectionPath = function () {
+    elPrototype.getSelectionPath = function() {
       var path = '';
       var args = this.__psync_selection_args;
       if (args) {
@@ -396,7 +400,7 @@ export module protractor_sync {
       return path;
     };
 
-    elPrototype.reselect = function () {
+    elPrototype.reselect = function() {
       var args = this.__psync_selection_args;
       if (args) {
         var elements: any;
@@ -762,7 +766,7 @@ export module protractor_sync {
   })();
 
   export function injectjQuery() {
-    var jQuery = browser.executeScript(function () {
+    var jQuery = browser.executeScript(function() {
       return !!(<any>window).jQuery;
     });
 
