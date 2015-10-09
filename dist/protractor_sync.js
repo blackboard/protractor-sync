@@ -330,9 +330,12 @@ var protractor_sync;
      * Augments ElementFinder and ElementArrayFinder "types" with synchronous extensions
      */
     function patchElementFinder() {
-        _patch(ElementFinder, ['fromWebElement_'], function (returnValue) {
-            return wrapElementFinder(returnValue);
-        });
+        if (!ElementFinder.__psync_patched) {
+            _patch(ElementFinder, ['fromWebElement_'], function (returnValue) {
+                return wrapElementFinder(returnValue);
+            });
+            ElementFinder.__psync_patched = true;
+        }
         //Add exec functions to ElementFinder and ElementArrayFinder, which can be used to resolve the elements synchronously
         elPrototype.exec = function () {
             return exec(this);
@@ -523,25 +526,32 @@ var protractor_sync;
         patchBrowser();
     }
     function patchBrowser() {
-        patchWithExec(browser, ['getAllWindowHandles']);
-        patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close']);
-        patchWithExec(Object.getPrototypeOf(browser.manage()), ['addCookie', 'deleteAllCookies', 'deleteCookie', 'getCookies', 'getCookie']);
-        var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
-        patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
-        browser.waitFor = function (condition, waitTimeMs) {
-            _polledWait(function () {
-                return { data: null, keepPolling: !condition() };
-            }, null, waitTimeMs);
-        };
-        var PAUSE_DEBUGGER_DELAY_MS = 500;
-        _patch(browser, ['pause', 'debugger'], function (returnValue) {
-            var flow = ab.getCurrentFlow();
-            if (flow) {
-                //Sometimes pause and debugger don't work without a delay before executing the next command
-                flow.sync(setTimeout(flow.add(), PAUSE_DEBUGGER_DELAY_MS));
-            }
-            return returnValue;
-        });
+        if (!browser.__psync_patched) {
+            patchWithExec(browser, ['getAllWindowHandles']);
+            patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close', 'quit']);
+            var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
+            patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
+            browser.waitFor = function (condition, waitTimeMs) {
+                _polledWait(function () {
+                    return { data: null, keepPolling: !condition() };
+                }, null, waitTimeMs);
+            };
+            var PAUSE_DEBUGGER_DELAY_MS = 500;
+            _patch(browser, ['pause', 'debugger'], function (returnValue) {
+                var flow = ab.getCurrentFlow();
+                if (flow) {
+                    //Sometimes pause and debugger don't work without a delay before executing the next command
+                    flow.sync(setTimeout(flow.add(), PAUSE_DEBUGGER_DELAY_MS));
+                }
+                return returnValue;
+            });
+            browser.__psync_patched = true;
+        }
+        var managePrototype = Object.getPrototypeOf(browser.manage());
+        if (!managePrototype.__psync_patched) {
+            patchWithExec(managePrototype, ['addCookie', 'deleteAllCookies', 'deleteCookie', 'getCookies', 'getCookie']);
+            managePrototype.__psync_patched = true;
+        }
     }
     function _patch(obj, methods, post) {
         var patches = Object.create(null);

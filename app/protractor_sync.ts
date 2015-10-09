@@ -346,9 +346,13 @@ export module protractor_sync {
    * Augments ElementFinder and ElementArrayFinder "types" with synchronous extensions
    */
   function patchElementFinder() {
-    _patch(ElementFinder, ['fromWebElement_'], returnValue => {
-      return wrapElementFinder(returnValue);
-    });
+    if (!ElementFinder.__psync_patched) {
+      _patch(ElementFinder, ['fromWebElement_'], returnValue => {
+        return wrapElementFinder(returnValue);
+      });
+
+      ElementFinder.__psync_patched = true;
+    }
 
     //Add exec functions to ElementFinder and ElementArrayFinder, which can be used to resolve the elements synchronously
     elPrototype.exec = function () {
@@ -582,32 +586,43 @@ export module protractor_sync {
   }
 
   function patchBrowser() {
-    patchWithExec(browser, ['getAllWindowHandles']);
-    patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close']);
-    patchWithExec(
-      Object.getPrototypeOf(browser.manage()),
-      ['addCookie', 'deleteAllCookies', 'deleteCookie', 'getCookies', 'getCookie']
-    );
+    if (!(<any>browser).__psync_patched) {
+      patchWithExec(browser, ['getAllWindowHandles']);
+      patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close',
+                                     'quit']);
 
-    var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
-    patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
+      var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
+      patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
 
-    browser.waitFor = function (condition: () => boolean, waitTimeMs?: number) {
-      _polledWait(() => {
-        return {data: <any>null, keepPolling: !condition()};
-      }, null, waitTimeMs);
-    };
+      browser.waitFor = function(condition: () => boolean, waitTimeMs?: number) {
+        _polledWait(() => {
+          return {data: <any>null, keepPolling: !condition()};
+        }, null, waitTimeMs);
+      };
 
-    var PAUSE_DEBUGGER_DELAY_MS = 500;
-    _patch(browser, ['pause', 'debugger'], (returnValue: any) => {
-      var flow = ab.getCurrentFlow();
-      if (flow) {
-        //Sometimes pause and debugger don't work without a delay before executing the next command
-        flow.sync(setTimeout(flow.add(), PAUSE_DEBUGGER_DELAY_MS));
-      }
+      var PAUSE_DEBUGGER_DELAY_MS = 500;
+      _patch(browser, ['pause', 'debugger'], (returnValue: any) => {
+        var flow = ab.getCurrentFlow();
+        if (flow) {
+          //Sometimes pause and debugger don't work without a delay before executing the next command
+          flow.sync(setTimeout(flow.add(), PAUSE_DEBUGGER_DELAY_MS));
+        }
 
-      return returnValue;
-    });
+        return returnValue;
+      });
+
+      (<any>browser).__psync_patched = true;
+    }
+
+    var managePrototype = Object.getPrototypeOf(browser.manage());
+    if (!managePrototype.__psync_patched) {
+      patchWithExec(
+        managePrototype,
+        ['addCookie', 'deleteAllCookies', 'deleteCookie', 'getCookies', 'getCookie']
+      );
+
+      managePrototype.__psync_patched = true;
+    }
   }
 
   function _patch(obj: any, methods: string[], post: (returnValue: any) => any) {
