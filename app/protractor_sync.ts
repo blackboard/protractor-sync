@@ -589,7 +589,7 @@ export module protractor_sync {
     if (!(<any>browser).__psync_patched) {
       patchWithExec(browser, ['getAllWindowHandles']);
       patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close',
-                                     'quit']);
+                                     'quit', 'getWindowHandle']);
 
       var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
       patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
