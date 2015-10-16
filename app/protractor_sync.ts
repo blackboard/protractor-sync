@@ -20,7 +20,7 @@ export module protractor_sync {
 
   export var LARGE_BREAKPOINT_WIDTH = 1366;
   export var MEDIUM_BREAKPOINT_WIDTH = 768;
-  export var SMALL_BREAKPOINT_WIDTH = 320;
+  export var SMALL_BREAKPOINT_WIDTH = 375;
 
   export var DEFAULT_BREAKPOINT_WIDTH = LARGE_BREAKPOINT_WIDTH;
   export var DEFAULT_BREAKPOINT_HEIGHT = 1024;
