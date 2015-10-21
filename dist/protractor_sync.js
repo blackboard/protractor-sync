@@ -825,17 +825,21 @@ var protractor_sync;
      * @param filename The name of the file to save
      */
     function takeScreenshot(filename, callback) {
-        var basePath = path.dirname(filename);
-        if (!fs.existsSync(basePath)) {
-            mkdirp.sync(basePath);
-        }
-        if (!(/\.png$/i).test(filename)) {
-            filename += '.png';
+        if (filename) {
+            var basePath = path.dirname(filename);
+            if (!fs.existsSync(basePath)) {
+                mkdirp.sync(basePath);
+            }
+            if (!(/\.png$/i).test(filename)) {
+                filename += '.png';
+            }
         }
         browser.takeScreenshot().then(function (base64png) {
-            fs.writeFileSync(filename, base64png, 'base64');
+            if (filename) {
+                fs.writeFileSync(filename, base64png, 'base64');
+            }
             if (callback) {
-                return callback();
+                return callback(null, base64png);
             }
         });
     }
