@@ -19,7 +19,9 @@ var protractor_sync;
     protractor_sync.SMALL_BREAKPOINT_WIDTH = 375;
     protractor_sync.DEFAULT_BREAKPOINT_WIDTH = protractor_sync.LARGE_BREAKPOINT_WIDTH;
     protractor_sync.DEFAULT_BREAKPOINT_HEIGHT = 1024;
+    protractor_sync.CLICK_RETRY_INTERVAL = 200;
     protractor_sync.autoReselectStaleElements = true;
+    protractor_sync.autoRetryClick = true;
     //Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
     //The prototypes can be used to augment all instances of ElementFinder and ElementArrayFinder.
     var elPrototype = Object.getPrototypeOf(element(by.css('')));
@@ -313,6 +315,30 @@ var protractor_sync;
             _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], function (returnValue) {
                 return elementFinder;
             });
+            if (protractor_sync.autoRetryClick) {
+                var prevClick = elementFinder.click;
+                elementFinder.click = function () {
+                    var _this = this;
+                    var startTime = new Date().getTime();
+                    var attempt = function () {
+                        try {
+                            return prevClick.apply(_this, arguments);
+                        }
+                        catch (e) {
+                            if (/Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < protractor_sync.IMPLICIT_WAIT_MS) {
+                                console.log('(Protractor-sync): Element (' + _this.getSelectionPath() + ') was covered, retrying click.');
+                                var flow = ab.getCurrentFlow();
+                                flow.sync(setTimeout(flow.add(), protractor_sync.CLICK_RETRY_INTERVAL)); //We don't need this to retry as quickly
+                                return attempt();
+                            }
+                            else {
+                                throw e;
+                            }
+                        }
+                    };
+                    return attempt();
+                };
+            }
             if (protractor_sync.autoReselectStaleElements) {
                 RETRY_ON_STALE.forEach(function (func) {
                     elementFinder[func] = retryOnStale(elementFinder, func);

@@ -723,6 +723,43 @@ describe('Protractor extensions', () => {
     }));
   });
 
+  describe('Clicking an element', () => {
+    it('retries until the element is uncovered', createTest(() => {
+      browser.get('data:,');
+
+      appendTestArea({ innerHtml:
+        '<button class="covered" onclick="this.innerHTML = \'clicked\'">click</button>' +
+        '<div class="cov" style="height:200px; width: 200px; position: absolute; top: 0; left: 0; z-index: 1;"></div>'
+      });
+
+      var consoleLog = console.log;
+      var count = 0;
+      spyOn(console, 'log').and.callFake(function(message: any) {
+        if (/was covered, retrying click/.test(message)) {
+          count++;
+
+          if (count === 2) {
+            browser.executeScript(() => {
+              var cover = document.querySelector('div.cov');
+              cover.parentNode.removeChild(cover);
+            });
+          } else if (count > 2) {
+            throw new Error('Retried clicking too many times');
+          }
+        } else {
+          throw new Error('Unexpected console.log received: ' + message);
+        }
+
+        return consoleLog.apply(this, arguments);
+      });
+
+      var button = element.findVisible('button.covered').click();
+
+      expect((<any>console.log).calls.count()).toEqual(2);
+      expect(button.getText()).toEqual('clicked');
+    }));
+  });
+
   describe('Screenshots', () => {
     it('takes a screenshot', createTest(() => {
       spyOn(fs, 'writeFileSync');
