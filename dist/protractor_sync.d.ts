@@ -10,7 +10,9 @@ declare module "protractor_sync" {
     var SMALL_BREAKPOINT_WIDTH: number;
     var DEFAULT_BREAKPOINT_WIDTH: number;
     var DEFAULT_BREAKPOINT_HEIGHT: number;
+    var CLICK_RETRY_INTERVAL: number;
     var autoReselectStaleElements: boolean;
+    var autoRetryClick: boolean;
     /**
      * Apply synchronous patches to protractor
      */

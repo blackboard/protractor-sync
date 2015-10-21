@@ -25,7 +25,10 @@ export module protractor_sync {
   export var DEFAULT_BREAKPOINT_WIDTH = LARGE_BREAKPOINT_WIDTH;
   export var DEFAULT_BREAKPOINT_HEIGHT = 1024;
 
+  export var CLICK_RETRY_INTERVAL = 200;
+
   export var autoReselectStaleElements = true;
+  export var autoRetryClick = true;
 
   //Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
   //The prototypes can be used to augment all instances of ElementFinder and ElementArrayFinder.
@@ -320,9 +323,35 @@ export module protractor_sync {
       patchWithExec(elementFinder, ELEMENT_PATCHES);
 
       //For the methods which don't return a value, we want to change the return value to allow chaining (field.clear().sendKeys())
-      _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], function (returnValue: any) {
+      _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], (returnValue: any) => {
         return elementFinder;
       });
+
+      if (autoRetryClick) {
+        var prevClick = elementFinder.click;
+        elementFinder.click = function () {
+          var startTime = new Date().getTime();
+
+          var attempt: any = () => {
+            try {
+              return prevClick.apply(this, arguments);
+            } catch (e) {
+              if (/Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < IMPLICIT_WAIT_MS) {
+                console.log('(Protractor-sync): Element (' + this.getSelectionPath() + ') was covered, retrying click.');
+
+                var flow = ab.getCurrentFlow();
+                flow.sync(setTimeout(flow.add(), CLICK_RETRY_INTERVAL)); //We don't need this to retry as quickly
+
+                return attempt();
+              } else {
+                throw e;
+              }
+            }
+          };
+
+          return attempt();
+        };
+      }
 
       if (autoReselectStaleElements) {
         RETRY_ON_STALE.forEach(func => {
