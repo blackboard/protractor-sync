@@ -345,6 +345,7 @@ describe('Protractor extensions', () => {
   describe('jQuery methods', () => {
     var testArea: protractor.ElementFinder;
     var testSpan: protractor.ElementFinder;
+    var testInput: protractor.ElementFinder;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
@@ -362,12 +363,14 @@ describe('Protractor extensions', () => {
           innerHtml: '<span ' +
           '  style="height:50px; width:30px; display:block; position: absolute; left:10px; top:10px; border:black solid 2px;" ' +
           '  class="test-span">test span 1</span>' +
-          '<span class="test-span-2">test span 2</span>'
+          '<span class="test-span-2">test span 2</span>' +
+          '<input type="text"/>'
         }
       );
 
       testArea = element.findVisible('#' + TEST_AREA_ID);
       testSpan = element.findVisible('.test-span');
+      testInput = element.findVisible('input');
     }));
 
     it('Finds the closest element matching the selector', createTest(() => {
@@ -380,6 +383,16 @@ describe('Protractor extensions', () => {
 
     it('Can determine a class does not exist on an element', createTest(() => {
       expect(testSpan.hasClass('no')).toEqual(false);
+    }));
+
+    it('Can determine an element is focused', createTest(() => {
+      testInput.click();
+      expect(testInput.isFocused()).toEqual(true);
+    }));
+
+    it('Can determine an element is not focused', createTest(() => {
+      testSpan.click();
+      expect(testInput.isFocused()).toEqual(false);
     }));
 
     it('Can get the innerHeight of an element', createTest(() => {

@@ -491,6 +491,9 @@ var protractor_sync;
                 return element.classList.contains(className);
             }, this.getWebElement(), className);
         };
+        elPrototype.isFocused = function () {
+            return executeJQueryElementMethod(this, 'is', ':focus');
+        };
         elPrototype.innerHeight = function () {
             return executeJQueryElementMethod(this, 'innerHeight');
         };
