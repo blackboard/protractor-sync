@@ -67,7 +67,7 @@ describe('Protractor extensions', () => {
 
     it('should prevent calling browser.$', () => {
         expect(() => {
-          browser.$('body');
+          (<any>browser).$('body');
         }).toThrowError(
           '$() has been disabled in this project! Use element.findVisible() or element.findElement() instead.'
         );
@@ -75,7 +75,7 @@ describe('Protractor extensions', () => {
 
     it('should prevent calling browser.$$', () => {
         expect(() => {
-          browser.$$('body');
+          (<any>browser).$$('body');
         }).toThrowError(
           '$$() has been disabled in this project! Use element.findVisibles() or element.findElements() instead.'
         );
@@ -116,7 +116,7 @@ describe('Protractor extensions', () => {
 
     it('should prevent calling element.all', () => {
         expect(() => {
-          element.all(by.model(''));
+          (<any>element).all(by.model(''));
         }).toThrowError(
           'all() has been disabled in this project! Use element.findVisibles() or element.findElements() instead.'
         );
@@ -129,7 +129,7 @@ describe('Protractor extensions', () => {
         var body = element.findVisible('body');
 
         expect(() => {
-          body.$('a');
+          (<any>body).$('a');
         }).toThrowError(
           '$() has been disabled in this project! Use instance.findVisible() or instance.findElement() instead'
         );
@@ -141,7 +141,7 @@ describe('Protractor extensions', () => {
         var body = element.findVisible('body');
 
         expect(() => {
-          body.$$('a');
+          (<any>body).$$('a');
         }).toThrowError(
           '$$() has been disabled in this project! Use instance.findVisibles() or instance.findElements() instead.'
         );
@@ -152,7 +152,7 @@ describe('Protractor extensions', () => {
       ab(() => {
         var body = element.findVisible('body');
         expect(() => {
-          body.element(by.model(''));
+          (<any>body).element(by.model(''));
         }).toThrowError(
           'element() has been disabled in this project! Use instance.findVisible() or instance.findElement() instead'
         );
@@ -163,7 +163,7 @@ describe('Protractor extensions', () => {
       ab(() => {
         var body = element.findVisible('body');
         expect(() => {
-          body.all(by.model(''));
+          (<any>body).all(by.model(''));
         }).toThrowError(
           'all() has been disabled in this project! Use instance.findVisibles() or instance.findElements() instead.'
         );
