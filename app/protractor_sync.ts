@@ -33,7 +33,7 @@ export module protractor_sync {
   //Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
   //The prototypes can be used to augment all instances of ElementFinder and ElementArrayFinder.
   var elPrototype = Object.getPrototypeOf(element(by.css('')));
-  var elArrayPrototype = Object.getPrototypeOf(element.all(by.css('')));
+  var elArrayPrototype = Object.getPrototypeOf((<any>element).all(by.css('')));
 
   //Get access to the ElementFinder type
   var ElementFinder: any = element(by.css('')).constructor;
@@ -150,13 +150,13 @@ export module protractor_sync {
     var flow = ab.getCurrentFlow();
 
     return _polledWait(() => {
-      var elements: protractor.ElementArrayFinder;
+      var elements: any;
       var filtered: protractor.ElementFinder[];
 
       if (args.rootElement) {
-        elements = args.rootElement.all(locator);
+        elements = (<any>args.rootElement).all(locator);
       } else {
-        elements = element.all(locator);
+        elements = (<any>element).all(locator);
       }
 
       //Force the elements to resolve immediately (we want to make sure elements selected with findElement are present before continuing)
