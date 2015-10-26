@@ -491,6 +491,11 @@ var protractor_sync;
                 return element.classList.contains(className);
             }, this.getWebElement(), className);
         };
+        elPrototype.isFocused = function () {
+            return browser.executeScript(function (element) {
+                return document.activeElement === element;
+            }, this.getWebElement());
+        };
         elPrototype.innerHeight = function () {
             return executeJQueryElementMethod(this, 'innerHeight');
         };

@@ -533,6 +533,12 @@ export module protractor_sync {
       }, this.getWebElement(), className);
     };
 
+    elPrototype.isFocused = function () {
+      return browser.executeScript(function(element: HTMLElement) {
+        return document.activeElement === element;
+      }, this.getWebElement());
+    };
+
     elPrototype.innerHeight = function () {
       return executeJQueryElementMethod(this, 'innerHeight');
     };
