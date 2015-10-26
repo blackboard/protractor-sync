@@ -534,7 +534,9 @@ export module protractor_sync {
     };
 
     elPrototype.isFocused = function () {
-      return executeJQueryElementMethod(this, 'is', ':focus');
+      return browser.executeScript(function(element: HTMLElement) {
+        return document.activeElement === element;
+      }, this.getWebElement());
     };
 
     elPrototype.innerHeight = function () {
