@@ -973,7 +973,7 @@ export module protractor_sync {
    *
    * @param filename The name of the file to save
    */
-  export function takeScreenshot(filename: string, callback?: Function) {
+  export function takeScreenshot(filename: string) {
     if (filename) {
       var basePath = path.dirname(filename);
       if (!fs.existsSync(basePath)) {
@@ -984,14 +984,17 @@ export module protractor_sync {
         filename += '.png';
       }
     }
+
+    var flow = ab.getCurrentFlow();
+    var callback = flow.add();
     browser.takeScreenshot().then(function (base64png: string) {
       if (filename) {
         fs.writeFileSync(filename, base64png, 'base64');
       }
-      if (callback) {
-        return callback(null, base64png);
-      }
+      return callback(null, base64png);
     });
+
+    return flow.wait();
   }
 
   function calculateDimension(dimension: number, window: number, viewport: number) {
