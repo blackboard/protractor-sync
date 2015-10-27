@@ -362,6 +362,12 @@ var protractor_sync;
             });
             ElementFinder.__psync_patched = true;
         }
+        function getActiveElement() {
+            var active = browser.executeScript(function () {
+                return document.activeElement;
+            });
+            return ElementFinder.fromWebElement_(element.ptor_, active);
+        }
         //Add exec functions to ElementFinder and ElementArrayFinder, which can be used to resolve the elements synchronously
         elPrototype.exec = function () {
             return exec(this);
@@ -531,6 +537,14 @@ var protractor_sync;
         };
         elPrototype.prop = function (name) {
             return executeJQueryElementMethod(this, 'prop', name);
+        };
+        elPrototype.sendEnterKey = function () {
+            this.sendKeys(protractor.Key.ENTER);
+            return getActiveElement();
+        };
+        elPrototype.sendTabKey = function () {
+            this.sendKeys(protractor.Key.TAB);
+            return getActiveElement();
         };
         elPrototype.scrollLeft = function () {
             return executeJQueryElementMethod(this, 'scrollLeft');

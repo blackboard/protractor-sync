@@ -346,6 +346,8 @@ describe('Protractor extensions', () => {
     var testArea: protractor.ElementFinder;
     var testSpan: protractor.ElementFinder;
     var testInput: protractor.ElementFinder;
+    var testButton: protractor.ElementFinder;
+    var testMultilineInput: protractor.ElementFinder;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
@@ -364,13 +366,17 @@ describe('Protractor extensions', () => {
           '  style="height:50px; width:30px; display:block; position: absolute; left:10px; top:10px; border:black solid 2px;" ' +
           '  class="test-span">test span 1</span>' +
           '<span class="test-span-2">test span 2</span>' +
-          '<input type="text"/>'
+          '<input type="text"/>' +
+          '<button class="button1">Click Me!</button>' +
+          '<textarea></textarea>'
         }
       );
 
       testArea = element.findVisible('#' + TEST_AREA_ID);
       testSpan = element.findVisible('.test-span');
       testInput = element.findVisible('input');
+      testButton = element.findVisible('.button1');
+      testMultilineInput = element.findVisible('textarea');
     }));
 
     it('Finds the closest element matching the selector', createTest(() => {
@@ -441,6 +447,19 @@ describe('Protractor extensions', () => {
 
     it('Can get an element property', createTest(() => {
       expect(testSpan.prop('nodeType')).toEqual(1);
+    }));
+
+    it('Can send the ENTER key to an element', createTest(() => {
+      testMultilineInput.sendKeys('Hello')
+        .sendEnterKey()
+        .sendKeys('there');
+      expect(testMultilineInput.getAttribute('value')).toBe('Hello\nthere');
+    }));
+
+    it('Can send the TAB key to an element', createTest(() => {
+      testInput.clear(); // focus the input
+      testInput.sendTabKey().sendTabKey(); // tabbing twice should move focus forward twice
+      expect(testMultilineInput.isFocused()).toEqual(true);
     }));
 
     it('Can get an element\'s scrollLeft', createTest(() => {
