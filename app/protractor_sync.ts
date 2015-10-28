@@ -235,6 +235,17 @@ export module protractor_sync {
   }
 
   /**
+   * Returns the active element on the page
+   */
+  function getActiveElement() {
+    var active = browser.executeScript(function() {
+      return document.activeElement;
+    });
+
+    return ElementFinder.fromWebElement_((<any>element).ptor_, active);
+  }
+
+  /**
    * Finds a single visible instance of an element. If more than one visible elements match the locator,
    * and error is thrown. If no visible elements match the locator, an error is thrown. Implicitly waits until there is exactly one
    * visible element.
@@ -381,14 +392,6 @@ export module protractor_sync {
       });
 
       ElementFinder.__psync_patched = true;
-    }
-
-    function getActiveElement() {
-      var active = browser.executeScript(function() {
-        return document.activeElement;
-      });
-
-      return ElementFinder.fromWebElement_((<any>element).ptor_, active);
     }
 
     //Add exec functions to ElementFinder and ElementArrayFinder, which can be used to resolve the elements synchronously
@@ -597,12 +600,10 @@ export module protractor_sync {
 
     elPrototype.sendEnterKey = function() {
       this.sendKeys(protractor.Key.ENTER);
-      return getActiveElement();
     };
 
     elPrototype.sendTabKey = function() {
       this.sendKeys(protractor.Key.TAB);
-      return getActiveElement();
     };
 
     elPrototype.scrollLeft = function () {
@@ -634,6 +635,8 @@ export module protractor_sync {
     global.element.findElements = findElements;
 
     global.element.assertElementDoesNotExist = assertElementDoesNotExist;
+
+    global.element.getActiveElement = getActiveElement;
 
     patchBrowser();
   }

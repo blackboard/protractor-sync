@@ -346,7 +346,6 @@ describe('Protractor extensions', () => {
     var testArea: protractor.ElementFinder;
     var testSpan: protractor.ElementFinder;
     var testInput: protractor.ElementFinder;
-    var testButton: protractor.ElementFinder;
     var testMultilineInput: protractor.ElementFinder;
 
     beforeAll(createTest(() => {
@@ -367,7 +366,6 @@ describe('Protractor extensions', () => {
           '  class="test-span">test span 1</span>' +
           '<span class="test-span-2">test span 2</span>' +
           '<input type="text"/>' +
-          '<button class="button1">Click Me!</button>' +
           '<textarea></textarea>'
         }
       );
@@ -375,7 +373,6 @@ describe('Protractor extensions', () => {
       testArea = element.findVisible('#' + TEST_AREA_ID);
       testSpan = element.findVisible('.test-span');
       testInput = element.findVisible('input');
-      testButton = element.findVisible('.button1');
       testMultilineInput = element.findVisible('textarea');
     }));
 
@@ -451,14 +448,13 @@ describe('Protractor extensions', () => {
 
     it('Can send the ENTER key to an element', createTest(() => {
       testMultilineInput.sendKeys('Hello')
-        .sendEnterKey()
-        .sendKeys('there');
-      expect(testMultilineInput.getAttribute('value')).toBe('Hello\nthere');
+        .sendEnterKey();
+      expect(testMultilineInput.getAttribute('value')).toBe('Hello\n');
     }));
 
     it('Can send the TAB key to an element', createTest(() => {
       testInput.clear(); // focus the input
-      testInput.sendTabKey().sendTabKey(); // tabbing twice should move focus forward twice
+      testInput.sendTabKey(); // tabbing twice should move focus forward
       expect(testMultilineInput.isFocused()).toEqual(true);
     }));
 
