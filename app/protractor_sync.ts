@@ -1008,12 +1008,12 @@ export module protractor_sync {
 
     var flow = ab.getCurrentFlow();
     var callback = flow.add();
-    browser.takeScreenshot().then(function (base64png: string) {
+    browser.takeScreenshot().then((base64png: string) => {
       if (filename) {
         fs.writeFileSync(filename, base64png, 'base64');
       }
       return callback(null, base64png);
-    });
+    }, callback);
 
     return flow.wait();
   }

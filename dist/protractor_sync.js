@@ -888,7 +888,7 @@ var protractor_sync;
                 fs.writeFileSync(filename, base64png, 'base64');
             }
             return callback(null, base64png);
-        });
+        }, callback);
         return flow.wait();
     }
     protractor_sync.takeScreenshot = takeScreenshot;
