@@ -234,6 +234,15 @@ var protractor_sync;
         }
     }
     /**
+     * Returns the active element on the page
+     */
+    function getActiveElement() {
+        var active = browser.executeScript(function () {
+            return document.activeElement;
+        });
+        return ElementFinder.fromWebElement_(element.ptor_, active);
+    }
+    /**
      * Finds a single visible instance of an element. If more than one visible elements match the locator,
      * and error is thrown. If no visible elements match the locator, an error is thrown. Implicitly waits until there is exactly one
      * visible element.
@@ -532,6 +541,12 @@ var protractor_sync;
         elPrototype.prop = function (name) {
             return executeJQueryElementMethod(this, 'prop', name);
         };
+        elPrototype.sendEnterKey = function () {
+            this.sendKeys(protractor.Key.ENTER);
+        };
+        elPrototype.sendTabKey = function () {
+            this.sendKeys(protractor.Key.TAB);
+        };
         elPrototype.scrollLeft = function () {
             return executeJQueryElementMethod(this, 'scrollLeft');
         };
@@ -554,6 +569,7 @@ var protractor_sync;
         global.element.findElement = findElement;
         global.element.findElements = findElements;
         global.element.assertElementDoesNotExist = assertElementDoesNotExist;
+        global.element.getActiveElement = getActiveElement;
         patchBrowser();
     }
     function patchBrowser() {
