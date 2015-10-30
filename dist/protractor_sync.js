@@ -871,7 +871,7 @@ var protractor_sync;
      *
      * @param filename The name of the file to save
      */
-    function takeScreenshot(filename, callback) {
+    function takeScreenshot(filename) {
         if (filename) {
             var basePath = path.dirname(filename);
             if (!fs.existsSync(basePath)) {
@@ -881,14 +881,15 @@ var protractor_sync;
                 filename += '.png';
             }
         }
+        var flow = ab.getCurrentFlow();
+        var callback = flow.add();
         browser.takeScreenshot().then(function (base64png) {
             if (filename) {
                 fs.writeFileSync(filename, base64png, 'base64');
             }
-            if (callback) {
-                return callback(null, base64png);
-            }
-        });
+            return callback(null, base64png);
+        }, callback);
+        return flow.wait();
     }
     protractor_sync.takeScreenshot = takeScreenshot;
     function calculateDimension(dimension, window, viewport) {

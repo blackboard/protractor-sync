@@ -794,8 +794,7 @@ describe('Protractor extensions', () => {
       spyOn(fs, 'existsSync').and.returnValue(true);
 
       browser.get('data:,');
-      var flow = ab.getCurrentFlow();
-      flow.sync(protractorSync.takeScreenshot('test', flow.add()));
+      protractorSync.takeScreenshot('test');
 
       expect((<any>fs.writeFileSync).calls.count()).toEqual(1);
       expect((<any>fs.writeFileSync).calls.argsFor(0)[0]).toEqual('test.png');

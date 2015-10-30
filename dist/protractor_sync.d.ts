@@ -30,7 +30,7 @@ declare module "protractor_sync" {
      *
      * @param filename The name of the file to save
      */
-    function takeScreenshot(filename: string, callback?: Function): void;
+    function takeScreenshot(filename: string): any;
     function resizeViewport(size: {
         width?: number;
         height?: number;
