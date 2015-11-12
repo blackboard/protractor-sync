@@ -1008,14 +1008,12 @@ export module protractor_sync {
 
     var flow = ab.getCurrentFlow();
     var callback = flow.add();
-    browser.takeScreenshot().then((base64png: string) => {
+    return flow.sync(browser.takeScreenshot().then((base64png: string) => {
       if (filename) {
         fs.writeFileSync(filename, base64png, 'base64');
       }
       return callback(null, base64png);
-    }, callback);
-
-    return flow.wait();
+    }, callback));
   }
 
   function calculateDimension(dimension: number, window: number, viewport: number) {
