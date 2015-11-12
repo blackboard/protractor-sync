@@ -883,13 +883,12 @@ var protractor_sync;
         }
         var flow = ab.getCurrentFlow();
         var callback = flow.add();
-        browser.takeScreenshot().then(function (base64png) {
+        return flow.sync(browser.takeScreenshot().then(function (base64png) {
             if (filename) {
                 fs.writeFileSync(filename, base64png, 'base64');
             }
             return callback(null, base64png);
-        }, callback);
-        return flow.wait();
+        }, callback));
     }
     protractor_sync.takeScreenshot = takeScreenshot;
     function calculateDimension(dimension, window, viewport) {
