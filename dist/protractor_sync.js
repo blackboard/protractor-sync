@@ -16,7 +16,7 @@ var protractor_sync;
     protractor_sync.RETRY_INTERVAL = 10;
     protractor_sync.LARGE_BREAKPOINT_WIDTH = 1366;
     protractor_sync.MEDIUM_BREAKPOINT_WIDTH = 768;
-    protractor_sync.SMALL_BREAKPOINT_WIDTH = 375;
+    protractor_sync.SMALL_BREAKPOINT_WIDTH = 550;
     protractor_sync.DEFAULT_BREAKPOINT_WIDTH = protractor_sync.LARGE_BREAKPOINT_WIDTH;
     protractor_sync.DEFAULT_BREAKPOINT_HEIGHT = 1024;
     protractor_sync.CLICK_RETRY_INTERVAL = 200;
