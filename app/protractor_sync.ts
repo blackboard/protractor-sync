@@ -20,6 +20,9 @@ export module protractor_sync {
 
   export var LARGE_BREAKPOINT_WIDTH = 1366;
   export var MEDIUM_BREAKPOINT_WIDTH = 768;
+  // Ideally we'd like the small breakpoint to be 320px to mimic older smart phones.  We've found that this has not been practical (chrome
+  // on mac will set a minimum with of around 400px if you go lower than that, and chrome on linux stops showing the window all together if
+  // you go below the minimum).  550px currently works on the build server, so until we find a work-around, we'll stick with that.
   export var SMALL_BREAKPOINT_WIDTH = 550;
 
   export var DEFAULT_BREAKPOINT_WIDTH = LARGE_BREAKPOINT_WIDTH;
