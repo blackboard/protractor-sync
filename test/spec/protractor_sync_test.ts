@@ -352,8 +352,6 @@ describe('Protractor extensions', () => {
       //Make sure we are starting on a fresh page
       browser.get('data:,');
 
-      protractorSync.injectjQuery();
-
       appendTestArea({
           style: {
             position: 'absolute',
@@ -471,8 +469,6 @@ describe('Protractor extensions', () => {
     it('can scroll to an element', createTest(() => {
       //Make sure we are starting on a fresh page
       browser.get('data:,');
-
-      protractorSync.injectjQuery();
 
       appendTestArea({
         style: { height: '100px', overflow: 'scroll' },
@@ -695,7 +691,7 @@ describe('Protractor extensions', () => {
 
       //Can't use expect().toThrow() to check this because it doesn't run from the Fiber when patched by jasminewd
       try {
-        protractorSync.polledExpect(() => counter++, { timeoutMS: 100 }).toBeLessThan(0);
+        protractorSync.polledExpect(() => counter++, 100).toBeLessThan(0);
       } catch (e) {
         catchRan = true;
         expect(e.message).toMatch(/Expected \d+ to be less than 0\./);
@@ -816,7 +812,7 @@ describe('Protractor extensions', () => {
   });
 
   describe('Window size', () => {
-    it('resizes the window', createTest((done: Function) => {
+    it('resizes the window', createTest(() => {
       browser.get('data:,');
       var viewportSize: any = browser.driver.executeScript(function () {
         return {
@@ -828,7 +824,7 @@ describe('Protractor extensions', () => {
       var flow = ab.getCurrentFlow();
       var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({firstArgIsError: false})));
 
-      flow.sync(protractorSync.resizeViewport({ width: 400, height: 200 }, flow.add()));
+      protractorSync.resizeViewport({ width: 400, height: 200 });
       var newSize: any = browser.driver.executeScript(function () {
         return {
           height: window.document.documentElement.clientHeight,
@@ -839,7 +835,7 @@ describe('Protractor extensions', () => {
       expect(newSize.width).toEqual(400);
       expect(newSize.height).toEqual(200);
 
-      flow.sync(protractorSync.resizeViewport(viewportSize, flow.add()));
+      protractorSync.resizeViewport(viewportSize);
       newSize = browser.driver.executeScript(function () {
         return {
           height: window.document.documentElement.clientHeight,
