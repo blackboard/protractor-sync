@@ -22,9 +22,7 @@ declare module "protractor_sync" {
     }) => void;
     function injectjQuery(): void;
     function waitForNewWindow(action: Function, waitTimeMs?: number): void;
-    function polledExpect(func: Function, args?: {
-        timeoutMS?: number;
-    }): any;
+    function polledExpect(func: Function, waitTimeMS?: number): any;
     /**
      * Takes a screenshot and saves a .png file in the configured screenshot directory.
      *
@@ -34,5 +32,5 @@ declare module "protractor_sync" {
     function resizeViewport(size: {
         width?: number;
         height?: number;
-    }, callback: Function): void;
+    }): void;
 }

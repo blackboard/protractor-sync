@@ -468,17 +468,26 @@ var protractor_sync;
         };
         //JQuery methods
         function executeJQueryElementMethod(element, method, arg) {
-            //Warning: this method requires jQuery to be in the page
-            var result = browser.executeScript(function (element, method, arg) {
-                var $ = window.jQuery;
-                var result = arg ? $(element)[method](arg) : $(element)[method]();
-                if (result instanceof window.jQuery) {
-                    return result.toArray();
-                }
-                else {
-                    return result;
-                }
-            }, element.getWebElement(), method, arg);
+            var attempt = function () {
+                return browser.executeScript(function (element, method, arg) {
+                    var $ = window.jQuery;
+                    if (!$) {
+                        return '!!jquery not present!!';
+                    }
+                    var result = arg ? $(element)[method](arg) : $(element)[method]();
+                    if (result instanceof window.jQuery) {
+                        return result.toArray();
+                    }
+                    else {
+                        return result;
+                    }
+                }, element.getWebElement(), method, arg);
+            };
+            var result = attempt();
+            if (result === '!!jquery not present!!') {
+                injectjQuery();
+                result = attempt();
+            }
             if (Array.isArray(result)) {
                 return result.map(function (webElement, i) {
                     var elementFinder = ElementFinder.fromWebElement_(element.ptor_, webElement, method, arg);
@@ -774,12 +783,12 @@ var protractor_sync;
         }, waitTimeMs);
     }
     protractor_sync.waitForNewWindow = waitForNewWindow;
-    function polledExpect(func, args) {
+    function polledExpect(func, waitTimeMS) {
         var jasmine = global.jasmine;
         if (jasmine == null) {
             throw new Error('jasmine is required to use polledExpect');
         }
-        var timeout = args && args.timeoutMS || protractor_sync.IMPLICIT_WAIT_MS;
+        var timeout = waitTimeMS || protractor_sync.IMPLICIT_WAIT_MS;
         var startTime = new Date().getTime();
         var flow = ab.getCurrentFlow();
         var expectation;
@@ -897,32 +906,31 @@ var protractor_sync;
     function calculateDimension(dimension, window, viewport) {
         return dimension + (window - viewport);
     }
-    function resizeViewport(size, callback) {
-        ab(function (flow) {
-            var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({ firstArgIsError: false })));
-            var viewportSize = browser.driver.executeScript(function () {
-                return {
-                    height: window.document.documentElement.clientHeight,
-                    width: window.document.documentElement.clientWidth
-                };
-            });
-            var calcWidth = function (width) { return calculateDimension(width, windowSize.width, viewportSize.width); };
-            var calcHeight = function (height) { return calculateDimension(height, windowSize.height, viewportSize.height); };
-            var width = windowSize.width;
-            var height = windowSize.height;
-            if (size) {
-                width = calcWidth(size.width || protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
-                height = calcHeight(size.height || protractor_sync.DEFAULT_BREAKPOINT_HEIGHT);
-            }
-            else if (windowSize.width < protractor_sync.DEFAULT_BREAKPOINT_WIDTH) {
-                width = calcWidth(protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
-            }
-            else {
-                // No size set and width is wider than the minimum.  We can return early without resizing the browser
-                return;
-            }
-            flow.sync(browser.manage().window().setSize(width, height).then(flow.add()));
-        }, callback);
+    function resizeViewport(size) {
+        var flow = ab.getCurrentFlow();
+        var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({ firstArgIsError: false })));
+        var viewportSize = browser.driver.executeScript(function () {
+            return {
+                height: window.document.documentElement.clientHeight,
+                width: window.document.documentElement.clientWidth
+            };
+        });
+        var calcWidth = function (width) { return calculateDimension(width, windowSize.width, viewportSize.width); };
+        var calcHeight = function (height) { return calculateDimension(height, windowSize.height, viewportSize.height); };
+        var width = windowSize.width;
+        var height = windowSize.height;
+        if (size) {
+            width = calcWidth(size.width || protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
+            height = calcHeight(size.height || protractor_sync.DEFAULT_BREAKPOINT_HEIGHT);
+        }
+        else if (windowSize.width < protractor_sync.DEFAULT_BREAKPOINT_WIDTH) {
+            width = calcWidth(protractor_sync.DEFAULT_BREAKPOINT_WIDTH);
+        }
+        else {
+            // No size set and width is wider than the minimum.  We can return early without resizing the browser
+            return;
+        }
+        flow.sync(browser.manage().window().setSize(width, height).then(flow.add()));
     }
     protractor_sync.resizeViewport = resizeViewport;
 })(protractor_sync = exports.protractor_sync || (exports.protractor_sync = {}));
