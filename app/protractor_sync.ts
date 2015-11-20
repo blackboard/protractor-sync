@@ -507,17 +507,31 @@ export module protractor_sync {
     //JQuery methods
 
     function executeJQueryElementMethod(element: protractor.ElementFinder, method: string, arg?: any) {
-      //Warning: this method requires jQuery to be in the page
-      var result: any = browser.executeScript(function (element: HTMLElement, method: string, arg: any) {
-        var $ = (<any>window).jQuery;
-        var result = arg ? $(element)[method](arg) : $(element)[method]();
 
-        if (result instanceof (<any>window).jQuery) {
-          return result.toArray();
-        } else {
-          return result;
-        }
-      }, element.getWebElement(), method, arg);
+      var attempt = () => {
+        return browser.executeScript(function (element: HTMLElement, method: string, arg: any) {
+          var $ = (<any>window).jQuery;
+
+          if (!$) {
+            return '!!jquery not present!!';
+          }
+
+          var result = arg ? $(element)[method](arg) : $(element)[method]();
+
+          if (result instanceof (<any>window).jQuery) {
+            return result.toArray();
+          } else {
+            return result;
+          }
+        }, element.getWebElement(), method, arg);
+      };
+
+      var result = attempt();
+
+      if (result === '!!jquery not present!!') {
+        injectjQuery();
+        result = attempt();
+      }
 
       if (Array.isArray(result)) {
         return result.map((webElement: any, i: number) => {
@@ -883,13 +897,13 @@ export module protractor_sync {
     }, waitTimeMs);
   }
 
-  export function polledExpect(func: Function, args?: { timeoutMS?: number; }) {
+  export function polledExpect(func: Function, waitTimeMS?: number) {
     var jasmine = global.jasmine;
     if (jasmine == null) {
       throw new Error('jasmine is required to use polledExpect');
     }
 
-    var timeout = args && args.timeoutMS || IMPLICIT_WAIT_MS;
+    var timeout = waitTimeMS || IMPLICIT_WAIT_MS;
     var startTime = new Date().getTime();
 
     var flow = ab.getCurrentFlow();
@@ -1023,33 +1037,33 @@ export module protractor_sync {
     return dimension + (window - viewport);
   }
 
-  export function resizeViewport(size: { width?: number; height?: number; }, callback: Function) {
-    ab((flow) => {
-      var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({firstArgIsError: false})));
-      var viewportSize: any = browser.driver.executeScript(function () {
-        return {
-          height: window.document.documentElement.clientHeight,
-          width: window.document.documentElement.clientWidth
-        };
-      });
+  export function resizeViewport(size: { width?: number; height?: number; }) {
+    var flow = ab.getCurrentFlow();
 
-      var calcWidth = (width: number) => calculateDimension(width, windowSize.width, viewportSize.width);
-      var calcHeight = (height: number) => calculateDimension(height, windowSize.height, viewportSize.height);
+    var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({firstArgIsError: false})));
+    var viewportSize: any = browser.driver.executeScript(function () {
+      return {
+        height: window.document.documentElement.clientHeight,
+        width: window.document.documentElement.clientWidth
+      };
+    });
 
-      var width = windowSize.width;
-      var height = windowSize.height;
+    var calcWidth = (width: number) => calculateDimension(width, windowSize.width, viewportSize.width);
+    var calcHeight = (height: number) => calculateDimension(height, windowSize.height, viewportSize.height);
 
-      if (size) {
-        width = calcWidth(size.width || DEFAULT_BREAKPOINT_WIDTH);
-        height = calcHeight(size.height || DEFAULT_BREAKPOINT_HEIGHT);
-      } else if (windowSize.width < DEFAULT_BREAKPOINT_WIDTH) {
-        width = calcWidth(DEFAULT_BREAKPOINT_WIDTH);
-      } else {
-        // No size set and width is wider than the minimum.  We can return early without resizing the browser
-        return;
-      }
+    var width = windowSize.width;
+    var height = windowSize.height;
 
-      flow.sync(browser.manage().window().setSize(width, height).then(flow.add()));
-    }, callback);
+    if (size) {
+      width = calcWidth(size.width || DEFAULT_BREAKPOINT_WIDTH);
+      height = calcHeight(size.height || DEFAULT_BREAKPOINT_HEIGHT);
+    } else if (windowSize.width < DEFAULT_BREAKPOINT_WIDTH) {
+      width = calcWidth(DEFAULT_BREAKPOINT_WIDTH);
+    } else {
+      // No size set and width is wider than the minimum.  We can return early without resizing the browser
+      return;
+    }
+
+    flow.sync(browser.manage().window().setSize(width, height).then(flow.add()));
   }
 }
