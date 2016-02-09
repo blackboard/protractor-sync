@@ -482,6 +482,91 @@ describe('Protractor extensions', () => {
     }));
   });
 
+  describe('Element finder methods', () => {
+    var testArea: protractor.ElementFinder;
+
+    beforeAll(createTest(() => {
+      //Make sure we are starting on a fresh page
+      browser.get('data:,');
+
+      // add some text in the spans so they will be visible by default
+      appendTestArea({
+        innerHtml: '<span class="visible-element">Span 1</span>' +
+                   '<span class="duplicate-selector">Span 2</span>' +
+                   '<span class="duplicate-selector">Span 3</span>' +
+                   '<span class="duplicate-selector not-visible" style="display:none">Span 4</span>' +
+                   '<span class="invisible not-visible" style="display:none">Span 5</span>'
+      });
+
+      testArea = element.findElement('#' + TEST_AREA_ID);
+    }));
+
+    describe('findElement', () => {
+      it('finds a visible element', createTest(() => {
+        testArea.findElement('.visible-element');
+      }));
+
+      it('finds an invisible element', createTest(() => {
+        testArea.findElement('.invisible');
+      }));
+
+      it('throws an error if element was not found', createTest(() => {
+        testArea.findElement('.does-not-exist');
+      }, 'No instances of (.does-not-exist) were found'));
+
+      it('throws an error if more than one element was found', createTest(() => {
+        testArea.findElement('.duplicate-selector');
+      }, 'More than one instance of (.duplicate-selector) was found!'));
+    });
+
+    describe('findVisible', () => {
+      it('finds a visible element', createTest(() => {
+        testArea.findVisible('.visible-element');
+      }));
+
+      it('throws an error if more than one element was found', createTest(() => {
+        testArea.findVisible('.duplicate-selector');
+      }, 'More than one visible instance of (.duplicate-selector) was found!'));
+
+      it('throws an error if the element found was not visible', createTest(() => {
+        testArea.findVisible('.invisible');
+      }, 'No visible instances of (.invisible) were found'));
+    });
+
+    describe('findElements', () => {
+      it('finds an element', createTest(() => {
+        testArea.findElement('.visible-element');
+      }));
+
+      it('finds an invisible element', createTest(() => {
+        testArea.findElement('.invisible');
+      }));
+
+      it('finds more than one element, even if some are invisible', createTest(() => {
+        expect(testArea.findElements('.duplicate-selector').length).toBe(3);
+      }));
+
+      it('throws an error if no elements were found', createTest(() => {
+        testArea.findElements('.not-found');
+      }, 'No instances of (.not-found) were found'));
+    });
+
+    describe('findVisibles', () => {
+      it('finds a visible element', createTest(() => {
+        testArea.findVisibles('.visible-element');
+      }));
+
+      it('finds more than one visible element', createTest(() => {
+        expect(testArea.findVisibles('.duplicate-selector').length).toBe(2);
+      }));
+
+      it('throws an error if no visible elements were found', createTest(() => {
+        testArea.findVisibles('.invisible');
+      }, 'No visible instances of (.invisible) were found'));
+    });
+
+  });
+
   describe('assertElementDoesNotExist', () => {
     var testArea: protractor.ElementFinder;
 

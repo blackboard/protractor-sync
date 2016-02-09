@@ -100,6 +100,7 @@ export module protractor_sync {
    * Selects an element or elements. This function is not intended to be called directly (use findVisible, findVisibles, findElement, etc.)
    *
    * @param args.selector A css selector or locator used to select the element(s)
+   * @param args.shouldExist True if we expect the element to be found, false otherwise
    * @param args.single True if we're only selecting one element, false otherwise
    * @param args.requireVisible True if the elements must be visible
    * @param args.rootElement Constrain selection to descendants of this element only
@@ -109,6 +110,7 @@ export module protractor_sync {
   function _getElements(
     args: {
       selector: any;
+      shouldExist: boolean;
       single: boolean;
       requireVisible: boolean;
       rootElement: protractor.ElementFinder;
@@ -118,10 +120,16 @@ export module protractor_sync {
     function extractResult(elements: protractor.ElementFinder[]) {
       var filteredCount = elements && elements.length || 0;
 
-      if (args.single && filteredCount === 1) {
-        return {keepPolling: false, data: wrapElementFinderArray(elements)};
-      } else if (!args.single && filteredCount > 0) {
-        return {keepPolling: false, data: wrapElementFinderArray(elements)};
+      if (!args.shouldExist) {
+        if (filteredCount === 0) {
+          return {keepPolling: false, data: []};
+        }
+      } else {
+        if (args.single && filteredCount === 1) {
+          return {keepPolling: false, data: wrapElementFinderArray(elements)};
+        } else if (!args.single && filteredCount > 0) {
+          return {keepPolling: false, data: wrapElementFinderArray(elements)};
+        }
       }
 
       return {keepPolling: true, data: elements};
@@ -129,6 +137,10 @@ export module protractor_sync {
 
     function onTimeout(elements: protractor.ElementFinder[]) {
       var filteredCount = elements && elements.length || 0;
+
+      if (!args.shouldExist && filteredCount > 0) {
+        throw new Error(args.selector + ' was found when it should not exist!');
+      }
 
       if (filteredCount === 0) {
         if (args.requireVisible) {
@@ -213,28 +225,24 @@ export module protractor_sync {
   }
 
   /**
-   * Asserts that an element is NOT present and throws an error if the element is found. Returns instantly (no polling).
+   * Asserts that an element is NOT present. Polls in order to give the element time to disappear from the DOM.
+   * If time expires and the element is still present, an error will be thrown.
    * @param selector A CSS selector or element locator
    * @param rootElement If specified, only search for descendants of this element
    */
   function assertElementDoesNotExist(selector: any, rootElement?: protractor.ElementFinder) {
     var elements: any[] = [];
 
-    try {
-      elements = _getElements({
-        selector: selector,
-        rootElement: rootElement,
-        poll: false,
-        requireVisible: false,
-        single: false
-      });
-    } catch (e) {
-      //Ignore the case where the element isn't found
-    }
+    elements = _getElements({
+      selector: selector,
+      shouldExist: false,
+      rootElement: rootElement,
+      poll: true,
+      requireVisible: false,
+      single: false
+    });
 
-    if (elements.length > 0) {
-      throw new Error(selector + ' was found when it should not exist!');
-    }
+    return elements;
   }
 
   /**
@@ -260,6 +268,7 @@ export module protractor_sync {
   function findVisible(selector: any, rootElement?: protractor.ElementFinder) {
     var displayed = _getElements({
       selector: selector,
+      shouldExist: true,
       single: true,
       requireVisible: true,
       rootElement: rootElement,
@@ -280,6 +289,7 @@ export module protractor_sync {
   function findVisibles(selector: any, rootElement?: protractor.ElementFinder) {
     var displayed = _getElements({
       selector: selector,
+      shouldExist: true,
       single: false,
       requireVisible: true,
       rootElement: rootElement,
@@ -300,6 +310,7 @@ export module protractor_sync {
   function findElement(selector: any, rootElement?: protractor.ElementFinder) {
     var elements = _getElements({
       selector: selector,
+      shouldExist: true,
       single: true,
       requireVisible: false,
       rootElement: rootElement,
@@ -321,6 +332,7 @@ export module protractor_sync {
   function findElements(selector: any, rootElement?: protractor.ElementFinder) {
     var elements = _getElements({
       selector: selector,
+      shouldExist: true,
       single: false,
       requireVisible: false,
       rootElement: rootElement,
