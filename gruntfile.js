@@ -4,8 +4,6 @@ if (ab.enableTransform(module)) {
   return;
 }
 
-var TS_FILES = [ 'app/**/*.ts', 'test/**/*.ts' ];
-
 module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
@@ -71,12 +69,12 @@ module.exports = function(grunt) {
       },
 
       build: {
-        src: [ TS_FILES ],
+        src: [ 'app/**/*.ts', 'test/**/*.ts' ],
         outDir: 'build/develop'
       },
 
-      watch: {
-        src: [ TS_FILES ],
+      watchApp: {
+        src: [ 'app/**/*.ts', 'test/**/*.ts' ],
         watch: '.',
         outDir: 'build/develop'
       }
@@ -88,7 +86,7 @@ module.exports = function(grunt) {
       },
 
       all: {
-        src: [ TS_FILES ]
+        src: [ 'app/**/*.ts', 'test/**/*.ts' ]
       }
     }
   });
@@ -99,7 +97,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('develop', [
-    'ts:watch',
+    'ts:watchApp',
     'copy:jquery'
   ]);
 

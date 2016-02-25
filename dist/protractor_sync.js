@@ -1,3 +1,4 @@
+"use strict";
 /// <reference path='../node_modules/node-shared-typescript-defs/angular-protractor-sync/angular-protractor-sync.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/asyncblock/asyncblock.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
@@ -32,46 +33,14 @@ var protractor_sync;
     //Get access to the ElementFinder type
     var ElementFinder = element(by.css('')).constructor;
     var ELEMENT_PATCHES = [
-        'isPresent',
-        'evaluate',
-        'allowAnimations',
-        'isElementPresent',
-        'click',
-        'sendKeys',
-        'getTagName',
-        'getCssValue',
-        'getAttribute',
-        'getText',
-        'getSize',
-        'getLocation',
-        'isEnabled',
-        'isSelected',
-        'submit',
-        'clear',
-        'isDisplayed',
-        'getOuterHtml',
-        'getInnerHtml',
-        'getId',
-        'getRawId'
+        'isPresent', 'evaluate', 'allowAnimations',
+        'isElementPresent', 'click', 'sendKeys',
+        'getTagName', 'getCssValue', 'getAttribute', 'getText', 'getSize', 'getLocation', 'isEnabled',
+        'isSelected', 'submit', 'clear', 'isDisplayed', 'getOuterHtml', 'getInnerHtml', 'getId', 'getRawId'
     ];
     var RETRY_ON_STALE = ELEMENT_PATCHES.concat([
-        'closest',
-        'hasClass',
-        'innerHeight',
-        'innerWidth',
-        'is',
-        'outerHeight',
-        'outerWidth',
-        'next',
-        'offset',
-        'parent',
-        'parents',
-        'position',
-        'prev',
-        'prop',
-        'scrollLeft',
-        'scrollTop',
-        'scrollIntoView',
+        'closest', 'hasClass', 'innerHeight', 'innerWidth', 'is', 'outerHeight', 'outerWidth', 'next', 'offset', 'parent',
+        'parents', 'position', 'prev', 'prop', 'scrollLeft', 'scrollTop', 'scrollIntoView',
         'waitUntil'
     ]);
     /**
@@ -344,8 +313,12 @@ var protractor_sync;
                     var _this = this;
                     var startTime = new Date().getTime();
                     var attempt = function () {
+                        var args = [];
+                        for (var _i = 0; _i < arguments.length; _i++) {
+                            args[_i - 0] = arguments[_i];
+                        }
                         try {
-                            return prevClick.apply(_this, arguments);
+                            return prevClick.apply(_this, args);
                         }
                         catch (e) {
                             if (/Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < protractor_sync.IMPLICIT_WAIT_MS) {
@@ -598,7 +571,8 @@ var protractor_sync;
     function patchBrowser() {
         if (!browser.__psync_patched) {
             patchWithExec(browser, ['getAllWindowHandles']);
-            patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close', 'quit', 'getWindowHandle']);
+            patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close',
+                'quit', 'getWindowHandle']);
             var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
             patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
             browser.waitFor = function (condition, waitTimeMs) {
@@ -630,7 +604,7 @@ var protractor_sync;
             obj[func] = function () {
                 var returnValue = patches[func].apply(this, arguments);
                 if (post) {
-                    returnValue = post.call(this, returnValue);
+                    returnValue = post.call(this, returnValue, func);
                 }
                 return returnValue;
             };
@@ -804,6 +778,8 @@ var protractor_sync;
         var flow = ab.getCurrentFlow();
         var expectation;
         var matcherCalled = false;
+        var expectationPassed = false;
+        var expectationTimedOut = false;
         var originalContext = new Error(); //used to keep the original stack trace
         var options = {
             actual: func(),
@@ -826,6 +802,7 @@ var protractor_sync;
                         });
                     }
                     else {
+                        expectationTimedOut = true;
                         //If we throw the error directly the caller can't catch it b/c this is a different context
                         //However, returning it to the flow.queue will throw it on the Fiber running the test
                         flow.queue(function (callback) {
@@ -835,6 +812,7 @@ var protractor_sync;
                     }
                 }
                 else {
+                    expectationPassed = true;
                     flow.doneAdding(); //asyncblock will wait at flow.forceWait() until this is called
                 }
             },
@@ -849,11 +827,16 @@ var protractor_sync;
             addExpectationResult: plainExpectation.addExpectationResult,
             util: plainExpectation.util
         });
+        // Each time the expectation matcher is checked, we let it know whether the expectation is passed/timedout
+        // This prevents a situation where the matcher may be called after it passes and forceWait gets
+        // called again, hanging the application
         patchExpectation(plainExpectation, function () {
             matcherCalled = true;
+            return expectationPassed || expectationTimedOut;
         });
         patchExpectation(notExpectation, function () {
             matcherCalled = true;
+            return expectationPassed || expectationTimedOut;
         });
         Object.defineProperty(plainExpectation, 'not', {
             get: function () {
@@ -879,11 +862,11 @@ var protractor_sync;
     /** This patch will force the expectation to block execution until it passes or throws an error. */
     function patchExpectation(expectation, post) {
         //jasmine.matchers contains all the matchers, like toEqual, toBeGreaterThan, etc.
-        _patch(expectation, Object.keys(jasmine.matchers), function (result) {
-            post();
+        _patch(expectation, Object.keys(jasmine.matchers), function (result, matcher) {
+            var expectationComplete = post();
             var flow = ab.getCurrentFlow();
             //Calling forceWait more than once seems to deadlock things
-            if (!flow._forceWait) {
+            if (!flow._forceWait && !expectationComplete) {
                 flow.forceWait();
             }
             return result;
