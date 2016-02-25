@@ -358,9 +358,9 @@ export module protractor_sync {
         elementFinder.click = function () {
           var startTime = new Date().getTime();
 
-          var attempt: any = () => {
+          var attempt: any = (...args: any[]) => {
             try {
-              return prevClick.apply(this, arguments);
+              return prevClick.apply(this, args);
             } catch (e) {
               if (/Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < IMPLICIT_WAIT_MS) {
                 console.log('(Protractor-sync): Element (' + this.getSelectionPath() + ') was covered, retrying click.');
@@ -720,7 +720,7 @@ export module protractor_sync {
         var returnValue = patches[func].apply(this, arguments);
 
         if (post) {
-          returnValue = post.call(this, returnValue);
+          returnValue = post.call(this, returnValue, func);
         }
 
         return returnValue;
@@ -921,6 +921,8 @@ export module protractor_sync {
     var flow = ab.getCurrentFlow();
     var expectation: any;
     var matcherCalled = false;
+    var expectationPassed = false;
+    var expectationTimedOut = false;
     var originalContext = new Error(); //used to keep the original stack trace
 
     var options = {
@@ -942,19 +944,19 @@ export module protractor_sync {
             flow.queue((callback: Function) => {
               flow.sync(setTimeout(flow.add(), RETRY_INTERVAL));
               recheck();
-
               callback();
             });
           } else {
+            expectationTimedOut = true;
             //If we throw the error directly the caller can't catch it b/c this is a different context
             //However, returning it to the flow.queue will throw it on the Fiber running the test
             flow.queue((callback: Function) => {
               return callback(new Error(info.message));
             });
-
             flow.doneAdding(); //asyncblock will wait at flow.forceWait() until this is called
           }
         } else {
+          expectationPassed = true;
           flow.doneAdding(); //asyncblock will wait at flow.forceWait() until this is called
         }
       },
@@ -971,8 +973,18 @@ export module protractor_sync {
       addExpectationResult: plainExpectation.addExpectationResult,
       util: plainExpectation.util
     });
-    patchExpectation(plainExpectation, () => { matcherCalled = true; });
-    patchExpectation(notExpectation, () => { matcherCalled = true; });
+
+    // Each time the expectation matcher is checked, we let it know whether the expectation is passed/timedout
+    // This prevents a situation where the matcher may be called after it passes and forceWait gets
+    // called again, hanging the application
+    patchExpectation(plainExpectation, () => {
+      matcherCalled = true;
+      return expectationPassed || expectationTimedOut;
+    });
+    patchExpectation(notExpectation, () => {
+      matcherCalled = true;
+      return expectationPassed || expectationTimedOut;
+    });
 
     Object.defineProperty(plainExpectation, 'not', {
       get: function() {
@@ -1002,15 +1014,15 @@ export module protractor_sync {
   global.polledExpect = polledExpect;
 
   /** This patch will force the expectation to block execution until it passes or throws an error. */
-  function patchExpectation(expectation: any, post: Function) {
+  function patchExpectation(expectation: any, post: () => boolean) {
     //jasmine.matchers contains all the matchers, like toEqual, toBeGreaterThan, etc.
-    _patch(expectation, Object.keys((<any>jasmine).matchers), (result: any) => {
-      post();
+    _patch(expectation, Object.keys((<any>jasmine).matchers), (result: any, matcher?: string) => {
+      var expectationComplete = post();
 
       var flow = ab.getCurrentFlow();
 
       //Calling forceWait more than once seems to deadlock things
-      if (!(<any>flow)._forceWait) {
+      if (!(<any>flow)._forceWait && !expectationComplete) {
         flow.forceWait();
       }
 
