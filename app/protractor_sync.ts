@@ -10,8 +10,8 @@ import ab = require('asyncblock');
 import mkdirp = require('mkdirp');
 
 import baseDir = require('../base_dir');
-var webdriver = require('grunt-protractor-runner/node_modules/protractor/node_modules/selenium-webdriver');
-'use strict';
+
+var webdriver = require('selenium-webdriver');
 
 export module protractor_sync {
   'use strict';
@@ -358,9 +358,9 @@ export module protractor_sync {
         elementFinder.click = function () {
           var startTime = new Date().getTime();
 
-          var attempt: any = () => {
+          var attempt: any = (...args: any[]) => {
             try {
-              return prevClick.apply(this, arguments);
+              return prevClick.apply(this, args);
             } catch (e) {
               if (/Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < IMPLICIT_WAIT_MS) {
                 console.log('(Protractor-sync): Element (' + this.getSelectionPath() + ') was covered, retrying click.');

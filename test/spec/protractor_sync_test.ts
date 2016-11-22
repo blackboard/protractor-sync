@@ -6,7 +6,6 @@ import ab = require('asyncblock');
 import mkdirp = require('mkdirp');
 
 import _protractorSync = require('../../app/protractor_sync');
-'use strict';
 
 var protractorSync = _protractorSync.protractor_sync;
 

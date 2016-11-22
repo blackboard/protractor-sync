@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "noLib": false,
+    "noImplicitAny": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "outDir": "build/develop"
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "bower_components"
+  ],
+  "compileOnSave": false
+}

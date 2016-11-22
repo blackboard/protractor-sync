@@ -2,7 +2,7 @@
 import ab = require('asyncblock');
 import assert = require('assert');
 import _protractorSync = require('../../../app/protractor_sync');
-'use strict';
+
 var protractorSync = _protractorSync.protractor_sync;
 
 describe('disallowed methods, including expect', () => {

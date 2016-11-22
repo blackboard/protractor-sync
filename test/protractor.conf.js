@@ -10,7 +10,7 @@ exports.config = {
 
   // Do not start a Selenium Standalone sever - only run this using chrome.
   directConnect: true,
-  chromeDriver: '../node_modules/grunt-protractor-runner/node_modules/protractor/selenium/chromedriver',
+  chromeDriver: '../node_modules/webdriver-manager/selenium/chromedriver_2.25',
 
   // Comment out directConnect and chromeDriver and uncomment this to run on separate Selenium server
   //seleniumAddress: 'http://someServer:4444/wd/hub',

@@ -1,3 +1,4 @@
+"use strict";
 /// <reference path='../node_modules/node-shared-typescript-defs/angular-protractor-sync/angular-protractor-sync.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/asyncblock/asyncblock.d.ts'/>
 /// <reference path='../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
@@ -7,8 +8,7 @@ var fs = require('fs');
 var path = require('path');
 var ab = require('asyncblock');
 var mkdirp = require('mkdirp');
-var webdriver = require('grunt-protractor-runner/node_modules/protractor/node_modules/selenium-webdriver');
-'use strict';
+var webdriver = require('selenium-webdriver');
 var protractor_sync;
 (function (protractor_sync) {
     'use strict';
@@ -32,46 +32,14 @@ var protractor_sync;
     //Get access to the ElementFinder type
     var ElementFinder = element(by.css('')).constructor;
     var ELEMENT_PATCHES = [
-        'isPresent',
-        'evaluate',
-        'allowAnimations',
-        'isElementPresent',
-        'click',
-        'sendKeys',
-        'getTagName',
-        'getCssValue',
-        'getAttribute',
-        'getText',
-        'getSize',
-        'getLocation',
-        'isEnabled',
-        'isSelected',
-        'submit',
-        'clear',
-        'isDisplayed',
-        'getOuterHtml',
-        'getInnerHtml',
-        'getId',
-        'getRawId'
+        'isPresent', 'evaluate', 'allowAnimations',
+        'isElementPresent', 'click', 'sendKeys',
+        'getTagName', 'getCssValue', 'getAttribute', 'getText', 'getSize', 'getLocation', 'isEnabled',
+        'isSelected', 'submit', 'clear', 'isDisplayed', 'getOuterHtml', 'getInnerHtml', 'getId', 'getRawId'
     ];
     var RETRY_ON_STALE = ELEMENT_PATCHES.concat([
-        'closest',
-        'hasClass',
-        'innerHeight',
-        'innerWidth',
-        'is',
-        'outerHeight',
-        'outerWidth',
-        'next',
-        'offset',
-        'parent',
-        'parents',
-        'position',
-        'prev',
-        'prop',
-        'scrollLeft',
-        'scrollTop',
-        'scrollIntoView',
+        'closest', 'hasClass', 'innerHeight', 'innerWidth', 'is', 'outerHeight', 'outerWidth', 'next', 'offset', 'parent',
+        'parents', 'position', 'prev', 'prop', 'scrollLeft', 'scrollTop', 'scrollIntoView',
         'waitUntil'
     ]);
     /**
@@ -344,8 +312,12 @@ var protractor_sync;
                     var _this = this;
                     var startTime = new Date().getTime();
                     var attempt = function () {
+                        var args = [];
+                        for (var _i = 0; _i < arguments.length; _i++) {
+                            args[_i - 0] = arguments[_i];
+                        }
                         try {
-                            return prevClick.apply(_this, arguments);
+                            return prevClick.apply(_this, args);
                         }
                         catch (e) {
                             if (/Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < protractor_sync.IMPLICIT_WAIT_MS) {
@@ -598,7 +570,8 @@ var protractor_sync;
     function patchBrowser() {
         if (!browser.__psync_patched) {
             patchWithExec(browser, ['getAllWindowHandles']);
-            patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close', 'quit', 'getWindowHandle']);
+            patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', 'get', 'getCurrentUrl', 'close',
+                'quit', 'getWindowHandle']);
             var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
             patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
             browser.waitFor = function (condition, waitTimeMs) {
@@ -849,12 +822,8 @@ var protractor_sync;
             addExpectationResult: plainExpectation.addExpectationResult,
             util: plainExpectation.util
         });
-        patchExpectation(plainExpectation, function () {
-            matcherCalled = true;
-        });
-        patchExpectation(notExpectation, function () {
-            matcherCalled = true;
-        });
+        patchExpectation(plainExpectation, function () { matcherCalled = true; });
+        patchExpectation(notExpectation, function () { matcherCalled = true; });
         Object.defineProperty(plainExpectation, 'not', {
             get: function () {
                 expectation = notExpectation;
