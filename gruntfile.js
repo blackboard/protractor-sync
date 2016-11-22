@@ -4,8 +4,6 @@ if (ab.enableTransform(module)) {
   return;
 }
 
-var TS_FILES = [ 'app/**/*.ts', 'test/**/*.ts' ];
-
 module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
@@ -51,34 +49,26 @@ module.exports = function(grunt) {
 
     shell: {
       webdriverUpdate: {
-        command: 'node ./node_modules/grunt-protractor-runner/node_modules/protractor/bin/webdriver-manager update'
+        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager update'
       },
 
       webdriverStart: {
-        command: 'node ./node_modules/grunt-protractor-runner/node_modules/protractor/bin/webdriver-manager start'
+        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager start'
       }
     },
 
     ts: {
       options: {
-        compiler: 'node_modules/typescript/bin/tsc',
-        declaration: true,
-        module: 'commonjs',
-        removeComments: false,
-        target: 'es5',
-        sourceMap: true,
-        noImplicitAny: true
+        compiler: 'node_modules/typescript/bin/tsc'
       },
 
       build: {
-        src: [ TS_FILES ],
-        outDir: 'build/develop'
+        tsconfig: 'tsconfig.json'
       },
 
-      watch: {
-        src: [ TS_FILES ],
-        watch: '.',
-        outDir: 'build/develop'
+      watchApp: {
+        tsconfig: 'tsconfig.json',
+        watch: '.'
       }
     },
 
@@ -88,7 +78,7 @@ module.exports = function(grunt) {
       },
 
       all: {
-        src: [ TS_FILES ]
+        src: [ 'app/**/*.ts', 'test/**/*.ts' ]
       }
     }
   });
@@ -99,7 +89,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('develop', [
-    'ts:watch',
+    'ts:watchApp',
     'copy:jquery'
   ]);
 
