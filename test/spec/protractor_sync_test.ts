@@ -216,13 +216,13 @@ describe('Protractor extensions', () => {
         );
     });
 
-    it('should prevent calling by.buttonText', () => {
-        expect(() => {
-          by.buttonText('');
-        }).toThrowError(
-          'buttonText() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
+    // it('should prevent calling by.buttonText', () => {
+    //     expect(() => {
+    //       by.buttonText('');
+    //     }).toThrowError(
+    //       'buttonText() has been disabled in this project! Use a css selector or by.model instead.'
+    //     );
+    // });
 
     it('should prevent calling by.className', () => {
         expect(() => {
