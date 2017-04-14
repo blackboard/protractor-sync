@@ -852,7 +852,6 @@ export module protractor_sync {
 
       [
         'binding',
-        'buttonText',
         'className',
         'css',
         'cssContainingText',
