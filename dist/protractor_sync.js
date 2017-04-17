@@ -719,7 +719,6 @@ var protractor_sync;
             var LOCATOR_ADVICE = 'Use a css selector or by.model instead.';
             [
                 'binding',
-                'buttonText',
                 'className',
                 'css',
                 'cssContainingText',
