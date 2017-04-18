@@ -132,7 +132,8 @@ Note: tests/pre-commit task should be run only when protractor_sync is located o
 
 # How to update this project
 
-* Make code changes (make sure you run `grunt pre-commit` to update the contents of "dist"), and create a PR / push changes
+* Make code changes and run tests (`grunt tests`)
+* Create a PR (make sure you run `grunt pre-commit` to update the contents of "dist", and include the updated dist files in your PR)
 * Increment version # in package.json (use semantic versioning)
-* Publish a tag with the version number (`git tag v0.0.1; git push --tags;`)
-* (To use new version from another project, update reference in package.json to point to the new tag)
+* After your PR is merged, publish a tag with the version number (E.g. `git tag v0.0.1; git push --tags;`)
+* (To use the new version of protractor_sync in another project, update the protractor_sync reference in package.json to point to the new tag)
