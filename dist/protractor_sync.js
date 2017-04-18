@@ -1,13 +1,14 @@
 "use strict";
-/// <reference path='../node_modules/node-shared-typescript-defs/angular-protractor-sync/angular-protractor-sync.d.ts'/>
-/// <reference path='../node_modules/node-shared-typescript-defs/asyncblock/asyncblock.d.ts'/>
-/// <reference path='../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
-/// <reference path='../node_modules/node-shared-typescript-defs/node/node.d.ts'/>
 /* tslint:disable: no-var-requires no-eval */
-var fs = require('fs');
-var path = require('path');
-var ab = require('asyncblock');
-var mkdirp = require('mkdirp');
+Object.defineProperty(exports, "__esModule", { value: true });
+var fs = require("fs");
+var path = require("path");
+var ab = require("asyncblock");
+var mkdirp = require("mkdirp");
+var protractor = require("protractor");
+//declare var browser: protractor.Protractor;
+//declare var by: protractor.IProtractorLocatorStrategy;
+//declare var element: protractor.Element;
 var webdriver = require('selenium-webdriver');
 var protractor_sync;
 (function (protractor_sync) {
@@ -314,7 +315,7 @@ var protractor_sync;
                     var attempt = function () {
                         var args = [];
                         for (var _i = 0; _i < arguments.length; _i++) {
-                            args[_i - 0] = arguments[_i];
+                            args[_i] = arguments[_i];
                         }
                         try {
                             return prevClick.apply(_this, args);
@@ -677,7 +678,7 @@ var protractor_sync;
             var original = object[method];
             object[method] = function () {
                 // We don't want to block access from protractor or selenium or the current file
-                var stack = (new Error()).stack;
+                var stack = new Error().stack;
                 //First line is the error message, second line is where the error was created, third line is the caller
                 var secondFrame = stack.split('\n')[2];
                 if (ALLOWED_LOCATIONS.every(function (location) { return secondFrame.indexOf(location) < 0; })) {

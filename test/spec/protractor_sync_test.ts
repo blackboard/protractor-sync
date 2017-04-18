@@ -1,5 +1,3 @@
-/// <reference path='../../node_modules/node-shared-typescript-defs/jasmine/jasmine.d.ts'/>
-/// <reference path='../../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
 import fs = require('fs');
 
 import ab = require('asyncblock');

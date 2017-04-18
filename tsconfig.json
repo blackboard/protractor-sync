@@ -10,7 +10,8 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
-    "outDir": "build/develop"
+    "outDir": "build/develop",
+    "typeRoots" : ["./node_modules/@types", "./typings"]
   },
   "exclude": [
     "node_modules",

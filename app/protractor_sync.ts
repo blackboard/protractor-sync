@@ -1,8 +1,5 @@
-/// <reference path='../node_modules/node-shared-typescript-defs/angular-protractor-sync/angular-protractor-sync.d.ts'/>
-/// <reference path='../node_modules/node-shared-typescript-defs/asyncblock/asyncblock.d.ts'/>
-/// <reference path='../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
-/// <reference path='../node_modules/node-shared-typescript-defs/node/node.d.ts'/>
 /* tslint:disable: no-var-requires no-eval */
+
 import fs = require('fs');
 import path = require('path');
 
@@ -10,6 +7,12 @@ import ab = require('asyncblock');
 import mkdirp = require('mkdirp');
 
 import baseDir = require('../base_dir');
+
+import protractor = require('protractor');
+
+//declare var browser: protractor.Protractor;
+//declare var by: protractor.IProtractorLocatorStrategy;
+//declare var element: protractor.Element;
 
 var webdriver = require('selenium-webdriver');
 
@@ -655,17 +658,17 @@ export module protractor_sync {
    * Extend global element variable
    */
   function patchGlobals() {
-    global.element.findVisible = findVisible;
+    (<any>global).element.findVisible = findVisible;
 
-    global.element.findVisibles = findVisibles;
+    (<any>global).element.findVisibles = findVisibles;
 
-    global.element.findElement = findElement;
+    (<any>global).element.findElement = findElement;
 
-    global.element.findElements = findElements;
+    (<any>global).element.findElements = findElements;
 
-    global.element.assertElementDoesNotExist = assertElementDoesNotExist;
+    (<any>global).element.assertElementDoesNotExist = assertElementDoesNotExist;
 
-    global.element.getActiveElement = getActiveElement;
+    (<any>global).element.getActiveElement = getActiveElement;
 
     patchBrowser();
   }
@@ -910,7 +913,7 @@ export module protractor_sync {
   }
 
   export function polledExpect(func: Function, waitTimeMS?: number) {
-    var jasmine = global.jasmine;
+    var jasmine = (<any>global).jasmine;
     if (jasmine == null) {
       throw new Error('jasmine is required to use polledExpect');
     }
@@ -999,7 +1002,7 @@ export module protractor_sync {
   }
 
   //Expose global variable so callers can call "polledExpect" similar to just calling "expect"
-  global.polledExpect = polledExpect;
+  (<any>global).polledExpect = polledExpect;
 
   /** This patch will force the expectation to block execution until it passes or throws an error. */
   function patchExpectation(expectation: any, post: Function) {
