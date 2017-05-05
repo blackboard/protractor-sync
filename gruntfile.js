@@ -96,14 +96,14 @@ module.exports = function(grunt) {
   grunt.registerTask('pre-commit', [
     'tslint:all',
     'build',
-    'tests',
+    'test',
     'copy:jquery',
     'clean:dist',
     'copy:dist',
     'copy:prepareModuleDefinition'
   ]);
 
-  grunt.registerTask('tests', [
+  grunt.registerTask('test', [
     'copy:jquery',
     'protractor:tests'
   ]);
