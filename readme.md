@@ -16,6 +16,7 @@ Pre-reqs:
 * Protractor (or something like grunt-protractor-runner, which includes it)
 * asyncblock (`npm install asyncblock`)
 * jasmine (Comes with protractor. Other frameworks can be used, but some features only work with jasmine)
+* jQuery must be available in the web application being tested
 
 `npm install protractor_sync`
 

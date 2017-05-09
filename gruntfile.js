@@ -20,12 +20,6 @@ module.exports = function(grunt) {
         src: ['*.js', '*.d.ts'],
         dest: 'dist'
       },
-      jquery: {
-        expand: true,
-        cwd: 'app',
-        src: 'jquery-1.11.3.js',
-        dest: 'build/develop/app/'
-      },
       prepareModuleDefinition: {
         expand: true,
         cwd: 'dist',
@@ -89,22 +83,19 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('develop', [
-    'ts:watchApp',
-    'copy:jquery'
+    'ts:watchApp'
   ]);
 
-  grunt.registerTask('pre-commit', [
+  grunt.registerTask('prepublish', [
     'tslint:all',
     'build',
     'test',
-    'copy:jquery',
     'clean:dist',
     'copy:dist',
     'copy:prepareModuleDefinition'
   ]);
 
   grunt.registerTask('test', [
-    'copy:jquery',
     'protractor:tests'
   ]);
 

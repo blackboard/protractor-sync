@@ -543,8 +543,7 @@ export module protractor_sync {
       var result = attempt();
 
       if (result === '!!jquery not present!!') {
-        injectjQuery();
-        result = attempt();
+        throw Error('jQuery not present, unable to continue');
       }
 
       if (Array.isArray(result)) {
@@ -873,22 +872,6 @@ export module protractor_sync {
       });
     };
   })();
-
-  export function injectjQuery() {
-    var jQuery = browser.executeScript(function() {
-      return !!(<any>window).jQuery;
-    });
-
-    if (!jQuery) {
-      var jquerySource = fs.readFileSync(path.join(__dirname, './jquery-1.11.3.js'), 'utf8');
-
-      browser.executeScript((jquerySource: string) => {
-        eval(jquerySource);
-
-        (<any>window).$.noConflict();
-      }, jquerySource);
-    }
-  }
 
   export function waitForNewWindow(action: Function, waitTimeMs?: number) {
     var handlesBefore: string[] = (<any>browser).getAllWindowHandles();
