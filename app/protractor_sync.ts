@@ -10,11 +10,9 @@ import baseDir = require('../base_dir');
 
 import protractor = require('protractor');
 
-//declare var browser: protractor.Protractor;
-//declare var by: protractor.IProtractorLocatorStrategy;
-//declare var element: protractor.Element;
-
 var webdriver = require('selenium-webdriver');
+
+//var _global = global as any;
 
 export module protractor_sync {
   'use strict';
@@ -232,6 +230,7 @@ export module protractor_sync {
    * If time expires and the element is still present, an error will be thrown.
    * @param selector A CSS selector or element locator
    * @param rootElement If specified, only search for descendants of this element
+   * @returns true if there are no matching elements
    */
   function assertElementDoesNotExist(selector: any, rootElement?: protractor.ElementFinder) {
     var elements: any[] = [];
@@ -245,7 +244,7 @@ export module protractor_sync {
       single: false
     });
 
-    return elements;
+    return elements.length === 0;
   }
 
   /**
@@ -658,17 +657,17 @@ export module protractor_sync {
    * Extend global element variable
    */
   function patchGlobals() {
-    (<any>global).element.findVisible = findVisible;
+    global.element.findVisible = findVisible;
 
-    (<any>global).element.findVisibles = findVisibles;
+    global.element.findVisibles = findVisibles;
 
-    (<any>global).element.findElement = findElement;
+    global.element.findElement = findElement;
 
-    (<any>global).element.findElements = findElements;
+    global.element.findElements = findElements;
 
-    (<any>global).element.assertElementDoesNotExist = assertElementDoesNotExist;
+    global.element.assertElementDoesNotExist = assertElementDoesNotExist;
 
-    (<any>global).element.getActiveElement = getActiveElement;
+    global.element.getActiveElement = getActiveElement;
 
     patchBrowser();
   }
@@ -912,7 +911,7 @@ export module protractor_sync {
   }
 
   export function polledExpect(func: Function, waitTimeMS?: number) {
-    var jasmine = (<any>global).jasmine;
+    var jasmine = global.jasmine;
     if (jasmine == null) {
       throw new Error('jasmine is required to use polledExpect');
     }
@@ -1001,7 +1000,7 @@ export module protractor_sync {
   }
 
   //Expose global variable so callers can call "polledExpect" similar to just calling "expect"
-  (<any>global).polledExpect = polledExpect;
+  global.polledExpect = polledExpect;
 
   /** This patch will force the expectation to block execution until it passes or throws an error. */
   function patchExpectation(expectation: any, post: Function) {
