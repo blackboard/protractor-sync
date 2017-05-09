@@ -1,6 +1,6 @@
 # What is this?
 
-Protractor_sync builds on protractor and provides:
+Protractor-sync builds on protractor and provides:
 
 * Synchronous-style test writing (using fibers, behind the scenes)
 * Polling mechanisms for testing asynchronous apps (polledExpect, elementFinder.waitUntil & .waitUntilRemoved, browser.waitFor)
@@ -18,12 +18,12 @@ Pre-reqs:
 * jasmine (Comes with protractor. Other frameworks can be used, but some features only work with jasmine)
 * jQuery must be available in the web application being tested
 
-`npm install protractor_sync`
+`npm install protractor-sync`
 
 In your code:
 
 ```
-var protractorSync = require('protractor_sync');
+var protractorSync = require('protractor-sync');
 
 protractorSync.patch();
 protractorSync.disallowMethods({ expect: true });
@@ -42,7 +42,7 @@ polledExpect(function() { return element.findVisible('div.start-date').getText()
 //With ES6/Typescript: polledExpect(() => element.findVisible('div.start-date').getText()).toEqual('1/1/2000');
 ```
 
-See test/protractor_sync_test.ts for more examples.
+See test/protractor-sync_test.ts for more examples.
 
 # API
 
@@ -100,16 +100,16 @@ See test/protractor_sync_test.ts for more examples.
 
 * **waitFor(condition, waitTimeMS?)** - Waits for the condition function to return a truthy value. An exception will be raised if it times out.
 
-## protractor_sync
+## protractor-sync
 
 * **IMPLICIT_WAIT_MS** - The amount of time to wait before timing out operations which wait implicitly. Note: An implicit wait
 SHOULD NOT be set in selenium/protractor. Use this value instead. Default: 5 seconds.
 * **RETRY_INTERVAL** - The amount of time to wait before retrying operations which wait. Default: 10ms.
 * **CLICK_RETRY_INTERVAL** - The amount of time to wait before attempting to re-click a blocked element. Default: 200ms.
 * **autoReselectStaleElements** - A boolean value indicating whether stale elements should be automatically re-selected or not.
-* **autoRetryClick** - A boolean value indicating whether protractor_sync should attempt to automatically retry blocked clicks or not.
+* **autoRetryClick** - A boolean value indicating whether protractor-sync should attempt to automatically retry blocked clicks or not.
 * **patch()** - Apply patches to protractor, allowing "synchronous-style" tests to be written. Should be called once before any tests have run.
-* **disallowMethods(options)** - Restricts usage of underlying protractor methods, encouraging the use of protractor_sync and protractor_sync's preferred
+* **disallowMethods(options)** - Restricts usage of underlying protractor methods, encouraging the use of protractor-sync and protractor-sync's preferred
   style of test writing. Pass `{ expect: true }` to prevent the usage of `expect` (in favor of `polledExpect`).
 * **waitForNewWindow(action, waitTimeMs)** - Executes the action function, then waits for a new popup window to appear.
   The current window will be switched to the new window when it opens. Times out after waitTimeMs milliseconds.
@@ -121,23 +121,18 @@ SHOULD NOT be set in selenium/protractor. Use this value instead. Default: 5 sec
 
 * Do not set an implicit wait in protractor/selenium. Set protractorSync.IMPLICIT_WAIT_MS instead.
 * Turn off protractor synchronization (browser.ignoreSynchronization = true;) for faster tests. You can also enable/disable it during portions of tests.
-* Always use findVisible, except for special sitautions where you want to select a hidden element.
+* Always use findVisible, except for special situations where you want to select a hidden element.
 * If you must manually pass a waitTimeMS, set it as a multiple of the IMPLICIT_WAIT_TIME_MS so it will scale on slower machines.
 
 # Grunt tasks
 
-* `grunt develop` - Builds code and watches for changes
-* `grunt test` - Run the tests
-* `grunt pre-commit` - Runs the linter, runs the tests, and builds the code. Also copies the appropriate files into dist.
-* `grunt update` - Gets the latest selenium webdriver and chromedriver
+* `npm start` - Builds code and watches for changes
+* `npm test` - Run the tests
+* `npm prepublish` - Runs the linter, runs the tests, builds the code, and copies files into dist
 
-Note: `test` and `pre-commit` tasks should be run only when protractor_sync is located outside node_modules folder. Otherwise
-`disallow methods` tests will fail.
+# How to publish a new version to NPM
 
-# How to update this project
-
-* Make code changes and run `grunt pre-commit`
-* Create a PR, making sure to include the updated dist files changed by `grunt pre-commit`
+* Checkout/pull develop
+* Verify the version in package.json is set to the correct version for release, if not increment and commit it
+* TODO: Finish these steps
 * Increment version # in package.json (use semantic versioning)
-* After your PR is merged, publish a tag with the version number (E.g. `git tag v0.0.1; git push --tags;`)
-* (To use the new version of protractor_sync in another project, update the protractor_sync reference in package.json to point to the new tag)

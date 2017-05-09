@@ -30,6 +30,8 @@
     "grunt-shell": "2.1.0",
     "grunt-ts": "6.0.0-beta.15",
     "grunt-tslint": "3.3.0",
+    "husky": "0.13.3",
+    "in-publish": "^2.0.0",
     "jasmine-reporters": "2.1.1",
     "jasmine-spec-reporter": "2.4.0",
     "jquery": "^2.2.4",
@@ -39,6 +41,9 @@
     "typescript": "2.3.0"
   },
   "scripts": {
-    "prepublish": "grunt prepublish"
+    "postinstall": "grunt update",
+    "start": "grunt develop",
+    "prepush": "grunt verifySource",
+    "prepublish": "in-publish && grunt prepublish || not-in-publish"
   }
 }
