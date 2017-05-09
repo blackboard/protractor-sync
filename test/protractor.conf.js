@@ -18,7 +18,16 @@ exports.config = {
   // ----- Capabilities to be passed to the webdriver instance ----
 
   capabilities: {
-    'browserName': 'chrome'
+    'browserName': 'chrome',
+    chromeOptions: {
+        'args': ['enable-precise-memory-info','disable-infobars'],
+        prefs: {
+            'credentials_enable_service': false,
+            'profile': {
+                'password_manager_enabled': false
+            }
+        }
+    }
   },
 
   // ----- What tests to run -----
