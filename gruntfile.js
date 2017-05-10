@@ -86,20 +86,17 @@ module.exports = function(grunt) {
     'ts:watchApp'
   ]);
 
-  grunt.registerTask('prepublish', [
-    'tslint:all',
-    'build',
-    'test',
-    'clean:dist',
-    'copy:dist',
-    'copy:prepareModuleDefinition'
-  ]);
-
   grunt.registerTask('test', [
     'protractor:tests'
   ]);
 
-  grunt.registerTask('update', [
-    'shell:webdriverUpdate'
+  grunt.registerTask('verify', [
+    'tslint:all'
+  ]);
+
+  grunt.registerTask('package', [
+    'clean:dist',
+    'copy:dist',
+    'copy:prepareModuleDefinition'
   ]);
 };

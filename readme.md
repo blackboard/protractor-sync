@@ -124,11 +124,13 @@ SHOULD NOT be set in selenium/protractor. Use this value instead. Default: 5 sec
 * Always use findVisible, except for special situations where you want to select a hidden element.
 * If you must manually pass a waitTimeMS, set it as a multiple of the IMPLICIT_WAIT_TIME_MS so it will scale on slower machines.
 
-# Grunt tasks
+# Build tasks
 
-* `npm start` - Builds code and watches for changes
-* `npm test` - Run the tests
-* `npm prepublish` - Runs the linter, runs the tests, builds the code, and copies files into dist
+* `npm start` - Builds the code and watches for changes
+* `npm test` - Builds the code, runs the linter and runs the test suite
+* `npm publish` - Publish a new version to NPM
+
+This project will automatically build, lint and test when pushing code to a remote repository.
 
 # How to publish a new version to NPM
 

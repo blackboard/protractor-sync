@@ -41,9 +41,10 @@
     "typescript": "2.3.0"
   },
   "scripts": {
-    "postinstall": "grunt update",
+    "postinstall": "grunt shell:webdriverUpdate",
+    "test": "grunt build verify test",
     "start": "grunt develop",
-    "prepush": "grunt prepublish",
-    "prepublish": "in-publish && grunt prepublish || not-in-publish"
+    "prepush": "grunt build verify test",
+    "prepublish": "in-publish && grunt build verify test package || not-in-publish"
   }
 }
