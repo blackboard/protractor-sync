@@ -10,7 +10,7 @@
   "author": "Chris Scribner <scriby@gmail.com>",
   "license": "MIT",
   "main": "index.js",
-  "typings": "index.d.ts",
+  "typings": "dist/protractor_sync.d.ts",
   "engines": {
     "node": ">=6.9.x"
   },

@@ -16,11 +16,14 @@ build/
 docs/
 scripts/
 test/
+typings/
 
 .gitattributes
 .gitignore
 .npmignore
 base_dir.ts
+index.d.ts
+index.js
 gruntfile.js
 tsconfig.json
 tslint.json
