@@ -1,0 +1,29 @@
+# Shared between gitignore/npmignore
+
+yarn.lock
+npm-debug.log
+.idea/
+.vscode/
+*.DS_Store
+*.swp
+
+# Dev
+
+.github/
+.tscache/
+app/
+build/
+docs/
+scripts/
+test/
+typings/
+
+.gitattributes
+.gitignore
+.npmignore
+base_dir.ts
+index.d.ts
+index.js
+gruntfile.js
+tsconfig.json
+tslint.json

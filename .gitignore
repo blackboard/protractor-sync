@@ -1,15 +1,19 @@
-node_modules
-build
+# Shared between gitignore/npmignore
 
+yarn.lock
+npm-debug.log
+.idea/
+.vscode/
+*.DS_Store
+*.swp
+
+# Build artifacts
+
+node_modules/
+build/
+dist/
 tmp
-.DS_Store
 .tscache
-/.idea/*
 *.tmp.txt
-
 .tscache
 .baseDir.ts
-
-npm-debug.log
-
-atlassian-ide-plugin.xml

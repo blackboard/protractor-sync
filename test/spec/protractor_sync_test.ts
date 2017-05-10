@@ -1,10 +1,9 @@
-/// <reference path='../../node_modules/node-shared-typescript-defs/jasmine/jasmine.d.ts'/>
-/// <reference path='../../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
 import fs = require('fs');
 
 import ab = require('asyncblock');
 import mkdirp = require('mkdirp');
 
+import testUtil = require('./test_util');
 import _protractorSync = require('../../app/protractor_sync');
 
 var protractorSync = _protractorSync.protractor_sync;
@@ -60,7 +59,6 @@ function createTest(fn: Function, errorMsg?: string) {
 }
 
 describe('Protractor extensions', () => {
-
   describe('disallowed methods', () => {
     // browser/element selectors
 
@@ -343,6 +341,8 @@ describe('Protractor extensions', () => {
       //Make sure we are starting on a fresh page
       browser.get('data:,');
 
+      testUtil.injectjQuery();
+
       appendTestArea({
           style: {
             position: 'absolute',
@@ -460,6 +460,8 @@ describe('Protractor extensions', () => {
     it('can scroll to an element', createTest(() => {
       //Make sure we are starting on a fresh page
       browser.get('data:,');
+
+      testUtil.injectjQuery();
 
       appendTestArea({
         style: { height: '100px', overflow: 'scroll' },
@@ -596,7 +598,7 @@ describe('Protractor extensions', () => {
     beforeAll(createTest(() => {
       browser.get('data:,');
 
-      protractorSync.injectjQuery();
+      testUtil.injectjQuery();
     }));
 
     beforeEach(() => {
@@ -778,7 +780,7 @@ describe('Protractor extensions', () => {
 
     it('works in conjunction with element finders', createTest(() => {
       browser.get('data:,');
-      protractorSync.injectjQuery();
+      testUtil.injectjQuery();
       appendTestArea();
 
       var testArea = element.findElement('#' + TEST_AREA_ID);

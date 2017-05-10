@@ -1,8 +1,5 @@
-/// <reference path='../node_modules/node-shared-typescript-defs/angular-protractor-sync/angular-protractor-sync.d.ts'/>
-/// <reference path='../node_modules/node-shared-typescript-defs/asyncblock/asyncblock.d.ts'/>
-/// <reference path='../node_modules/node-shared-typescript-defs/mkdirp/mkdirp.d.ts'/>
-/// <reference path='../node_modules/node-shared-typescript-defs/node/node.d.ts'/>
 /* tslint:disable: no-var-requires no-eval */
+
 import fs = require('fs');
 import path = require('path');
 
@@ -11,7 +8,11 @@ import mkdirp = require('mkdirp');
 
 import baseDir = require('../base_dir');
 
+import protractor = require('protractor');
+
 var webdriver = require('selenium-webdriver');
+
+//var _global = global as any;
 
 export module protractor_sync {
   'use strict';
@@ -229,6 +230,7 @@ export module protractor_sync {
    * If time expires and the element is still present, an error will be thrown.
    * @param selector A CSS selector or element locator
    * @param rootElement If specified, only search for descendants of this element
+   * @returns true if there are no matching elements
    */
   function assertElementDoesNotExist(selector: any, rootElement?: protractor.ElementFinder) {
     var elements: any[] = [];
@@ -242,7 +244,7 @@ export module protractor_sync {
       single: false
     });
 
-    return elements;
+    return elements.length === 0;
   }
 
   /**
@@ -541,8 +543,7 @@ export module protractor_sync {
       var result = attempt();
 
       if (result === '!!jquery not present!!') {
-        injectjQuery();
-        result = attempt();
+        throw Error('jQuery not present, unable to continue');
       }
 
       if (Array.isArray(result)) {
@@ -871,22 +872,6 @@ export module protractor_sync {
       });
     };
   })();
-
-  export function injectjQuery() {
-    var jQuery = browser.executeScript(function() {
-      return !!(<any>window).jQuery;
-    });
-
-    if (!jQuery) {
-      var jquerySource = fs.readFileSync(path.join(__dirname, './jquery-1.11.3.js'), 'utf8');
-
-      browser.executeScript((jquerySource: string) => {
-        eval(jquerySource);
-
-        (<any>window).$.noConflict();
-      }, jquerySource);
-    }
-  }
 
   export function waitForNewWindow(action: Function, waitTimeMs?: number) {
     var handlesBefore: string[] = (<any>browser).getAllWindowHandles();
