@@ -43,7 +43,7 @@
   "scripts": {
     "postinstall": "grunt update",
     "start": "grunt develop",
-    "prepush": "grunt verifySource",
+    "prepush": "grunt prepublish",
     "prepublish": "in-publish && grunt prepublish || not-in-publish"
   }
 }
