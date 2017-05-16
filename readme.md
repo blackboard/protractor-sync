@@ -126,6 +126,7 @@ SHOULD NOT be set in selenium/protractor. Use this value instead. Default: 5 sec
 
 # Build tasks
 
+* `grunt shell:webdriverUpdate` - Install/update WebDriver
 * `npm start` - Builds the code and watches for changes
 * `npm test` - Builds the code, runs the linter and runs the test suite
 * `npm publish` - Publish a new version to NPM
