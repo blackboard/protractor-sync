@@ -1,5 +1,7 @@
-import fs = require('fs');
-import path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
+
+import { browser } from '../../app/protractor_sync';
 
 export function injectjQuery() {
   var jQuery = browser.executeScript(function() {

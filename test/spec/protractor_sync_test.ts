@@ -1,15 +1,16 @@
-import fs = require('fs');
+import * as fs from 'fs';
 
-import ab = require('asyncblock');
-import mkdirp = require('mkdirp');
+import * as ab from 'asyncblock';
+import * as mkdirp from 'mkdirp';
 
-import testUtil = require('./test_util');
-import _protractorSync = require('../../app/protractor_sync');
-
-var protractorSync = _protractorSync.protractor_sync;
+import { browser, by, element, ElementFinder } from '../../app/patches';
+import * as testUtil from './test_util';
+import * as protractorSync from '../../app/protractor_sync';
+import { polledExpect } from '../../app/protractor_sync';
 
 protractorSync.patch();
 protractorSync.disallowMethods();
+protractorSync.configure({ implicitWaitMs: 500 });
 
 var TEST_AREA_ID = 'protractor_sync-test-area';
 var PNG_HEADER_BASE_64 = 'iVBORw0KGgo';
@@ -51,7 +52,7 @@ function createTest(fn: Function, errorMsg?: string) {
       if (errorMsg) {
         expect(err.message).toEqual(errorMsg);
       } else {
-        expect(err || undefined).toBeUndefined();
+        expect(err && err.stack || err || undefined).toBeUndefined();
       }
       done();
     });
@@ -75,14 +76,6 @@ describe('Protractor extensions', () => {
           (<any>browser).$$('body');
         }).toThrowError(
           '$$() has been disabled in this project! Use element.findVisibles() or element.findElements() instead.'
-        );
-    });
-
-    it('should prevent calling browser.element', () => {
-        expect(() => {
-          browser.element(by.model(''));
-        }).toThrowError(
-          'element() has been disabled in this project! Use element.findVisible() or element.findElement() instead.'
         );
     });
 
@@ -169,9 +162,9 @@ describe('Protractor extensions', () => {
 
     // wait/findElements/sleep
 
-    it('should prevent calling browser.driver.wait', () => {
+    it('should prevent calling browser.wait', () => {
       expect(() => {
-        browser.driver.wait(() => {
+        browser.wait(() => {
           return;
         }, 1);
       }).toThrowError(
@@ -179,25 +172,25 @@ describe('Protractor extensions', () => {
       );
     });
 
-    it('should prevent calling browser.driver.findElement', () => {
+    it('should prevent calling browser.findElement', () => {
         expect(() => {
-          browser.driver.findElement('body');
+          browser.findElement('body');
         }).toThrowError(
           'findElement() has been disabled in this project! Use element.findVisible() or element.findElement() instead.'
         );
     });
 
-    it('should prevent calling browser.driver.findElements', () => {
+    it('should prevent calling browser.findElements', () => {
         expect(() => {
-          browser.driver.findElements('body');
+          browser.findElements('body');
         }).toThrowError(
           'findElements() has been disabled in this project! Use element.findVisibles() or element.findElements() instead.'
         );
     });
 
-    it('should prevent calling browser.driver.sleep', () => {
+    it('should prevent calling browser.sleep', () => {
         expect(() => {
-          browser.driver.sleep(1);
+          browser.sleep(1);
         }).toThrowError(
           'sleep() has been disabled in this project! Use browser.waitFor(), element.waitUntil(), element.waitUntilRemove() etc. ' +
           'instead of browser.sleep().'
@@ -332,10 +325,10 @@ describe('Protractor extensions', () => {
   });
 
   describe('jQuery methods', () => {
-    var testArea: protractor.ElementFinder;
-    var testSpan: protractor.ElementFinder;
-    var testInput: protractor.ElementFinder;
-    var testMultilineInput: protractor.ElementFinder;
+    var testArea: ElementFinder;
+    var testSpan: ElementFinder;
+    var testInput: ElementFinder;
+    var testMultilineInput: ElementFinder;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
@@ -476,7 +469,7 @@ describe('Protractor extensions', () => {
   });
 
   describe('Element finder methods', () => {
-    var testArea: protractor.ElementFinder;
+    var testArea: ElementFinder;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
@@ -561,7 +554,7 @@ describe('Protractor extensions', () => {
   });
 
   describe('assertElementDoesNotExist', () => {
-    var testArea: protractor.ElementFinder;
+    var testArea: ElementFinder;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
@@ -892,7 +885,7 @@ describe('Protractor extensions', () => {
   describe('Window size', () => {
     it('resizes the window', createTest(() => {
       browser.get('data:,');
-      var viewportSize: any = browser.driver.executeScript(function () {
+      var viewportSize: any = browser.executeScript(function () {
         return {
           height: window.document.documentElement.clientHeight,
           width: window.document.documentElement.clientWidth
@@ -903,7 +896,7 @@ describe('Protractor extensions', () => {
       var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({firstArgIsError: false})));
 
       protractorSync.resizeViewport({ width: 400, height: 200 });
-      var newSize: any = browser.driver.executeScript(function () {
+      var newSize: any = browser.executeScript(function () {
         return {
           height: window.document.documentElement.clientHeight,
           width: window.document.documentElement.clientWidth
@@ -914,7 +907,7 @@ describe('Protractor extensions', () => {
       expect(newSize.height).toEqual(200);
 
       protractorSync.resizeViewport(viewportSize);
-      newSize = browser.driver.executeScript(function () {
+      newSize = browser.executeScript(function () {
         return {
           height: window.document.documentElement.clientHeight,
           width: window.document.documentElement.clientWidth
