@@ -1,7 +1,5 @@
 var ab = require('asyncblock');
 
-exports.IMPLICIT_WAIT_MS = 3000;
-
 // protractor configuration file (see options doc at https://github.com/angular/protractor/blob/master/docs/referenceConf.js)
 exports.config = {
   baseUrl: 'http://localhost',

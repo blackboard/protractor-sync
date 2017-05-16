@@ -10,6 +10,7 @@ var protractorSync = _protractorSync.protractor_sync;
 
 protractorSync.patch();
 protractorSync.disallowMethods();
+protractorSync.IMPLICIT_WAIT_MS = 500;
 
 var TEST_AREA_ID = 'protractor_sync-test-area';
 var PNG_HEADER_BASE_64 = 'iVBORw0KGgo';
