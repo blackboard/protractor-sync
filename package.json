@@ -1,6 +1,6 @@
 {
   "name": "protractor-sync",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Synchronous, polled selectors and expectations in Protractor 2.x",
   "homepage": "",
   "repository": {
