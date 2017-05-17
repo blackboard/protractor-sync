@@ -358,7 +358,7 @@ function wrapElementFinder(elementFinder: ElementFinder) {
     patchWithExec(elementFinder, ELEMENT_PATCHES);
 
     //For the methods which don't return a value, we want to change the return value to allow chaining (field.clear().sendKeys())
-    _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], (returnValue: any) => {
+    _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], null, (returnValue: any) => {
       return elementFinder;
     });
 
@@ -411,7 +411,7 @@ function wrapElementFinderArray(elementFinders: ElementFinder[]) {
  */
 function patchElementFinder() {
   if (!elPrototype.__psync_patched) {
-    _patch(ElementFinder, ['fromWebElement_'], returnValue => {
+    _patch(ElementFinder, ['fromWebElement_'], null, returnValue => {
       return wrapElementFinder(returnValue);
     });
 
@@ -694,7 +694,7 @@ function patchBrowser() {
     };
 
     var PAUSE_DEBUGGER_DELAY_MS = 500;
-    _patch(browser, ['pause', 'debugger'], (returnValue: any) => {
+    _patch(browser, ['pause', 'debugger'], null, (returnValue: any) => {
       var flow = ab.getCurrentFlow();
       if (flow) {
         //Sometimes pause and debugger don't work without a delay before executing the next command
@@ -718,13 +718,17 @@ function patchBrowser() {
   }
 }
 
-function _patch(obj: any, methods: string[], post: (returnValue: any) => any) {
+function _patch(obj: any, methods: string[], pre: () => void, post: (returnValue: any) => any) {
   var patches = Object.create(null);
 
   methods.forEach(func => {
     patches[func] = obj[func];
 
     obj[func] = function () {
+      if (pre) {
+        pre.call(this);
+      }
+
       var returnValue = patches[func].apply(this, arguments);
 
       if (post) {
@@ -737,7 +741,7 @@ function _patch(obj: any, methods: string[], post: (returnValue: any) => any) {
 }
 
 function patchWithExec(proto: any, methods: string[]) {
-  _patch(proto, methods, returnValue => {
+  _patch(proto, methods, null, returnValue => {
     if (returnValue && returnValue.exec && ab.getCurrentFlow()) {
       return returnValue.exec();
     } else {
@@ -901,79 +905,13 @@ export function waitForNewWindow(action: Function, waitTimeMs?: number) {
 }
 
 export function polledExpect(func: Function, waitTimeMS?: number) {
-  var jasmine = (global as any).jasmine;
-  if (jasmine == null) {
-    throw new Error('jasmine is required to use polledExpect');
-  }
-
-  var timeout = waitTimeMS || IMPLICIT_WAIT_MS;
-  var startTime = new Date().getTime();
-
-  var flow = ab.getCurrentFlow();
-  var expectation: any;
-  var matcherCalled = false;
-  var originalContext = new Error(); //used to keep the original stack trace
-
-  var options = {
-    actual: func(),
-
-    addExpectationResult: function(passed: boolean, info: any) {
-      var recheck = function() {
-        expectation.actual = func();
-        expectation[info.matcherName](info.expected);
-      };
-
-      if (!passed) {
-        if (new Date().getTime() - startTime <= timeout) {
-          //We have to do some funny things with the flow control because jasminewd (included w/ protractor)
-          //patches expect and makes it async (and therefore not execute in the current Fiber).
-          //We use flow.queue to get the recheck code to execute under the Fiber.
-          //We patch the jasmine matchers (like .toEqual, .toBeGreaterThan) to wait for the verification to finish
-          //before allowing the code to continue.
-          flow.queue((callback: Function) => {
-            flow.sync(setTimeout(flow.add(), RETRY_INTERVAL));
-            recheck();
-
-            callback();
-          });
-        } else {
-          //If we throw the error directly the caller can't catch it b/c this is a different context
-          //However, returning it to the flow.queue will throw it on the Fiber running the test
-          flow.queue((callback: Function) => {
-            return callback(new Error(info.message));
-          });
-
-          flow.doneAdding(); //asyncblock will wait at flow.forceWait() until this is called
-        }
-      } else {
-        flow.doneAdding(); //asyncblock will wait at flow.forceWait() until this is called
-      }
-    },
-
-    util: jasmine.matchersUtil
-  };
-
-  //We create both the normal expectation class, and the one that will be used if the user uses ".not"
-  //We pre-create them both here so the proper one can be referenced when rerunning the expectation later
-  var plainExpectation = new jasmine.Expectation(options);
-  var notExpectation = new jasmine.Expectation({
-    isNot: true,
-    actual: plainExpectation.actual,
-    addExpectationResult: plainExpectation.addExpectationResult,
-    util: plainExpectation.util
-  });
-  patchExpectation(plainExpectation, () => { matcherCalled = true; });
-  patchExpectation(notExpectation, () => { matcherCalled = true; });
-
-  Object.defineProperty(plainExpectation, 'not', {
-    get: function() {
-      expectation = notExpectation;
-
-      return notExpectation;
-    }
-  });
-
-  expectation = plainExpectation;
+  const timeout = waitTimeMS || IMPLICIT_WAIT_MS;
+  const startTime = new Date().getTime();
+  const matchers = Object.create(null);
+  const flow = ab.getCurrentFlow();
+  const originalContext = new Error();
+  let isNot = false;
+  let matcherCalled = false;
 
   setTimeout(() => {
     if (!matcherCalled) {
@@ -986,28 +924,50 @@ export function polledExpect(func: Function, waitTimeMS?: number) {
     }
   });
 
-  return plainExpectation;
+  Object.keys((<any>jasmine).matchers).forEach(key => {
+    matchers[key] = function(expected: any) {
+      matcherCalled = true;
+      let passed = false;
+
+      do {
+        const actual = func();
+        const result = (<any>jasmine).matchers[key]((<any>jasmine).matchersUtil, null).compare(actual, expected);
+        passed = result.pass;
+
+        if (isNot) {
+          passed = !passed;
+        }
+
+        if (!passed) {
+          if (new Date().getTime() - startTime <= timeout) {
+            setTimeout(flow.add(), RETRY_INTERVAL);
+          } else {
+            let message = result.message;
+
+            if (!message) {
+              message = (<any>jasmine).matchersUtil.buildFailureMessage(key, isNot, actual, expected);
+            }
+
+            throw new Error(message);
+          }
+        }
+      } while (!passed);
+    };
+  });
+
+  Object.defineProperty(matchers, 'not', {
+    get: function() {
+      isNot = true;
+
+      return matchers;
+    }
+  });
+
+  return matchers;
 }
 
 //Expose global variable so callers can call "polledExpect" similar to just calling "expect"
 (global as any).polledExpect = polledExpect;
-
-/** This patch will force the expectation to block execution until it passes or throws an error. */
-function patchExpectation(expectation: any, post: Function) {
-  //jasmine.matchers contains all the matchers, like toEqual, toBeGreaterThan, etc.
-  _patch(expectation, Object.keys((<any>jasmine).matchers), (result: any) => {
-    post();
-
-    var flow = ab.getCurrentFlow();
-
-    //Calling forceWait more than once seems to deadlock things
-    if (!(<any>flow)._forceWait) {
-      flow.forceWait();
-    }
-
-    return result;
-  });
-}
 
 /**
  * Takes a screenshot and saves a .png file in the configured screenshot directory.

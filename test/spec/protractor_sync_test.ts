@@ -693,7 +693,7 @@ describe('Protractor extensions', () => {
 
         setTimeout(() => {
           (<any>window).jQuery('#protractor_sync-test-area').append('<div class="stale-test second">test</div>');
-        }, 500);
+        }, 200);
       });
 
       expect(el.hasClass('second')).toEqual(true);
@@ -703,12 +703,12 @@ describe('Protractor extensions', () => {
   describe('expect', () => {
     it('retries until the expectation passes', createTest(() => {
       var counter = 1;
-      var expectation = protractorSync.polledExpect(() => 'test' + counter++);
+      var spy = jasmine.createSpy('counter', () => true).and.callFake(() => 'test' + counter++);
+      var expectation = protractorSync.polledExpect(spy);
 
-      spyOn(expectation, 'toEqual').and.callThrough();
       expectation.toEqual('test5');
 
-      expect(expectation.toEqual.calls.count()).toEqual(5);
+      expect(spy.calls.count()).toEqual(5);
     }));
 
     it('is also available as a global variable', createTest(() => {
@@ -719,56 +719,49 @@ describe('Protractor extensions', () => {
 
     it('works with not', createTest(() => {
       var counter = 0;
-      var expectation = protractorSync.polledExpect(() => 'test' + counter++).not;
+      var spy = jasmine.createSpy('counter', () => true).and.callFake(() => 'test' + counter++);
+      var expectation = protractorSync.polledExpect(spy).not;
 
-      spyOn(expectation, 'toEqual').and.callThrough();
       expectation.toEqual('test0');
 
-      expect(expectation.toEqual.calls.count()).toEqual(2);
+      expect(spy.calls.count()).toEqual(2);
     }));
 
     it('works with the toBeGreaterThan matcher', createTest(() => {
       var counter = 1;
-      var expectation = protractorSync.polledExpect(() => counter++);
+      var spy = jasmine.createSpy('counter', () => true).and.callFake(() => counter++);
+      var expectation = protractorSync.polledExpect(spy);
 
-      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
       expectation.toBeGreaterThan(3);
 
-      expect(expectation.toBeGreaterThan.calls.count()).toEqual(4);
+      expect(spy.calls.count()).toEqual(4);
     }));
 
     it('works with multiple expectations', createTest(() => {
       var counter = 1;
+      var spy = jasmine.createSpy('counter', () => true).and.callFake(() => counter++);
 
-      var expectation = protractorSync.polledExpect(() => counter++);
-      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      var expectation = protractorSync.polledExpect(spy);
       expectation.toBeGreaterThan(3);
-      expect(expectation.toBeGreaterThan.calls.count()).toEqual(4);
+      expect(spy.calls.count()).toEqual(4);
+      spy.calls.reset();
 
-      expectation = protractorSync.polledExpect(() => counter++);
-      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation = protractorSync.polledExpect(spy);
       expectation.toBeGreaterThan(7);
-      expect(expectation.toBeGreaterThan.calls.count()).toEqual(4);
+      expect(spy.calls.count()).toEqual(4);
+      spy.calls.reset();
 
-      expectation = protractorSync.polledExpect(() => counter++);
-      spyOn(expectation, 'toBeGreaterThan').and.callThrough();
+      expectation = protractorSync.polledExpect(spy);
       expectation.toBeGreaterThan(10);
-      expect(expectation.toBeGreaterThan.calls.count()).toEqual(3);
+      expect(spy.calls.count()).toEqual(3);
     }));
 
     it('times out', createTest(() => {
       var counter = 0;
-      var catchRan = false;
 
-      //Can't use expect().toThrow() to check this because it doesn't run from the Fiber when patched by jasminewd
-      try {
-        protractorSync.polledExpect(() => counter++, 100).toBeLessThan(0);
-      } catch (e) {
-        catchRan = true;
-        expect(e.message).toMatch(/Expected \d+ to be less than 0\./);
-      }
-
-      expect(catchRan).toEqual(true);
+      expect(() =>
+        protractorSync.polledExpect(() => counter++, 100).toBeLessThan(0)
+      ).toThrowError(/Expected \d+ to be less than 0\./);
     }));
 
     it('works in conjunction with element finders', createTest(() => {
