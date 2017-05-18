@@ -4,15 +4,14 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-
-import ab = require('asyncblock');
+import * as ab from 'asyncblock';
 import * as mkdirp from 'mkdirp';
 
+import { ElementFinder, Key, WebElement, ProtractorBy, ProtractorBrowser } from 'protractor';
+import { Locator } from 'protractor/built/locators';
+import { ILocation, ISize, IWebElementId } from 'selenium-webdriver';
+
 import baseDir = require('../base_dir');
-
-import { ProtractorBy, ElementFinder, ElementArrayFinder, Key, WebElement } from 'protractor';
-
-var webdriver = require('selenium-webdriver');
 
 export var IMPLICIT_WAIT_MS = 5000;
 export var RETRY_INTERVAL = 10;
@@ -35,33 +34,6 @@ export var autoRetryClick = true;
 export const by = (global as any).by;
 export const element = (global as any).element;
 export const browser = (global as any).browser;
-
-const elPrototype = ElementFinder.prototype;
-const elArrayPrototype = ElementArrayFinder.prototype;
-
-//TODO: remove
-//Create an instance of an ElementFinder and ElementArrayFinder to grab their prototypes.
-//The prototypes can be used to augment all instances of ElementFinder and ElementArrayFinder.
-//var elPrototype = Object.getPrototypeOf(element(_by.css('')));
-//var elArrayPrototype = Object.getPrototypeOf((<any>element).all(_by.css('')));
-
-//TODO: remove
-//Get access to the ElementFinder type
-//var ElementFinder: any = element(by.css('')).constructor;
-
-var ELEMENT_PATCHES = [
-  'isPresent', 'evaluate', 'allowAnimations', //These 3 are added by protractor
-
-  'isElementPresent', 'click', 'sendKeys', //The rest of these are part of the core selenium webdriver
-  'getTagName', 'getCssValue', 'getAttribute', 'getText', 'getSize', 'getLocation', 'isEnabled',
-  'isSelected', 'submit', 'clear', 'isDisplayed', 'getOuterHtml', 'getInnerHtml', 'getId', 'getRawId'
-];
-
-var RETRY_ON_STALE = ELEMENT_PATCHES.concat([
-  'closest', 'hasClass', 'innerHeight', 'innerWidth', 'is', 'outerHeight', 'outerWidth', 'next', 'offset', 'parent',
-  'parents', 'position', 'prev', 'prop', 'scrollLeft', 'scrollTop', 'scrollIntoView',
-  'waitUntil'
-]);
 
 /**
  * Executes a function repeatedly until it returns a value other than undefined. Waits RETRY_INTERVAL ms between function calls.
@@ -121,7 +93,7 @@ function _getElements(
     shouldExist: boolean;
     single: boolean;
     requireVisible: boolean;
-    rootElement: ElementFinder;
+    rootElement: ElementFinderSync;
     poll: boolean
   }
 ) {
@@ -130,17 +102,17 @@ function _getElements(
 
     if (!args.shouldExist) {
       if (filteredCount === 0) {
-        return {keepPolling: false, data: []};
+        return { keepPolling: false, data: [] };
       }
     } else {
       if (args.single && filteredCount === 1) {
-        return {keepPolling: false, data: wrapElementFinderArray(elements)};
+        return { keepPolling: false, data: elements };
       } else if (!args.single && filteredCount > 0) {
-        return {keepPolling: false, data: wrapElementFinderArray(elements)};
+        return { keepPolling: false, data: elements };
       }
     }
 
-    return {keepPolling: true, data: elements};
+    return { keepPolling: true, data: elements };
   }
 
   function onTimeout(elements: ElementFinder[]) {
@@ -177,7 +149,7 @@ function _getElements(
     var filtered: ElementFinder[];
 
     if (args.rootElement) {
-      elements = (<any>args.rootElement).all(locator);
+      elements = (<any>args.rootElement.getElementFinder()).all(locator);
     } else {
       elements = (<any>element).all(locator);
     }
@@ -203,14 +175,15 @@ function _getElements(
 
     //Convert from an array of selenium web elements to an array of protractor element finders
     resolved = resolved.map((webElement: any, i: number) => {
-      var elementFinder = ElementFinder.fromWebElement_(elements.browser_, webElement, locator);
+      var elementFinder = ElementFinderSync.fromWebElement_(elements.browser_, webElement, locator);
+      //TODO: clean up
       elementFinder.__psync_selection_args = args;
       elementFinder.__psync_selection_ordinal = i;
       return elementFinder;
     });
 
     if (args.requireVisible) {
-      filtered = resolved.filter((element: ElementFinder) => {
+      filtered = resolved.filter((element: ElementFinderSync) => {
         try {
           return element.isDisplayed();
         } catch (e) {
@@ -239,7 +212,7 @@ function _getElements(
  * @param rootElement If specified, only search for descendants of this element
  * @returns true if there are no matching elements
  */
-function assertElementDoesNotExist(selector: any, rootElement?: ElementFinder) {
+function assertElementDoesNotExist(selector: any, rootElement?: ElementFinderSync) {
   var elements: any[] = [];
 
   elements = _getElements({
@@ -274,7 +247,7 @@ function getActiveElement() {
  * @param rootElement If specified, only find descendants of this element
  * @returns {ElementFinder}
  */
-function findVisible(selector: any, rootElement?: ElementFinder) {
+function findVisible(selector: any, rootElement?: ElementFinderSync): ElementFinderSync {
   var displayed = _getElements({
     selector: selector,
     shouldExist: true,
@@ -295,7 +268,7 @@ function findVisible(selector: any, rootElement?: ElementFinder) {
  * @param rootElement If specified, only find descendants of this element
  * @returns {ElementFinder[]}
  */
-function findVisibles(selector: any, rootElement?: ElementFinder) {
+function findVisibles(selector: any, rootElement?: ElementFinderSync): ElementFinderSync[] {
   var displayed = _getElements({
     selector: selector,
     shouldExist: true,
@@ -316,7 +289,7 @@ function findVisibles(selector: any, rootElement?: ElementFinder) {
  * @param rootElement If specified, only find descendants of this element
  * @returns {ElementFinder}
  */
-function findElement(selector: any, rootElement?: ElementFinder) {
+function findElement(selector: any, rootElement?: ElementFinderSync): ElementFinderSync {
   var elements = _getElements({
     selector: selector,
     shouldExist: true,
@@ -338,7 +311,7 @@ function findElement(selector: any, rootElement?: ElementFinder) {
  * @returns {ElementFinder}
  */
 
-function findElements(selector: any, rootElement?: ElementFinder) {
+function findElements(selector: any, rootElement?: ElementFinderSync): ElementFinderSync[] {
   var elements = _getElements({
     selector: selector,
     shouldExist: true,
@@ -351,329 +324,10 @@ function findElements(selector: any, rootElement?: ElementFinder) {
   return elements;
 }
 
-function wrapElementFinder(elementFinder: ElementFinder) {
-  if (!(<any>elementFinder).__psync_wrapped) {
-    //We have to patch individual ElementFinder instances instead of just updating the prototype because
-    //these methods are added to the ElementFinder instances explicitly and are not a part of the prototype.
-    patchWithExec(elementFinder, ELEMENT_PATCHES);
-
-    //For the methods which don't return a value, we want to change the return value to allow chaining (field.clear().sendKeys())
-    _patch(elementFinder, ['clear', 'click', 'sendKeys', 'submit'], null, (returnValue: any) => {
-      return elementFinder;
-    });
-
-    if (autoRetryClick) {
-      var prevClick = elementFinder.click;
-      elementFinder.click = function () {
-        var startTime = new Date().getTime();
-
-        var attempt: any = (...args: any[]) => {
-          try {
-            return prevClick.apply(this, args);
-          } catch (e) {
-            if (/Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < IMPLICIT_WAIT_MS) {
-              console.log('(Protractor-sync): Element (' + this.getSelectionPath() + ') was covered, retrying click.');
-
-              var flow = ab.getCurrentFlow();
-              flow.sync(setTimeout(flow.add(), CLICK_RETRY_INTERVAL)); //We don't need this to retry as quickly
-
-              return attempt();
-            } else {
-              throw e;
-            }
-          }
-        };
-
-        return attempt();
-      };
-    }
-
-    if (autoReselectStaleElements) {
-      RETRY_ON_STALE.forEach(func => {
-        (<any>elementFinder)[func] = retryOnStale(elementFinder, func);
-      });
-    }
-
-    (<any>elementFinder).__psync_wrapped = true;
-  }
-
-  return elementFinder;
-}
-
-function wrapElementFinderArray(elementFinders: ElementFinder[]) {
-  elementFinders.forEach(ef => wrapElementFinder(ef));
-
-  return elementFinders;
-}
-
-/**
- * Augments ElementFinder and ElementArrayFinder "types" with synchronous extensions
- */
-function patchElementFinder() {
-  if (!elPrototype.__psync_patched) {
-    _patch(ElementFinder, ['fromWebElement_'], null, returnValue => {
-      return wrapElementFinder(returnValue);
-    });
-
-    elPrototype.__psync_patched = true;
-  }
-
-  //Add exec functions to ElementFinder and ElementArrayFinder, which can be used to resolve the elements synchronously
-  elPrototype.exec = function () {
-    return exec(this);
-  };
-
-  elArrayPrototype.exec = function () {
-    return exec(this);
-  };
-
-  //Add in findVisible and findVisibles
-  elPrototype.findVisible = function (selector: any) {
-    return findVisible(selector, this);
-  };
-
-  elPrototype.findVisibles = function (selector: any) {
-    return findVisibles(selector, this);
-  };
-
-  //Add in aliases for findElement and findElements
-  elPrototype.findElement = function (selector: any) {
-    return findElement(selector, this);
-  };
-
-  elPrototype.findElements = function (selector: any) {
-    return findElements(selector, this);
-  };
-
-  //Add in assertElementDoesNotExist
-  elPrototype.assertElementDoesNotExist = function(selector: any) {
-    return assertElementDoesNotExist(selector, this);
-  };
-
-  elPrototype.getSelectionPath = function() {
-    var path = '';
-    var args = this.__psync_selection_args;
-    if (args) {
-      if (args.rootElement) {
-        path += args.rootElement.getSelectionPath() + ' -> ';
-      }
-
-      if (args.selector) {
-        path += args.selector;
-      } else if (args.method) {
-        path += args.method + '(' + (args.arg || '') + ')';
-      }
-
-      if (this.__psync_selection_ordinal > 0 || args.single === false) {
-        path += '[' + this.__psync_selection_ordinal + ']';
-      }
-    }
-
-    return path;
-  };
-
-  elPrototype.reselect = function() {
-    var args = this.__psync_selection_args;
-    if (args) {
-      var elements: any;
-
-      if (args.selector) {
-        console.log('(Protractor-sync): Re-selecting stale element: ' + this.getSelectionPath());
-
-        elements = _getElements(args);
-      } else if (args.method) {
-        console.log('(Protractor-sync): Re-selecting stale element: ' + this.getSelectionPath());
-
-        elements = args.rootElement[args.method](args.arg);
-      } else {
-        console.error('(Protractor-sync): Attempting to re-select stale element, but selection info is incomplete');
-      }
-
-      if (Array.isArray(elements)) {
-        return elements[this.__psync_selection_ordinal];
-      } else {
-        return elements;
-      }
-    } else {
-      console.error('(Protractor-sync): Attempting to re-select stale element, but selection info is missing');
-    }
-  };
-
-  //Polled waiting
-
-  elPrototype.waitUntil = function (condition: string) {
-    _polledWait(() => {
-      var val = browser.executeScript(function (element: HTMLElement, condition: string) {
-        return (<any>window).$(element).is(condition);
-      }, this, condition);
-
-      return {data: <any>null, keepPolling: !val};
-    }, () => {
-      throw new Error('Timed out(' + IMPLICIT_WAIT_MS + ') waiting for condition: ' + condition);
-    });
-
-    return this;
-  };
-
-  elPrototype.waitUntilRemoved = function () {
-    _polledWait(() => {
-      return {data: <any>null, keepPolling: this.isPresent()};
-    }, () => {
-      throw new Error('Timed out(' + IMPLICIT_WAIT_MS + ') waiting for element to be removed');
-    });
-
-    return this;
-  };
-
-  //JQuery methods
-
-  function executeJQueryElementMethod(element: ElementFinder, method: string, arg?: any): any {
-    var attempt: () => Promise<any> | string = () => {
-      return browser.executeScript(function (element: HTMLElement, method: string, arg: any) {
-        var $ = (<any>window).jQuery;
-
-        if (!$) {
-          return '!!jquery not present!!';
-        }
-
-        var result = arg ? $(element)[method](arg) : $(element)[method]();
-
-        if (result instanceof (<any>window).jQuery) {
-          return result.toArray();
-        } else {
-          return result;
-        }
-      }, element, method, arg);
-    };
-
-    var result = attempt();
-
-    if (result === '!!jquery not present!!') {
-      throw Error('jQuery not present, unable to continue');
-    }
-
-    if (Array.isArray(result)) {
-      return result.map((webElement: any, i: number) => {
-        var elementFinder = ElementFinder.fromWebElement_(element.browser_, webElement);
-
-        elementFinder.__psync_selection_args = {
-          rootElement: element,
-          method: method,
-          arg: arg
-        };
-        elementFinder.__psync_selection_ordinal = i;
-
-        return elementFinder;
-      });
-    } else {
-      return result;
-    }
-  }
-
-  elPrototype.closest = function (selector: string) {
-    return executeJQueryElementMethod(this, 'closest', selector)[0];
-  };
-
-  elPrototype.hasClass = function (className: string) {
-    return browser.executeScript(function (element: HTMLElement, className: string) {
-      return element.classList.contains(className);
-    }, this, className);
-  };
-
-  elPrototype.isFocused = function () {
-    return browser.executeScript(function(element: HTMLElement) {
-      return document.activeElement === element;
-    }, this);
-  };
-
-  elPrototype.innerHeight = function () {
-    return executeJQueryElementMethod(this, 'innerHeight');
-  };
-
-  elPrototype.innerWidth = function () {
-    return executeJQueryElementMethod(this, 'innerWidth');
-  };
-
-  elPrototype.is = function (selector: string) {
-    return executeJQueryElementMethod(this, 'is', selector);
-  };
-
-  elPrototype.outerHeight = function (includeMargin?: boolean) {
-    return executeJQueryElementMethod(this, 'outerHeight', includeMargin);
-  };
-
-  elPrototype.outerWidth = function (includeMargin?: boolean) {
-    return executeJQueryElementMethod(this, 'outerWidth', includeMargin);
-  };
-
-  elPrototype.next = function (selector?: string) {
-    return executeJQueryElementMethod(this, 'next', selector)[0];
-  };
-
-  elPrototype.offset = function () {
-    return executeJQueryElementMethod(this, 'offset');
-  };
-
-  elPrototype.parent = function (selector?: string) {
-    return executeJQueryElementMethod(this, 'parent', selector)[0];
-  };
-
-  elPrototype.parents = function (selector?: string) {
-    return executeJQueryElementMethod(this, 'parents', selector);
-  };
-
-  elPrototype.position = function () {
-    return executeJQueryElementMethod(this, 'position');
-  };
-
-  elPrototype.prev = function (selector?: string) {
-    return executeJQueryElementMethod(this, 'prev', selector)[0];
-  };
-
-  elPrototype.prop = function (name: string) {
-    return executeJQueryElementMethod(this, 'prop', name);
-  };
-
-  elPrototype.sendEnterKey = function() {
-    this.sendKeys(Key.ENTER);
-  };
-
-  elPrototype.sendTabKey = function() {
-    this.sendKeys(Key.TAB);
-  };
-
-  elPrototype.scrollLeft = function () {
-    return executeJQueryElementMethod(this, 'scrollLeft');
-  };
-
-  elPrototype.scrollTop = function () {
-    return executeJQueryElementMethod(this, 'scrollTop');
-  };
-
-  elPrototype.scrollIntoView = function () {
-    browser.executeScript(function (element: HTMLElement) {
-      element.scrollIntoView();
-    }, this);
-    return this;
-  };
-}
-
 /**
  * Extend global element variable
  */
 function patchGlobals() {
-  element.findVisible = findVisible;
-
-  element.findVisibles = findVisibles;
-
-  element.findElement = findElement;
-
-  element.findElements = findElements;
-
-  element.assertElementDoesNotExist = assertElementDoesNotExist;
-
-  element.getActiveElement = getActiveElement;
-
   patchBrowser();
 }
 
@@ -742,22 +396,12 @@ function _patch(obj: any, methods: string[], pre: () => void, post: (returnValue
 
 function patchWithExec(proto: any, methods: string[]) {
   _patch(proto, methods, null, returnValue => {
-    if (returnValue && returnValue.exec && ab.getCurrentFlow()) {
-      return returnValue.exec();
+    if (returnValue && returnValue.then && ab.getCurrentFlow()) {
+      return exec(returnValue);
     } else {
       return returnValue;
     }
   });
-}
-
-/**
- * Patch the selenium webdriver promise
- */
-function patchPromise() {
-  //Add an "exec" utility method which can be used to resolve the promise immediately
-  webdriver.promise.Promise.prototype.exec = function () {
-    return exec(this);
-  };
 }
 
 function exec(obj: any) {
@@ -766,6 +410,10 @@ function exec(obj: any) {
     var cb = flow.add();
 
     return flow.sync(obj.then(function (result: any) {
+      if (result instanceof ElementFinder) {
+        result = new ElementFinderSync(result);
+      }
+
       cb(null, result);
     }, function (err: any) {
       cb(err);
@@ -797,9 +445,7 @@ function retryOnStale(obj: any, func: string) {
  * Apply synchronous patches to protractor
  */
 export function patch() {
-  patchElementFinder();
   patchGlobals();
-  patchPromise();
 }
 
 export var disallowMethods = (function () {
@@ -829,8 +475,6 @@ export var disallowMethods = (function () {
   return (options?: { expect: boolean; }) => {
     var SELECTOR_GLOBAL_SINGLE_ADVICE = 'Use element.findVisible() or element.findElement() instead.';
     var SELECTOR_GLOBAL_MULTI_ADVICE = 'Use element.findVisibles() or element.findElements() instead.';
-    var SELECTOR_INSTANCE_SINGLE_ADVICE = 'Use instance.findVisible() or instance.findElement() instead';
-    var SELECTOR_INSTANCE_MULTI_ADVICE = 'Use instance.findVisibles() or instance.findElements() instead.';
     var SLEEP_ADVICE = 'Use browser.waitFor(), element.waitUntil(), element.waitUntilRemove() etc. instead of browser.sleep().';
     var WAIT_ADVICE = 'Use browser.waitFor() instead.';
     var EXPECT_ADVICE = 'Use polledExpect instead of expect.';
@@ -838,13 +482,6 @@ export var disallowMethods = (function () {
     disableMethod(browser, '$', SELECTOR_GLOBAL_SINGLE_ADVICE);
     disableMethod(browser, '$$', SELECTOR_GLOBAL_MULTI_ADVICE);
     disableMethod(browser, 'element', SELECTOR_GLOBAL_SINGLE_ADVICE);
-    disableMethod(element, 'all', SELECTOR_GLOBAL_MULTI_ADVICE);
-    // I don't see a good way to disable the "element()" selector
-
-    disableMethod(elPrototype, '$', SELECTOR_INSTANCE_SINGLE_ADVICE);
-    disableMethod(elPrototype, '$$', SELECTOR_INSTANCE_MULTI_ADVICE);
-    disableMethod(elPrototype, 'all', SELECTOR_INSTANCE_MULTI_ADVICE);
-    disableMethod(elPrototype, 'element', SELECTOR_INSTANCE_SINGLE_ADVICE);
 
     disableMethod(browser.driver, 'wait', WAIT_ADVICE);
     disableMethod(browser.driver, 'findElement', SELECTOR_GLOBAL_SINGLE_ADVICE);
@@ -1033,3 +670,400 @@ export function resizeViewport(size: { width?: number; height?: number; }) {
 export function configure(args: { implicitWaitMs: number }) {
   IMPLICIT_WAIT_MS = args.implicitWaitMs || IMPLICIT_WAIT_MS;
 }
+
+export class ElementFinderSync {
+  public __psync_selection_args: any;
+  public __psync_selection_ordinal: number;
+
+  constructor(private element: ElementFinder) {
+
+  }
+
+  findVisible(selector: string | ProtractorBy) {
+    return findVisible(selector, this);
+  }
+
+  findVisibles(selector: string | ProtractorBy) {
+    return findVisibles(selector, this);
+  }
+
+  findElement(selector: string | ProtractorBy) {
+    return findElement(selector, this);
+  }
+
+  findElements(selector: string | ProtractorBy) {
+    return findElements(selector, this);
+  }
+
+  assertElementDoesNotExist(selector: string | ProtractorBy) {
+    return assertElementDoesNotExist(selector, this);
+  }
+
+  getElementFinder() {
+    return this.element;
+  }
+
+  getSelectionPath() {
+    var path = '';
+    var args = this.__psync_selection_args;
+    if (args) {
+      if (args.rootElement) {
+        path += args.rootElement.getSelectionPath() + ' -> ';
+      }
+
+      if (args.selector) {
+        path += args.selector;
+      } else if (args.method) {
+        path += args.method + '(' + (args.arg || '') + ')';
+      }
+
+      if (this.__psync_selection_ordinal > 0 || args.single === false) {
+        path += '[' + this.__psync_selection_ordinal + ']';
+      }
+    }
+
+    return path;
+  };
+
+  reselect(): ElementFinderSync {
+    var args = this.__psync_selection_args;
+    if (args) {
+      var elements: ElementFinderSync[];
+
+      if (args.selector) {
+        console.log('(Protractor-sync): Re-selecting stale element: ' + this.getSelectionPath());
+
+        elements = _getElements(args);
+      } else if (args.method) {
+        console.log('(Protractor-sync): Re-selecting stale element: ' + this.getSelectionPath());
+
+        elements = args.rootElement[args.method](args.arg);
+      } else {
+        console.error('(Protractor-sync): Attempting to re-select stale element, but selection info is incomplete');
+      }
+
+      if (Array.isArray(elements)) {
+        return elements[this.__psync_selection_ordinal];
+      } else {
+        return elements;
+      }
+    } else {
+      console.error('(Protractor-sync): Attempting to re-select stale element, but selection info is missing');
+    }
+  };
+
+  //Polled waiting
+
+  waitUntil(condition: string) {
+    _polledWait(() => {
+      var val = this.element.browser_.executeScript(function (element: HTMLElement, condition: string) {
+        return (<any>window).$(element).is(condition);
+      }, this.element , condition);
+
+      return {data: <any>null, keepPolling: !val};
+    }, () => {
+      throw new Error('Timed out(' + IMPLICIT_WAIT_MS + ') waiting for condition: ' + condition);
+    });
+
+    return this;
+  }
+
+  waitUntilRemoved() {
+    _polledWait(() => {
+      return { data: <any>null, keepPolling: this.isPresent() };
+    }, () => {
+      throw new Error('Timed out(' + IMPLICIT_WAIT_MS + ') waiting for element to be removed');
+    });
+
+    return this;
+  }
+
+  //ElementFinder methods
+
+  isPresent(): boolean {
+    return exec(this.element.isPresent());
+  }
+
+  static fromWebElement_(browser: ProtractorBrowser, webElem: WebElement, locator?: Locator) {
+    return new ElementFinderSync(ElementFinder.fromWebElement_(browser, webElem, locator));
+  }
+
+  evaluate(expression: string): ElementFinderSync {
+    return this.runWithStaleDetection(() => exec(this.element.evaluate(expression)));
+  }
+
+  allowAnimations(value: boolean): ElementFinderSync {
+    return this.runWithStaleDetection(() => exec(this.element.allowAnimations(value)));
+  }
+
+  isElementPresent(subLocator: Locator): boolean {
+    return this.runWithStaleDetection(() => exec(this.element.isElementPresent(subLocator)));
+  }
+
+  click(): ElementFinderSync {
+    var startTime = new Date().getTime();
+
+    var attempt: any = () => {
+      try {
+        exec(this.element.click());
+      } catch (e) {
+        if (autoRetryClick && /Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < IMPLICIT_WAIT_MS) {
+          console.log('(Protractor-sync): Element (' + this.getSelectionPath() + ') was covered, retrying click.');
+
+          var flow = ab.getCurrentFlow();
+          flow.sync(setTimeout(flow.add(), CLICK_RETRY_INTERVAL)); //We don't need this to retry as quickly
+
+          return attempt();
+        } else {
+          throw e;
+        }
+      }
+    };
+
+    this.runWithStaleDetection(() => attempt());
+
+    return this;
+  }
+
+  sendKeys(...var_args: Array<string | number>): ElementFinderSync {
+    this.runWithStaleDetection(() => exec(this.element.sendKeys.apply(this.element, var_args)));
+
+    return this;
+  }
+
+  getTagName(): string {
+    return this.runWithStaleDetection(() => exec(this.element.getTagName()));
+  }
+
+  getCssValue(cssStyleProperty: string): string {
+    return this.runWithStaleDetection(() => exec(this.element.getCssValue(cssStyleProperty)));
+  }
+
+  getAttribute(attributeName: string): string {
+    return this.runWithStaleDetection(() => exec(this.element.getAttribute(attributeName)));
+  }
+
+  getText(): string {
+    return this.runWithStaleDetection(() => exec(this.element.getText()));
+  }
+
+  getSize(): ISize {
+    return this.runWithStaleDetection(() => exec(this.element.getSize()));
+  }
+
+  getLocation(): ILocation {
+    return this.runWithStaleDetection(() => exec(this.element.getLocation()));
+  }
+
+  isEnabled(): boolean {
+    return this.runWithStaleDetection(() => exec(this.element.isEnabled()));
+  }
+
+  isSelected(): boolean {
+    return this.runWithStaleDetection(() => exec(this.element.isSelected()));
+  }
+
+  submit(): ElementFinderSync {
+    this.runWithStaleDetection(() => exec(this.element.submit()));
+
+    return this;
+  }
+
+  clear(): ElementFinderSync {
+    this.runWithStaleDetection(() => exec(this.element.clear()));
+
+    return this;
+  }
+
+  isDisplayed(): boolean {
+    return this.runWithStaleDetection(() => exec(this.element.isDisplayed()));
+  }
+
+  takeScreenshot(opt_scroll?: boolean): string {
+    return this.runWithStaleDetection(() => exec(this.element.takeScreenshot(opt_scroll)));
+  }
+
+  getOuterHtml(): string {
+    return this.runWithStaleDetection(() => exec(this.element.getOuterHtml()));
+  }
+
+  getInnerHtml(): string {
+    return this.runWithStaleDetection(() => exec(this.element.getInnerHtml()));
+  }
+
+  serialize(): IWebElementId {
+    return this.runWithStaleDetection(() => exec(this.element.serialize()));
+  }
+
+  getId(): string {
+    return this.runWithStaleDetection(() => exec(this.element.getId()));
+  }
+
+  //JQuery methods
+
+  executeJQueryElementMethod(method: string, arg?: any): any {
+    var attempt: () => Promise<any> | string = () => {
+      return exec(browser.executeScript(function (element: HTMLElement, method: string, arg: any) {
+        var $ = (<any>window).jQuery;
+
+        if (!$) {
+          return '!!jquery not present!!';
+        }
+
+        var result = arg ? $(element)[method](arg) : $(element)[method]();
+
+        if (result instanceof (<any>window).jQuery) {
+          return result.toArray();
+        } else {
+          return result;
+        }
+      }, this.element, method, arg));
+    };
+
+    var result = this.runWithStaleDetection(() => attempt());
+
+    if (result === '!!jquery not present!!') {
+      throw Error('jQuery not present, unable to continue');
+    }
+
+    if (Array.isArray(result)) {
+      return result.map((webElement: any, i: number) => {
+        var elementFinder = ElementFinderSync.fromWebElement_(this.element.browser_, webElement);
+
+        //TODO: clean up
+        elementFinder.__psync_selection_args = {
+          rootElement: this,
+          method: method,
+          arg: arg
+        };
+        elementFinder.__psync_selection_ordinal = i;
+
+        return elementFinder;
+      });
+    } else {
+      return result;
+    }
+  }
+
+  closest(selector: string): ElementFinderSync {
+    return this.executeJQueryElementMethod('closest', selector)[0];
+  }
+
+  hasClass(className: string): boolean {
+    return this.runWithStaleDetection(() => exec(this.element.browser_.executeScript(function (element: HTMLElement, className: string) {
+      return element.classList.contains(className);
+    }, this.element, className)));
+  }
+
+  isFocused(): boolean {
+    return this.runWithStaleDetection(() => exec(this.element.browser_.executeScript(function(element: HTMLElement) {
+      return document.activeElement === element;
+    }, this.element)));
+  }
+
+  innerHeight(): number {
+    return this.executeJQueryElementMethod('innerHeight');
+  }
+
+  innerWidth(): number {
+    return this.executeJQueryElementMethod('innerWidth');
+  }
+
+  is(selector: string): boolean {
+    return this.executeJQueryElementMethod('is', selector);
+  }
+
+  outerHeight(includeMargin?: boolean) {
+    return this.executeJQueryElementMethod('outerHeight', includeMargin);
+  }
+
+  outerWidth(includeMargin?: boolean) {
+    return this.executeJQueryElementMethod('outerWidth', includeMargin);
+  };
+
+  next(selector?: string): ElementFinderSync {
+    return this.executeJQueryElementMethod('next', selector)[0];
+  };
+
+  offset(): { top: number; left: number } {
+    return this.executeJQueryElementMethod('offset');
+  };
+
+  parent(selector?: string): ElementFinderSync {
+    return this.executeJQueryElementMethod('parent', selector)[0];
+  };
+
+  parents(selector?: string): ElementFinderSync[] {
+    return this.executeJQueryElementMethod('parents', selector);
+  }
+
+  position(): { top: number; left: number } {
+    return this.executeJQueryElementMethod('position');
+  }
+
+  prev(selector?: string): ElementFinderSync {
+    return this.executeJQueryElementMethod('prev', selector)[0];
+  }
+
+  prop(name: string): string | number | boolean {
+    return this.executeJQueryElementMethod('prop', name);
+  }
+
+  sendEnterKey(): ElementFinderSync {
+    this.sendKeys(Key.ENTER);
+
+    return this;
+  }
+
+  sendTabKey(): ElementFinderSync {
+    this.sendKeys(Key.TAB);
+
+    return this;
+  }
+
+  scrollLeft(): number {
+    return this.executeJQueryElementMethod('scrollLeft');
+  }
+
+  scrollTop(): number {
+    return this.executeJQueryElementMethod('scrollTop');
+  }
+
+  scrollIntoView(): ElementFinderSync {
+    this.runWithStaleDetection(() => browser.executeScript(function (element: HTMLElement) {
+      element.scrollIntoView();
+    }, this.element));
+
+    return this;
+  }
+
+  private runWithStaleDetection<T>(func: () => T): T {
+    const attempt: () => T = () => {
+      try {
+        return func();
+      } catch (e) {
+        if (e.name === 'StaleElementReferenceError') {
+          this.element = this.reselect().getElementFinder();
+
+          return attempt();
+        } else {
+          throw e;
+        }
+      }
+    };
+
+    return attempt();
+  }
+}
+
+export const elementSync = {
+  findVisible,
+  findVisibles,
+
+  findElement,
+  findElements,
+
+  assertElementDoesNotExist,
+
+  getActiveElement
+};

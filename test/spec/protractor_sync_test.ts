@@ -3,10 +3,10 @@ import * as fs from 'fs';
 import * as ab from 'asyncblock';
 import * as mkdirp from 'mkdirp';
 
-import { browser, by, element, ElementFinder } from '../../app/patches';
+import { browser, by } from '../../app/patches';
 import * as testUtil from './test_util';
 import * as protractorSync from '../../app/protractor_sync';
-import { polledExpect } from '../../app/protractor_sync';
+import { polledExpect, elementSync as element, ElementFinderSync as ElementFinder } from '../../app/protractor_sync';
 
 protractorSync.patch();
 protractorSync.disallowMethods();
@@ -102,62 +102,6 @@ describe('Protractor extensions', () => {
       expect(() => { browser.findElements('body'); }).toThrowError(
         'findElements() has been disabled in this project! Use element.findVisibles() or element.findElements() instead.'
       );
-    });
-
-    it('should prevent calling element.all', () => {
-        expect(() => {
-          (<any>element).all(by.model(''));
-        }).toThrowError(
-          'all() has been disabled in this project! Use element.findVisibles() or element.findElements() instead.'
-        );
-    });
-
-    // elPrototype selectors.  These tests need an asyncblock so element.findVisible can call getCurrentFlow.
-
-    it('should prevent calling element.$', (done) => {
-      ab(() => {
-        var body = element.findVisible('body');
-
-        expect(() => {
-          (<any>body).$('a');
-        }).toThrowError(
-          '$() has been disabled in this project! Use instance.findVisible() or instance.findElement() instead'
-        );
-      }, done);
-    });
-
-    it('should prevent calling element.$$', (done) => {
-      ab(() => {
-        var body = element.findVisible('body');
-
-        expect(() => {
-          (<any>body).$$('a');
-        }).toThrowError(
-          '$$() has been disabled in this project! Use instance.findVisibles() or instance.findElements() instead.'
-        );
-      }, done);
-    });
-
-    it('should prevent calling element.element', (done) => {
-      ab(() => {
-        var body = element.findVisible('body');
-        expect(() => {
-          (<any>body).element(by.model(''));
-        }).toThrowError(
-          'element() has been disabled in this project! Use instance.findVisible() or instance.findElement() instead'
-        );
-      }, done);
-    });
-
-    it('should prevent calling element.all', (done) => {
-      ab(() => {
-        var body = element.findVisible('body');
-        expect(() => {
-          (<any>body).all(by.model(''));
-        }).toThrowError(
-          'all() has been disabled in this project! Use instance.findVisibles() or instance.findElements() instead.'
-        );
-      }, done);
     });
 
     // wait/findElements/sleep
