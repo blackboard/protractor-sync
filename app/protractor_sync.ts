@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as ab from 'asyncblock';
 import * as mkdirp from 'mkdirp';
 
-import {ElementFinder, Key, WebElement, ProtractorBy, ProtractorBrowser, ElementHelper, ElementArrayFinder} from 'protractor';
+import { ElementFinder, Key, WebElement, ProtractorBy, ProtractorBrowser, ElementHelper, ElementArrayFinder } from 'protractor';
 import { Locator } from 'protractor/built/locators';
 import { ILocation, ISize, IWebDriverOptionsCookie, IWebElementId, Options, TargetLocator, Window } from 'selenium-webdriver';
 
