@@ -3,13 +3,10 @@ import * as fs from 'fs';
 import * as ab from 'asyncblock';
 import * as mkdirp from 'mkdirp';
 
-import { browser, by } from '../../app/patches';
 import * as testUtil from './test_util';
 import * as protractorSync from '../../app/protractor_sync';
-import { polledExpect, elementSync as element, ElementFinderSync as ElementFinder } from '../../app/protractor_sync';
+import { polledExpect, elementSync as element, browserSync as browser, ElementFinderSync as ElementFinder } from '../../app/protractor_sync';
 
-protractorSync.patch();
-protractorSync.disallowMethods();
 protractorSync.configure({ implicitWaitMs: 500 });
 
 var TEST_AREA_ID = 'protractor_sync-test-area';
@@ -60,214 +57,6 @@ function createTest(fn: Function, errorMsg?: string) {
 }
 
 describe('Protractor extensions', () => {
-  describe('disallowed methods', () => {
-    // browser/element selectors
-
-    it('should prevent calling browser.$', () => {
-        expect(() => {
-          (<any>browser).$('body');
-        }).toThrowError(
-          '$() has been disabled in this project! Use element.findVisible() or element.findElement() instead.'
-        );
-    });
-
-    it('should prevent calling browser.$$', () => {
-        expect(() => {
-          (<any>browser).$$('body');
-        }).toThrowError(
-          '$$() has been disabled in this project! Use element.findVisibles() or element.findElements() instead.'
-        );
-    });
-
-    it('should prevent calling browser.sleep', () => {
-      expect(() => { browser.sleep(1); }).toThrowError(
-        'sleep() has been disabled in this project! Use browser.waitFor(), element.waitUntil(), element.waitUntilRemove() etc. ' +
-        'instead of browser.sleep().'
-      );
-    });
-
-    it('should prevent calling browser.wait', () => {
-      expect(() => { browser.wait(() => { return; }, 1); }).toThrowError(
-        'wait() has been disabled in this project! Use browser.waitFor() instead.'
-      );
-    });
-
-    it('should prevent calling browser.findElement', () => {
-      expect(() => { browser.findElement('body'); }).toThrowError(
-        'findElement() has been disabled in this project! Use element.findVisible() or element.findElement() instead.'
-      );
-    });
-
-    it('should prevent calling browser.findElements', () => {
-      expect(() => { browser.findElements('body'); }).toThrowError(
-        'findElements() has been disabled in this project! Use element.findVisibles() or element.findElements() instead.'
-      );
-    });
-
-    // wait/findElements/sleep
-
-    it('should prevent calling browser.wait', () => {
-      expect(() => {
-        browser.wait(() => {
-          return;
-        }, 1);
-      }).toThrowError(
-        'wait() has been disabled in this project! Use browser.waitFor() instead.'
-      );
-    });
-
-    it('should prevent calling browser.findElement', () => {
-        expect(() => {
-          browser.findElement('body');
-        }).toThrowError(
-          'findElement() has been disabled in this project! Use element.findVisible() or element.findElement() instead.'
-        );
-    });
-
-    it('should prevent calling browser.findElements', () => {
-        expect(() => {
-          browser.findElements('body');
-        }).toThrowError(
-          'findElements() has been disabled in this project! Use element.findVisibles() or element.findElements() instead.'
-        );
-    });
-
-    it('should prevent calling browser.sleep', () => {
-        expect(() => {
-          browser.sleep(1);
-        }).toThrowError(
-          'sleep() has been disabled in this project! Use browser.waitFor(), element.waitUntil(), element.waitUntilRemove() etc. ' +
-          'instead of browser.sleep().'
-        );
-    });
-
-    // locators
-
-    it('should prevent calling by.binding', () => {
-        expect(() => {
-          by.binding('');
-        }).toThrowError(
-          'binding() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    it('should prevent calling by.className', () => {
-        expect(() => {
-          by.className('');
-        }).toThrowError(
-          'className() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    it('should prevent calling by.css', () => {
-        expect(() => {
-          by.css('');
-        }).toThrowError(
-          'css() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    it('should prevent calling by.id', () => {
-        expect(() => {
-          by.id('');
-        }).toThrowError(
-          'id() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    it('should prevent calling by.js', () => {
-        expect(() => {
-          by.js('');
-        }).toThrowError(
-          'js() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    it('should prevent calling by.name', () => {
-        expect(() => {
-          by.name('');
-        }).toThrowError(
-          'name() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    it('should prevent calling by.partialButtonText', () => {
-        expect(() => {
-          by.partialButtonText('');
-        }).toThrowError(
-          'partialButtonText() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    it('should prevent calling by.repeater', () => {
-        expect(() => {
-          by.repeater('');
-        }).toThrowError(
-          'repeater() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    it('should prevent calling by.tagName', () => {
-        expect(() => {
-          by.tagName('');
-        }).toThrowError(
-          'tagName() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    it('should prevent calling by.xpath', () => {
-        expect(() => {
-          by.xpath('');
-        }).toThrowError(
-          'xpath() has been disabled in this project! Use a css selector or by.model instead.'
-        );
-    });
-
-    // locators that need a cast
-
-    it('should prevent calling by.cssContainingText', () => {
-      // These locator tests don't compile (Property 'cssContainingText' does not exist on type 'IProtractorLocatorStrategy'.)
-      expect(() => {
-        (<any>by).cssContainingText('');
-      }).toThrowError(
-        'cssContainingText() has been disabled in this project! Use a css selector or by.model instead.'
-      );
-    });
-
-    it('should prevent calling by.deepCss', () => {
-      expect(() => {
-        (<any>by).deepCss('');
-      }).toThrowError(
-        'deepCss() has been disabled in this project! Use a css selector or by.model instead.'
-      );
-    });
-
-    it('should prevent calling by.exactBinding', () => {
-      expect(() => {
-        (<any>by).exactBinding('');
-      }).toThrowError(
-        'exactBinding() has been disabled in this project! Use a css selector or by.model instead.'
-      );
-    });
-
-    it('should prevent calling by.exactRepeater', () => {
-      expect(() => {
-        (<any>by).exactRepeater('');
-      }).toThrowError(
-        'exactRepeater() has been disabled in this project! Use a css selector or by.model instead.'
-      );
-    });
-
-    it('should prevent calling by.options', () => {
-      expect(() => {
-        (<any>by).options('');
-      }).toThrowError(
-        'options() has been disabled in this project! Use a css selector or by.model instead.'
-      );
-    });
-
-  });
-
   describe('jQuery methods', () => {
     var testArea: ElementFinder;
     var testSpan: ElementFinder;
@@ -538,9 +327,9 @@ describe('Protractor extensions', () => {
       testUtil.injectjQuery();
     }));
 
-    beforeEach(() => {
+    beforeEach(createTest(() => {
       appendStaleTestArea();
-    });
+    }));
 
     it('re-selects a stale element', createTest(() => {
       var el = element.findElement('.stale-test');
@@ -829,8 +618,10 @@ describe('Protractor extensions', () => {
         };
       });
 
-      var flow = ab.getCurrentFlow();
-      var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({firstArgIsError: false})));
+      var windowSize = browser.manage().window().getSize();
+
+      expect(windowSize.width).toBeGreaterThan(0);
+      expect(windowSize.height).toBeGreaterThan(0);
 
       protractorSync.resizeViewport({ width: 400, height: 200 });
       var newSize: any = browser.executeScript(function () {

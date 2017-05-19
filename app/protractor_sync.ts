@@ -7,9 +7,9 @@ import * as path from 'path';
 import * as ab from 'asyncblock';
 import * as mkdirp from 'mkdirp';
 
-import { ElementFinder, Key, WebElement, ProtractorBy, ProtractorBrowser } from 'protractor';
+import {ElementFinder, Key, WebElement, ProtractorBy, ProtractorBrowser, ElementHelper, ElementArrayFinder} from 'protractor';
 import { Locator } from 'protractor/built/locators';
-import { ILocation, ISize, IWebElementId } from 'selenium-webdriver';
+import { ILocation, ISize, IWebDriverOptionsCookie, IWebElementId, Options, TargetLocator, Window } from 'selenium-webdriver';
 
 import baseDir = require('../base_dir');
 
@@ -30,10 +30,6 @@ export var CLICK_RETRY_INTERVAL = 200;
 
 export var autoReselectStaleElements = true;
 export var autoRetryClick = true;
-
-export const by = (global as any).by;
-export const element = (global as any).element;
-export const browser = (global as any).browser;
 
 /**
  * Executes a function repeatedly until it returns a value other than undefined. Waits RETRY_INTERVAL ms between function calls.
@@ -139,19 +135,19 @@ function _getElements(
 
   var locator = args.selector;
   if (typeof args.selector === 'string') {
-    locator = by.css(args.selector);
+    locator = ((global as any).by as ProtractorBy).css(args.selector);
   }
 
   var flow = ab.getCurrentFlow();
 
   return _polledWait(() => {
-    var elements: any;
+    var elements: ElementArrayFinder;
     var filtered: ElementFinder[];
 
     if (args.rootElement) {
-      elements = (<any>args.rootElement.getElementFinder()).all(locator);
+      elements = (args.rootElement.getElementFinder() as ElementFinder).all(locator);
     } else {
-      elements = (<any>element).all(locator);
+      elements = ((global as any).element as ElementHelper).all(locator);
     }
 
     //Force the elements to resolve immediately (we want to make sure elements selected with findElement are present before continuing)
@@ -225,17 +221,6 @@ function assertElementDoesNotExist(selector: any, rootElement?: ElementFinderSyn
   });
 
   return elements.length === 0;
-}
-
-/**
- * Returns the active element on the page
- */
-function getActiveElement() {
-  var active = browser.executeScript(function() {
-    return document.activeElement;
-  });
-
-  return ElementFinder.fromWebElement_(browser, active);
 }
 
 /**
@@ -324,131 +309,7 @@ function findElements(selector: any, rootElement?: ElementFinderSync): ElementFi
   return elements;
 }
 
-/**
- * Extend global element variable
- */
-function patchGlobals() {
-  patchBrowser();
-}
-
-function patchBrowser() {
-  if (!browser.__psync_patched) {
-    patchWithExec(browser, ['getAllWindowHandles']);
-    //TODO: 'get'
-    patchWithExec(browser.driver, ['executeScript', 'executeAsyncScript', 'sleep', /*'get',*/ 'getCurrentUrl', 'close',
-                                   'quit', 'getWindowHandle']);
-
-    var targetLocatorPrototype = Object.getPrototypeOf(browser.switchTo());
-    patchWithExec(targetLocatorPrototype, ['window', 'defaultContent']);
-
-    browser.waitFor = function(condition: () => boolean, waitTimeMs?: number) {
-      _polledWait(() => {
-        return {data: <any>null, keepPolling: !condition()};
-      }, null, waitTimeMs);
-    };
-
-    var PAUSE_DEBUGGER_DELAY_MS = 500;
-    _patch(browser, ['pause', 'debugger'], null, (returnValue: any) => {
-      var flow = ab.getCurrentFlow();
-      if (flow) {
-        //Sometimes pause and debugger don't work without a delay before executing the next command
-        flow.sync(setTimeout(flow.add(), PAUSE_DEBUGGER_DELAY_MS));
-      }
-
-      return returnValue;
-    });
-
-    browser.__psync_patched = true;
-  }
-
-  var managePrototype = Object.getPrototypeOf(browser.manage());
-  if (!managePrototype.__psync_patched) {
-    patchWithExec(
-      managePrototype,
-      ['addCookie', 'deleteAllCookies', 'deleteCookie', 'getCookies', 'getCookie']
-    );
-
-    managePrototype.__psync_patched = true;
-  }
-}
-
-function _patch(obj: any, methods: string[], pre: () => void, post: (returnValue: any) => any) {
-  var patches = Object.create(null);
-
-  methods.forEach(func => {
-    patches[func] = obj[func];
-
-    obj[func] = function () {
-      if (pre) {
-        pre.call(this);
-      }
-
-      var returnValue = patches[func].apply(this, arguments);
-
-      if (post) {
-        returnValue = post.call(this, returnValue);
-      }
-
-      return returnValue;
-    };
-  });
-}
-
-function patchWithExec(proto: any, methods: string[]) {
-  _patch(proto, methods, null, returnValue => {
-    if (returnValue && returnValue.then && ab.getCurrentFlow()) {
-      return exec(returnValue);
-    } else {
-      return returnValue;
-    }
-  });
-}
-
-function exec(obj: any) {
-  if (obj.then) {
-    var flow = ab.getCurrentFlow();
-    var cb = flow.add();
-
-    return flow.sync(obj.then(function (result: any) {
-      if (result instanceof ElementFinder) {
-        result = new ElementFinderSync(result);
-      }
-
-      cb(null, result);
-    }, function (err: any) {
-      cb(err);
-    }));
-  } else {
-    return obj;
-  }
-}
-
-function retryOnStale(obj: any, func: string) {
-  var original = obj[func];
-
-  return function attempt() {
-    try {
-      return original.apply(this, arguments);
-    } catch (e) {
-      if (e.name === 'StaleElementReferenceError') {
-        var reselected = this.reselect();
-
-        return reselected[func].apply(reselected, arguments);
-      } else {
-        throw e;
-      }
-    }
-  };
-}
-
-/**
- * Apply synchronous patches to protractor
- */
-export function patch() {
-  patchGlobals();
-}
-
-export var disallowMethods = (function () {
+export var disallowExpect = (function () {
   var ALLOWED_LOCATIONS = ['node_modules', 'protractor_sync.'];
 
   function disableMethod(object: any, method: string, extraInfo?: string) {
@@ -472,73 +333,30 @@ export var disallowMethods = (function () {
     };
   }
 
-  return (options?: { expect: boolean; }) => {
-    var SELECTOR_GLOBAL_SINGLE_ADVICE = 'Use element.findVisible() or element.findElement() instead.';
-    var SELECTOR_GLOBAL_MULTI_ADVICE = 'Use element.findVisibles() or element.findElements() instead.';
-    var SLEEP_ADVICE = 'Use browser.waitFor(), element.waitUntil(), element.waitUntilRemove() etc. instead of browser.sleep().';
-    var WAIT_ADVICE = 'Use browser.waitFor() instead.';
+  return () => {
     var EXPECT_ADVICE = 'Use polledExpect instead of expect.';
 
-    disableMethod(browser, '$', SELECTOR_GLOBAL_SINGLE_ADVICE);
-    disableMethod(browser, '$$', SELECTOR_GLOBAL_MULTI_ADVICE);
-    disableMethod(browser, 'element', SELECTOR_GLOBAL_SINGLE_ADVICE);
-
-    disableMethod(browser.driver, 'wait', WAIT_ADVICE);
-    disableMethod(browser.driver, 'findElement', SELECTOR_GLOBAL_SINGLE_ADVICE);
-    disableMethod(browser.driver, 'findElements', SELECTOR_GLOBAL_MULTI_ADVICE);
-    disableMethod(browser.driver, 'sleep', SLEEP_ADVICE);
-
-    disableMethod(browser, 'wait', WAIT_ADVICE);
-    disableMethod(browser, 'findElement', SELECTOR_GLOBAL_SINGLE_ADVICE);
-    disableMethod(browser, 'findElements', SELECTOR_GLOBAL_MULTI_ADVICE);
-    disableMethod(browser, 'sleep', SLEEP_ADVICE);
-
-    if (options && options.expect) {
-      disableMethod(global, 'expect', EXPECT_ADVICE);
-    }
-
-    var LOCATOR_ADVICE = 'Use a css selector or by.model instead.';
-
-    [
-      'binding',
-      'className',
-      'css',
-      'cssContainingText',
-      'deepCss',
-      'exactBinding',
-      'exactRepeater',
-      'id',
-      'js',
-      'name',
-      'options',
-      'partialButtonText',
-      'repeater',
-      'tagName',
-      'xpath'
-    ].forEach(locator => {
-      disableMethod(by, locator, LOCATOR_ADVICE);
-    });
+    disableMethod(global, 'expect', EXPECT_ADVICE);
   };
 })();
 
-export function waitForNewWindow(action: Function, waitTimeMs?: number) {
-  var handlesBefore: string[] = (<any>browser).getAllWindowHandles();
-  var handles: string[];
+function exec(obj: any) {
+  if (obj.then) {
+    var flow = ab.getCurrentFlow();
+    var cb = flow.add();
 
-  action();
+    return flow.sync(obj.then(function (result: any) {
+      if (result instanceof ElementFinder) {
+        result = new ElementFinderSync(result);
+      }
 
-  browser.waitFor(() => {
-    handles = (<any>browser).getAllWindowHandles();
-    return handles.length === handlesBefore.length + 1;
-  }, waitTimeMs);
-
-  var newWindowHandle = handles[handles.length - 1];
-
-  browser.switchTo().window(newWindowHandle);
-
-  browser.waitFor(() => {
-    return (<any>browser.driver).getCurrentUrl() !== '';
-  }, waitTimeMs);
+      cb(null, result);
+    }, function (err: any) {
+      cb(err);
+    }));
+  } else {
+    return obj;
+  }
 }
 
 export function polledExpect(func: Function, waitTimeMS?: number) {
@@ -606,70 +424,171 @@ export function polledExpect(func: Function, waitTimeMS?: number) {
 //Expose global variable so callers can call "polledExpect" similar to just calling "expect"
 (global as any).polledExpect = polledExpect;
 
-/**
- * Takes a screenshot and saves a .png file in the configured screenshot directory.
- *
- * @param filename The name of the file to save
- */
-export function takeScreenshot(filename: string) {
-  if (filename) {
-    var basePath = path.dirname(filename);
-    if (!fs.existsSync(basePath)) {
-      mkdirp.sync(basePath);
-    }
-
-    if (!(/\.png$/i).test(filename)) {
-      filename += '.png';
-    }
-  }
-
-  var flow = ab.getCurrentFlow();
-  var callback = flow.add();
-  return flow.sync(browser.takeScreenshot().then((base64png: string) => {
-    if (filename) {
-      fs.writeFileSync(filename, base64png, 'base64');
-    }
-    return callback(null, base64png);
-  }, callback));
-}
-
 function calculateDimension(dimension: number, window: number, viewport: number) {
   return dimension + (window - viewport);
-}
-
-export function resizeViewport(size: { width?: number; height?: number; }) {
-  var flow = ab.getCurrentFlow();
-
-  var windowSize = flow.sync(browser.manage().window().getSize().then(flow.add({firstArgIsError: false})));
-  var viewportSize: any = browser.executeScript(function () {
-    return {
-      height: window.document.documentElement.clientHeight,
-      width: window.document.documentElement.clientWidth
-    };
-  });
-
-  var calcWidth = (width: number) => calculateDimension(width, windowSize.width, viewportSize.width);
-  var calcHeight = (height: number) => calculateDimension(height, windowSize.height, viewportSize.height);
-
-  var width = windowSize.width;
-  var height = windowSize.height;
-
-  if (size) {
-    width = calcWidth(size.width || DEFAULT_BREAKPOINT_WIDTH);
-    height = calcHeight(size.height || DEFAULT_BREAKPOINT_HEIGHT);
-  } else if (windowSize.width < DEFAULT_BREAKPOINT_WIDTH) {
-    width = calcWidth(DEFAULT_BREAKPOINT_WIDTH);
-  } else {
-    // No size set and width is wider than the minimum.  We can return early without resizing the browser
-    return;
-  }
-
-  flow.sync(browser.manage().window().setSize(width, height).then(flow.add()));
 }
 
 export function configure(args: { implicitWaitMs: number }) {
   IMPLICIT_WAIT_MS = args.implicitWaitMs || IMPLICIT_WAIT_MS;
 }
+
+export class BrowserSync {
+  private readonly PAUSE_DEBUGGER_DELAY_MS = 500;
+
+  constructor(private browser: ProtractorBrowser) {
+
+  }
+
+  getBrowser() {
+    return this.browser;
+  }
+
+  executeScript<T>(script: string | Function, ...var_args: any[]): T {
+    return exec(this.browser.executeScript.apply(this.browser, arguments));
+  }
+
+  executeAsyncScript<T>(script: string | Function, ...var_args: any[]): T {
+    return exec(this.browser.executeAsyncScript.apply(this.browser, arguments));
+  }
+
+  get(destination: string, timeout?: number) {
+    return exec(this.browser.get(destination, timeout));
+  }
+
+  getAllWindowHandles(): string[] {
+    return exec(this.browser.getAllWindowHandles());
+  }
+
+  getWindowHandle(): string {
+    return exec(this.browser.getWindowHandle());
+  }
+
+  getCurrentUrl(): string {
+    return exec(this.browser.getCurrentUrl());
+  }
+
+  close() {
+    return exec(this.browser.close());
+  }
+
+  quit() {
+    return exec(this.browser.quit());
+  }
+
+  switchTo() {
+    return new TargetLocatorSync(this.browser.switchTo());
+  }
+
+  manage() {
+    return new OptionsSync(this.browser.manage());
+  }
+
+  waitFor(condition: () => boolean, waitTimeMs?: number) {
+    _polledWait(() => {
+      return { data: <any>null, keepPolling: !condition() };
+    }, null, waitTimeMs);
+  }
+
+  takeScreenshot(): string {
+    return exec(this.browser.takeScreenshot());
+  }
+
+  pause(): any {
+    const result = this.browser.pause();
+
+    var flow = ab.getCurrentFlow();
+    if (flow) {
+      //Sometimes pause and debugger don't work without a delay before executing the next command
+      flow.sync(setTimeout(flow.add(), this.PAUSE_DEBUGGER_DELAY_MS));
+    }
+
+    return result;
+  }
+
+  debugger(): any {
+    const result = this.browser.debugger();
+
+    var flow = ab.getCurrentFlow();
+    if (flow) {
+      //Sometimes pause and debugger don't work without a delay before executing the next command
+      flow.sync(setTimeout(flow.add(), this.PAUSE_DEBUGGER_DELAY_MS));
+    }
+
+    return result;
+  }
+}
+
+export class TargetLocatorSync {
+  constructor(private targetLocator: TargetLocator) {
+
+  }
+
+  window(nameOrHandle: string): void {
+    exec(this.targetLocator.window(nameOrHandle));
+  }
+
+  defaultContent() {
+    exec(this.targetLocator.defaultContent());
+  }
+}
+
+export class OptionsSync {
+  constructor(private options: Options) {
+
+  }
+
+  addCookie(name: string, value: string, opt_path?: string, opt_domain?: string, opt_isSecure?: boolean, opt_expiry?: number | Date) {
+    exec(this.options.addCookie(name, value, opt_path, opt_domain, opt_isSecure, opt_expiry));
+  }
+
+  deleteAllCookies() {
+    exec(this.options.deleteAllCookies());
+  }
+
+  deleteCookie(name: string) {
+    exec(this.options.deleteCookie(name));
+  }
+
+  getCookies(): IWebDriverOptionsCookie[] {
+    return exec(this.options.getCookies());
+  }
+
+  getCookie(name: string): IWebDriverOptionsCookie {
+    return exec(this.options.getCookie(name));
+  }
+
+  window(): WindowSync {
+    return new WindowSync(this.options.window());
+  }
+}
+
+export class WindowSync {
+  constructor(private window: Window) {
+
+  }
+
+  getPosition(): ILocation {
+    return exec(this.window.getPosition());
+  }
+
+  setPosition(x: number, y: number) {
+    exec(this.window.setPosition(x, y));
+  }
+
+  getSize(): ISize {
+    return exec(this.window.getSize());
+  }
+
+  setSize(width: number, height: number) {
+    exec(this.window.setSize(width, height));
+  }
+
+  maximize() {
+    exec(this.window.maximize());
+  }
+}
+
+export const browserSync = new BrowserSync((global as any).browser);
 
 export class ElementFinderSync {
   public __psync_selection_args: any;
@@ -784,8 +703,10 @@ export class ElementFinderSync {
     return exec(this.element.isPresent());
   }
 
-  static fromWebElement_(browser: ProtractorBrowser, webElem: WebElement, locator?: Locator) {
-    return new ElementFinderSync(ElementFinder.fromWebElement_(browser, webElem, locator));
+  static fromWebElement_(browser: BrowserSync | ProtractorBrowser, webElem: WebElement, locator?: Locator) {
+    const _browser = browser instanceof BrowserSync ? browser.getBrowser() : browser;
+
+    return new ElementFinderSync(ElementFinder.fromWebElement_(_browser, webElem, locator));
   }
 
   evaluate(expression: string): ElementFinderSync {
@@ -902,8 +823,8 @@ export class ElementFinderSync {
   //JQuery methods
 
   executeJQueryElementMethod(method: string, arg?: any): any {
-    var attempt: () => Promise<any> | string = () => {
-      return exec(browser.executeScript(function (element: HTMLElement, method: string, arg: any) {
+    var attempt = () => {
+      return browserSync.executeScript(function (element: HTMLElement, method: string, arg: any) {
         var $ = (<any>window).jQuery;
 
         if (!$) {
@@ -917,7 +838,7 @@ export class ElementFinderSync {
         } else {
           return result;
         }
-      }, this.element, method, arg));
+      }, this.element, method, arg);
     };
 
     var result = this.runWithStaleDetection(() => attempt());
@@ -1030,7 +951,7 @@ export class ElementFinderSync {
   }
 
   scrollIntoView(): ElementFinderSync {
-    this.runWithStaleDetection(() => browser.executeScript(function (element: HTMLElement) {
+    this.runWithStaleDetection(() => browserSync.executeScript(function (element: HTMLElement) {
       element.scrollIntoView();
     }, this.element));
 
@@ -1067,3 +988,88 @@ export const elementSync = {
 
   getActiveElement
 };
+
+/**
+ * Returns the active element on the page
+ */
+function getActiveElement() {
+  var active = browserSync.executeScript<WebElement>(function() {
+    return document.activeElement;
+  });
+
+  return ElementFinderSync.fromWebElement_(browserSync.getBrowser(), active);
+}
+
+export function waitForNewWindow(action: Function, waitTimeMs?: number) {
+  var handlesBefore = browserSync.getAllWindowHandles();
+  var handles: string[];
+
+  action();
+
+  browserSync.waitFor(() => {
+    handles = browserSync.getAllWindowHandles();
+    return handles.length === handlesBefore.length + 1;
+  }, waitTimeMs);
+
+  var newWindowHandle = handles[handles.length - 1];
+
+  browserSync.switchTo().window(newWindowHandle);
+
+  browserSync.waitFor(() => {
+    return browserSync.getCurrentUrl() !== '';
+  }, waitTimeMs);
+}
+
+/**
+ * Takes a screenshot and saves a .png file in the configured screenshot directory.
+ *
+ * @param filename The name of the file to save
+ */
+export function takeScreenshot(filename: string) {
+  if (filename) {
+    var basePath = path.dirname(filename);
+    if (!fs.existsSync(basePath)) {
+      mkdirp.sync(basePath);
+    }
+
+    if (!(/\.png$/i).test(filename)) {
+      filename += '.png';
+    }
+  }
+
+  const base64png = browserSync.takeScreenshot();
+
+  if (filename) {
+    fs.writeFileSync(filename, base64png, 'base64');
+  }
+
+  return base64png;
+}
+
+export function resizeViewport(size: { width?: number; height?: number; }) {
+  var windowSize = browserSync.manage().window().getSize();
+  var viewportSize = browserSync.executeScript<ISize>(() => {
+    return {
+      height: window.document.documentElement.clientHeight,
+      width: window.document.documentElement.clientWidth
+    };
+  });
+
+  var calcWidth = (width: number) => calculateDimension(width, windowSize.width, viewportSize.width);
+  var calcHeight = (height: number) => calculateDimension(height, windowSize.height, viewportSize.height);
+
+  var width = windowSize.width;
+  var height = windowSize.height;
+
+  if (size) {
+    width = calcWidth(size.width || DEFAULT_BREAKPOINT_WIDTH);
+    height = calcHeight(size.height || DEFAULT_BREAKPOINT_HEIGHT);
+  } else if (windowSize.width < DEFAULT_BREAKPOINT_WIDTH) {
+    width = calcWidth(DEFAULT_BREAKPOINT_WIDTH);
+  } else {
+    // No size set and width is wider than the minimum.  We can return early without resizing the browser
+    return;
+  }
+
+  browserSync.manage().window().setSize(width, height);
+}

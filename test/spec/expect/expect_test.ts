@@ -5,7 +5,7 @@ import * as protractorSync from '../../../app/protractor_sync';
 describe('disallowed methods, including expect', () => {
   var _expect = (<any>global).expect;
   beforeAll(() => {
-    protractorSync.disallowMethods({ expect: true });
+    protractorSync.disallowExpect();
   });
 
   afterAll(() => {

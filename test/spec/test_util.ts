@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { browser } from '../../app/protractor_sync';
+import { browserSync as browser } from '../../app/protractor_sync';
 
 export function injectjQuery() {
   var jQuery = browser.executeScript(function() {
