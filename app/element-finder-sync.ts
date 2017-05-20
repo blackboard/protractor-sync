@@ -1,4 +1,6 @@
 import * as ab from 'asyncblock';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ElementFinder, ProtractorBrowser, ProtractorBy } from 'protractor';
 import { Locator } from 'protractor/built/locators';
 import { ILocation, ISize, IWebElementId, Key, WebElement } from 'selenium-webdriver';
@@ -244,6 +246,8 @@ export class ElementFinderSync {
 
   executeJQueryElementMethod(method: string, arg?: any): any {
     const attempt = () => {
+      this.injectjQuery(); //Automatically inject jQuery into the page for testing sites that don't use it
+
       return browserSync.executeScript((element: HTMLElement, _method: string, _arg: any) => {
         const $ = (<any>window).jQuery;
 
@@ -283,6 +287,23 @@ export class ElementFinderSync {
       });
     } else {
       return result;
+    }
+  }
+
+  injectjQuery() {
+    const jQuery = browserSync.executeScript(() => {
+      return !!(<any>window).jQuery;
+    });
+
+    if (!jQuery) {
+      const jquerySource = fs.readFileSync(path.join(__dirname, '../../../node_modules/jquery/dist/jquery.js'), 'utf8');
+
+      browserSync.executeScript((_jquerySource: string) => {
+        /* tslint:disable-next-line:no-eval */
+        eval(_jquerySource);
+
+        (<any>window).$.noConflict();
+      }, jquerySource);
     }
   }
 

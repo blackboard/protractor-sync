@@ -4,7 +4,6 @@ import * as mkdirp from 'mkdirp';
 
 import * as protractorSync from '../../app/index';
 import { browserSync, ElementFinderSync, elementSync, polledExpect } from '../../app/index';
-import * as testUtil from './test_util';
 
 protractorSync.configure({ implicitWaitMs: 500 });
 
@@ -65,8 +64,6 @@ describe('Protractor extensions', () => {
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
       browserSync.get('data:,');
-
-      testUtil.injectjQuery();
 
       appendTestArea({
           style: {
@@ -185,8 +182,6 @@ describe('Protractor extensions', () => {
     it('can scroll to an element', createTest(() => {
       //Make sure we are starting on a fresh page
       browserSync.get('data:,');
-
-      testUtil.injectjQuery();
 
       appendTestArea({
         style: { height: '100px', overflow: 'scroll' },
@@ -322,8 +317,6 @@ describe('Protractor extensions', () => {
 
     beforeAll(createTest(() => {
       browserSync.get('data:,');
-
-      testUtil.injectjQuery();
     }));
 
     beforeEach(createTest(() => {
@@ -334,7 +327,8 @@ describe('Protractor extensions', () => {
       const el = elementSync.findElement('.stale-test');
 
       browserSync.executeScript(() => {
-        (<any>window).jQuery('.stale-test').remove();
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
       });
 
       appendStaleTestArea('second');
@@ -346,7 +340,8 @@ describe('Protractor extensions', () => {
       const el = elementSync.findElements('.stale-test');
 
       browserSync.executeScript(() => {
-        (<any>window).jQuery('.stale-test').remove();
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
       });
 
       appendStaleTestArea('second');
@@ -359,7 +354,8 @@ describe('Protractor extensions', () => {
       const el = parent.findElement('.inner-stale');
 
       browserSync.executeScript(() => {
-        (<any>window).jQuery('.stale-test').remove();
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
       });
 
       appendStaleTestArea('second');
@@ -373,7 +369,8 @@ describe('Protractor extensions', () => {
       const el = inner.findElement('.inner-stale-2');
 
       browserSync.executeScript(() => {
-        (<any>window).jQuery('.stale-test').remove();
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
       });
 
       appendStaleTestArea('second');
@@ -385,7 +382,8 @@ describe('Protractor extensions', () => {
       const el = elementSync.findElement('.stale-test').next();
 
       browserSync.executeScript(() => {
-        (<any>window).jQuery('.stale-test-2').remove();
+        const stale = document.querySelector('.stale-test-2');
+        stale.parentNode.removeChild(stale);
       });
 
       appendStaleTestArea('second');
@@ -397,7 +395,8 @@ describe('Protractor extensions', () => {
       const el = elementSync.findVisible('.inner-stale').closest('.stale-test');
 
       browserSync.executeScript(() => {
-        (<any>window).jQuery('.stale-test').remove();
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
       });
 
       appendStaleTestArea('second');
@@ -409,7 +408,8 @@ describe('Protractor extensions', () => {
       const el = elementSync.findVisible('.inner-stale-2').parents()[1];
 
       browserSync.executeScript(() => {
-        (<any>window).jQuery('.stale-test').remove();
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
       });
 
       appendStaleTestArea('second');
@@ -421,10 +421,14 @@ describe('Protractor extensions', () => {
       const el = elementSync.findElement('.stale-test');
 
       browserSync.executeScript(() => {
-        (<any>window).jQuery('.stale-test').remove();
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
 
         setTimeout(() => {
-          (<any>window).jQuery('#protractor_sync-test-area').append('<div class="stale-test second">test</div>');
+          const div = document.createElement('div');
+          div.setAttribute('class', 'stale-test second');
+          div.innerHTML = 'test';
+          document.querySelector('#protractor_sync-test-area').appendChild(div);
         }, 200);
       });
 
@@ -498,13 +502,12 @@ describe('Protractor extensions', () => {
 
     it('works in conjunction with element finders', createTest(() => {
       browserSync.get('data:,');
-      testUtil.injectjQuery();
       appendTestArea();
 
       const testArea = elementSync.findElement('#' + TEST_AREA_ID);
       const addClass = jasmine.createSpy('addClass').and.callFake(() => {
         browserSync.executeScript(() => {
-          (<any>window).jQuery('#protractor_sync-test-area').addClass('expect-test');
+          document.querySelector('#protractor_sync-test-area').classList.add('expect-test');
         });
       });
 
