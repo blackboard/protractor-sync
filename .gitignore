@@ -10,7 +10,6 @@ npm-debug.log
 # Build artifacts
 
 /node_modules/*
-!/node_modules/protractor_sync/
 build/
 dist/
 tmp

@@ -1,5 +1,6 @@
 import * as ab from 'asyncblock';
-import {implicitWaitMs, retryIntervalMs} from './config';
+
+import { implicitWaitMs, retryIntervalMs } from './config';
 
 /**
  * Executes a function repeatedly until it returns a value other than undefined. Waits RETRY_INTERVAL ms between function calls.

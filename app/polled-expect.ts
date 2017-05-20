@@ -1,5 +1,5 @@
 import * as ab from 'asyncblock';
-import {implicitWaitMs, retryIntervalMs} from './config';
+import { implicitWaitMs, retryIntervalMs } from './config';
 
 export function polledExpect(func: Function, waitTimeMS?: number) {
   const timeout = waitTimeMS || implicitWaitMs;
