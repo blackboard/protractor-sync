@@ -4,8 +4,8 @@ import * as ab from 'asyncblock';
 import * as mkdirp from 'mkdirp';
 
 import * as testUtil from './test_util';
-import * as protractorSync from '../../app/protractor_sync';
-import { polledExpect, elementSync as element, browserSync as browser, ElementFinderSync as ElementFinder } from '../../app/protractor_sync';
+import * as protractorSync from '../../app/index';
+import { polledExpect, elementSync, browserSync, ElementFinderSync } from '../../app/index';
 
 protractorSync.configure({ implicitWaitMs: 500 });
 
@@ -18,7 +18,7 @@ interface IAppendTestAreaOptions {
 }
 
 function appendTestArea(options?: IAppendTestAreaOptions) {
-  browser.executeScript((id: string, options?: IAppendTestAreaOptions) => {
+  browserSync.executeScript((id: string, options?: IAppendTestAreaOptions) => {
     var existing = document.querySelector('#' + id);
     if (existing) {
       existing.parentNode.removeChild(existing);
@@ -58,14 +58,14 @@ function createTest(fn: Function, errorMsg?: string) {
 
 describe('Protractor extensions', () => {
   describe('jQuery methods', () => {
-    var testArea: ElementFinder;
-    var testSpan: ElementFinder;
-    var testInput: ElementFinder;
-    var testMultilineInput: ElementFinder;
+    var testArea: ElementFinderSync;
+    var testSpan: ElementFinderSync;
+    var testInput: ElementFinderSync;
+    var testMultilineInput: ElementFinderSync;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
-      browser.get('data:,');
+      browserSync.get('data:,');
 
       testUtil.injectjQuery();
 
@@ -85,10 +85,10 @@ describe('Protractor extensions', () => {
         }
       );
 
-      testArea = element.findVisible('#' + TEST_AREA_ID);
-      testSpan = element.findVisible('.test-span');
-      testInput = element.findVisible('input');
-      testMultilineInput = element.findVisible('textarea');
+      testArea = elementSync.findVisible('#' + TEST_AREA_ID);
+      testSpan = elementSync.findVisible('.test-span');
+      testInput = elementSync.findVisible('input');
+      testMultilineInput = elementSync.findVisible('textarea');
     }));
 
     it('Finds the closest element matching the selector', createTest(() => {
@@ -185,7 +185,7 @@ describe('Protractor extensions', () => {
   describe('Other element finder extensions', () => {
     it('can scroll to an element', createTest(() => {
       //Make sure we are starting on a fresh page
-      browser.get('data:,');
+      browserSync.get('data:,');
 
       testUtil.injectjQuery();
 
@@ -194,7 +194,7 @@ describe('Protractor extensions', () => {
         innerHtml: '<div class="target" style="margin-top: 500px; margin-bottom: 500px;">World</div>'
       });
 
-      var el = element.findElement('#' + TEST_AREA_ID + ' .target');
+      var el = elementSync.findElement('#' + TEST_AREA_ID + ' .target');
       expect(el.parent().scrollTop()).toEqual(0);
       el.scrollIntoView();
       expect(el.parent().scrollTop()).toEqual(500);
@@ -202,11 +202,11 @@ describe('Protractor extensions', () => {
   });
 
   describe('Element finder methods', () => {
-    var testArea: ElementFinder;
+    var testArea: ElementFinderSync;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
-      browser.get('data:,');
+      browserSync.get('data:,');
 
       // add some text in the spans so they will be visible by default
       appendTestArea({
@@ -217,7 +217,7 @@ describe('Protractor extensions', () => {
                    '<span class="invisible not-visible" style="display:none">Span 5</span>'
       });
 
-      testArea = element.findElement('#' + TEST_AREA_ID);
+      testArea = elementSync.findElement('#' + TEST_AREA_ID);
     }));
 
     describe('findElement', () => {
@@ -287,17 +287,17 @@ describe('Protractor extensions', () => {
   });
 
   describe('assertElementDoesNotExist', () => {
-    var testArea: ElementFinder;
+    var testArea: ElementFinderSync;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
-      browser.get('data:,');
+      browserSync.get('data:,');
 
       appendTestArea({
         innerHtml: '<span class="element-does-exist"></span>'
       });
 
-      testArea = element.findElement('#' + TEST_AREA_ID);
+      testArea = elementSync.findElement('#' + TEST_AREA_ID);
     }));
 
     it('throws an error if the element exists', createTest(() => {
@@ -322,7 +322,7 @@ describe('Protractor extensions', () => {
     }
 
     beforeAll(createTest(() => {
-      browser.get('data:,');
+      browserSync.get('data:,');
 
       testUtil.injectjQuery();
     }));
@@ -332,9 +332,9 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element', createTest(() => {
-      var el = element.findElement('.stale-test');
+      var el = elementSync.findElement('.stale-test');
 
-      browser.executeScript(() => {
+      browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
       });
 
@@ -344,9 +344,9 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element using findElements', createTest(() => {
-      var el = element.findElements('.stale-test');
+      var el = elementSync.findElements('.stale-test');
 
-      browser.executeScript(() => {
+      browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
       });
 
@@ -356,10 +356,10 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element with a stale parent', createTest(() => {
-      var parent = element.findElement('.stale-test');
+      var parent = elementSync.findElement('.stale-test');
       var el = parent.findElement('.inner-stale');
 
-      browser.executeScript(() => {
+      browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
       });
 
@@ -369,11 +369,11 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element with two stale parents', createTest(() => {
-      var parent = element.findElement('.stale-test');
+      var parent = elementSync.findElement('.stale-test');
       var inner = parent.findElement('.inner-stale');
       var el = inner.findElement('.inner-stale-2');
 
-      browser.executeScript(() => {
+      browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
       });
 
@@ -383,9 +383,9 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element selected using next', createTest(() => {
-      var el = element.findElement('.stale-test').next();
+      var el = elementSync.findElement('.stale-test').next();
 
-      browser.executeScript(() => {
+      browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test-2').remove();
       });
 
@@ -395,9 +395,9 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element selected using closest', createTest(() => {
-      var el = element.findVisible('.inner-stale').closest('.stale-test');
+      var el = elementSync.findVisible('.inner-stale').closest('.stale-test');
 
-      browser.executeScript(() => {
+      browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
       });
 
@@ -407,9 +407,9 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element selected using parents', createTest(() => {
-      var el = element.findVisible('.inner-stale-2').parents()[1];
+      var el = elementSync.findVisible('.inner-stale-2').parents()[1];
 
-      browser.executeScript(() => {
+      browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
       });
 
@@ -419,9 +419,9 @@ describe('Protractor extensions', () => {
     }));
 
     it('waits to re-select a stale element', createTest(() => {
-      var el = element.findElement('.stale-test');
+      var el = elementSync.findElement('.stale-test');
 
-      browser.executeScript(() => {
+      browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
 
         setTimeout(() => {
@@ -498,13 +498,13 @@ describe('Protractor extensions', () => {
     }));
 
     it('works in conjunction with element finders', createTest(() => {
-      browser.get('data:,');
+      browserSync.get('data:,');
       testUtil.injectjQuery();
       appendTestArea();
 
-      var testArea = element.findElement('#' + TEST_AREA_ID);
+      var testArea = elementSync.findElement('#' + TEST_AREA_ID);
       var addClass = jasmine.createSpy('addClass').and.callFake(() => {
-        browser.executeScript(() => {
+        browserSync.executeScript(() => {
           (<any>window).jQuery('#protractor_sync-test-area').addClass('expect-test');
         });
       });
@@ -546,7 +546,7 @@ describe('Protractor extensions', () => {
 
   describe('Clicking an element', () => {
     it('retries until the element is uncovered', createTest(() => {
-      browser.get('data:,');
+      browserSync.get('data:,');
 
       appendTestArea({ innerHtml:
         '<button class="covered" onclick="this.innerHTML = \'clicked\'">click</button>' +
@@ -560,7 +560,7 @@ describe('Protractor extensions', () => {
           count++;
 
           if (count === 2) {
-            browser.executeScript(() => {
+            browserSync.executeScript(() => {
               var cover = document.querySelector('div.cov');
               cover.parentNode.removeChild(cover);
             });
@@ -574,7 +574,7 @@ describe('Protractor extensions', () => {
         return consoleLog.apply(this, arguments);
       });
 
-      var button = element.findVisible('button.covered').click();
+      var button = elementSync.findVisible('button.covered').click();
 
       expect((<any>console.log).calls.count()).toEqual(2);
       expect(button.getText()).toEqual('clicked');
@@ -586,7 +586,7 @@ describe('Protractor extensions', () => {
       spyOn(fs, 'writeFileSync');
       spyOn(fs, 'existsSync').and.returnValue(true);
 
-      browser.get('data:,');
+      browserSync.get('data:,');
       protractorSync.takeScreenshot('test');
 
       expect((<any>fs.writeFileSync).calls.count()).toEqual(1);
@@ -600,7 +600,7 @@ describe('Protractor extensions', () => {
       spyOn(fs, 'writeFileSync');
       spyOn(fs, 'existsSync').and.returnValue(false);
 
-      browser.get('data:,');
+      browserSync.get('data:,');
       protractorSync.takeScreenshot('test/path');
 
       expect((<any>mkdirp.sync).calls.count()).toEqual(1);
@@ -610,21 +610,21 @@ describe('Protractor extensions', () => {
 
   describe('Window size', () => {
     it('resizes the window', createTest(() => {
-      browser.get('data:,');
-      var viewportSize: any = browser.executeScript(function () {
+      browserSync.get('data:,');
+      var viewportSize: any = browserSync.executeScript(function () {
         return {
           height: window.document.documentElement.clientHeight,
           width: window.document.documentElement.clientWidth
         };
       });
 
-      var windowSize = browser.manage().window().getSize();
+      var windowSize = browserSync.manage().window().getSize();
 
       expect(windowSize.width).toBeGreaterThan(0);
       expect(windowSize.height).toBeGreaterThan(0);
 
       protractorSync.resizeViewport({ width: 400, height: 200 });
-      var newSize: any = browser.executeScript(function () {
+      var newSize: any = browserSync.executeScript(function () {
         return {
           height: window.document.documentElement.clientHeight,
           width: window.document.documentElement.clientWidth
@@ -635,7 +635,7 @@ describe('Protractor extensions', () => {
       expect(newSize.height).toEqual(200);
 
       protractorSync.resizeViewport(viewportSize);
-      newSize = browser.executeScript(function () {
+      newSize = browserSync.executeScript(function () {
         return {
           height: window.document.documentElement.clientHeight,
           width: window.document.documentElement.clientWidth

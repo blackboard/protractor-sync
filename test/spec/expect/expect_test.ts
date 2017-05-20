@@ -1,6 +1,5 @@
-import * as ab from 'asyncblock';
 import * as assert from 'assert';
-import * as protractorSync from '../../../app/protractor_sync';
+import * as protractorSync from '../../../app/index';
 
 describe('disallowed methods, including expect', () => {
   var _expect = (<any>global).expect;

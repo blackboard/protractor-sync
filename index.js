@@ -1,1 +1,1 @@
-module.exports = require('./dist/protractor_sync').protractor_sync;
+module.exports = require('./dist/index');
