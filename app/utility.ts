@@ -4,6 +4,7 @@ import * as path from 'path';
 import { ISize, WebElement } from 'selenium-webdriver';
 
 import { ElementFinderSync } from './element-finder-sync';
+import { polledWait } from './polled-wait';
 import { browserSync } from './vars';
 
 const DEFAULT_BREAKPOINT_WIDTH = 1366;
@@ -129,3 +130,9 @@ export const disallowExpect = (() => {
     disableMethod(global, 'expect', EXPECT_ADVICE);
   };
 })();
+
+export function waitFor(condition: () => boolean, waitTimeMs?: number) {
+  polledWait(() => {
+    return { data: <any>null, keepPolling: !condition() };
+  }, null, waitTimeMs);
+}

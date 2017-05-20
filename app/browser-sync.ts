@@ -56,12 +56,6 @@ export class BrowserSync {
     return new OptionsSync(this.browser.manage());
   }
 
-  waitFor(condition: () => boolean, waitTimeMs?: number) {
-    polledWait(() => {
-      return { data: <any>null, keepPolling: !condition() };
-    }, null, waitTimeMs);
-  }
-
   takeScreenshot(): string {
     return exec(this.browser.takeScreenshot());
   }
