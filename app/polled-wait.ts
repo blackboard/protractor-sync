@@ -10,15 +10,15 @@ import {IMPLICIT_WAIT_MS, RETRY_INTERVAL} from './config';
  * @param waitTimeMs Override the amount of time to wait before timing out
  * @returns {any} The last value the function returned, as long as it did not time out
  */
-export function _polledWait(
+export function polledWait(
   fn: () => { keepPolling: boolean; data: any; },
   onTimeout?: (data: any) => void,
   waitTimeMs?: number
 ) {
-  var startTime = new Date();
-  var timeout = waitTimeMs != null ? waitTimeMs : IMPLICIT_WAIT_MS;
-  var result: any;
-  var flow = ab.getCurrentFlow();
+  const startTime = new Date();
+  const timeout = waitTimeMs != null ? waitTimeMs : IMPLICIT_WAIT_MS;
+  let result: any;
+  const flow = ab.getCurrentFlow();
 
   while (true) {
     if (result == null || new Date().getTime() - startTime.getTime() < timeout) {

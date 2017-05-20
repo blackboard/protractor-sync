@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as protractorSync from '../../../app/index';
 
 describe('disallowed methods, including expect', () => {
-  var _expect = (<any>global).expect;
+  const _expect = (<any>global).expect;
   beforeAll(() => {
     protractorSync.disallowExpect();
   });
@@ -12,7 +12,7 @@ describe('disallowed methods, including expect', () => {
   });
 
   it('should prevent calling expect', () => {
-    var catchRan = false;
+    let catchRan = false;
 
     try {
       expect('test');

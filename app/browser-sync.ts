@@ -1,9 +1,9 @@
 import * as ab from 'asyncblock';
+import { ProtractorBrowser } from 'protractor';
+import { ILocation, ISize, IWebDriverOptionsCookie, Options, TargetLocator, Window } from 'selenium-webdriver';
 
 import { exec } from './exec';
-import { ILocation, ISize, IWebDriverOptionsCookie, Options, TargetLocator, Window } from 'selenium-webdriver';
-import { ProtractorBrowser } from 'protractor';
-import { _polledWait } from './polled-wait';
+import { polledWait } from './polled-wait';
 
 export class BrowserSync {
   private readonly PAUSE_DEBUGGER_DELAY_MS = 500;
@@ -16,11 +16,11 @@ export class BrowserSync {
     return this.browser;
   }
 
-  executeScript<T>(script: string | Function, ...var_args: any[]): T {
+  executeScript<T>(script: string | Function, ...varArgs: any[]): T {
     return exec(this.browser.executeScript.apply(this.browser, arguments));
   }
 
-  executeAsyncScript<T>(script: string | Function, ...var_args: any[]): T {
+  executeAsyncScript<T>(script: string | Function, ...varArgs: any[]): T {
     return exec(this.browser.executeAsyncScript.apply(this.browser, arguments));
   }
 
@@ -57,7 +57,7 @@ export class BrowserSync {
   }
 
   waitFor(condition: () => boolean, waitTimeMs?: number) {
-    _polledWait(() => {
+    polledWait(() => {
       return { data: <any>null, keepPolling: !condition() };
     }, null, waitTimeMs);
   }
@@ -69,7 +69,7 @@ export class BrowserSync {
   pause(): any {
     const result = this.browser.pause();
 
-    var flow = ab.getCurrentFlow();
+    const flow = ab.getCurrentFlow();
     if (flow) {
       //Sometimes pause and debugger don't work without a delay before executing the next command
       flow.sync(setTimeout(flow.add(), this.PAUSE_DEBUGGER_DELAY_MS));
@@ -81,7 +81,7 @@ export class BrowserSync {
   debugger(): any {
     const result = this.browser.debugger();
 
-    var flow = ab.getCurrentFlow();
+    const flow = ab.getCurrentFlow();
     if (flow) {
       //Sometimes pause and debugger don't work without a delay before executing the next command
       flow.sync(setTimeout(flow.add(), this.PAUSE_DEBUGGER_DELAY_MS));
@@ -110,8 +110,8 @@ export class OptionsSync {
 
   }
 
-  addCookie(name: string, value: string, opt_path?: string, opt_domain?: string, opt_isSecure?: boolean, opt_expiry?: number | Date) {
-    exec(this.options.addCookie(name, value, opt_path, opt_domain, opt_isSecure, opt_expiry));
+  addCookie(name: string, value: string, optPath?: string, optDomain?: string, optIsSecure?: boolean, optExpiry?: number | Date) {
+    exec(this.options.addCookie(name, value, optPath, optDomain, optIsSecure, optExpiry));
   }
 
   deleteAllCookies() {

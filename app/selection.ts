@@ -1,9 +1,9 @@
 import * as ab from 'asyncblock';
-import {ElementArrayFinder, ElementFinder, ElementHelper, ProtractorBy} from 'protractor';
+import { ElementArrayFinder, ElementFinder, ElementHelper, ProtractorBy } from 'protractor';
 
+import { autoReselectStaleElements, IMPLICIT_WAIT_MS } from './config';
 import { ElementFinderSync } from './element-finder-sync';
-import {_polledWait} from './polled-wait';
-import {autoReselectStaleElements, IMPLICIT_WAIT_MS} from './config';
+import { polledWait } from './polled-wait';
 
 /**
  * Selects an element or elements. This function is not intended to be called directly (use findVisible, findVisibles, findElement, etc.)
@@ -27,7 +27,7 @@ export function _getElements(
   }
 ) {
   function extractResult(elements: ElementFinder[]) {
-    var filteredCount = elements && elements.length || 0;
+    const filteredCount = elements && elements.length || 0;
 
     if (!args.shouldExist) {
       if (filteredCount === 0) {
@@ -45,7 +45,7 @@ export function _getElements(
   }
 
   function onTimeout(elements: ElementFinder[]) {
-    var filteredCount = elements && elements.length || 0;
+    const filteredCount = elements && elements.length || 0;
 
     if (!args.shouldExist && filteredCount > 0) {
       throw new Error(args.selector + ' was found when it should not exist!');
@@ -66,16 +66,16 @@ export function _getElements(
     }
   }
 
-  var locator = args.selector;
+  let locator = args.selector;
   if (typeof args.selector === 'string') {
     locator = ((global as any).by as ProtractorBy).css(args.selector);
   }
 
-  var flow = ab.getCurrentFlow();
+  const flow = ab.getCurrentFlow();
 
-  return _polledWait(() => {
-    var elements: ElementArrayFinder;
-    var filtered: ElementFinder[];
+  return polledWait(() => {
+    let elements: ElementArrayFinder;
+    let filtered: ElementFinder[];
 
     if (args.rootElement) {
       elements = (args.rootElement.getElementFinder() as ElementFinder).all(locator);
@@ -84,13 +84,13 @@ export function _getElements(
     }
 
     //Force the elements to resolve immediately (we want to make sure elements selected with findElement are present before continuing)
-    var resolveElementsCb = flow.add();
-    var resolved: any[] = [];
+    const resolveElementsCb = flow.add();
+    let resolved: any[] = [];
 
     try {
-      resolved = flow.sync(elements.getWebElements().then(function (result: any) {
+      resolved = flow.sync(elements.getWebElements().then((result: any) => {
         resolveElementsCb(null, result);
-      }, function (err: any) {
+      }, (err: any) => {
         resolveElementsCb(err);
       }));
     } catch (e) {
@@ -104,10 +104,11 @@ export function _getElements(
 
     //Convert from an array of selenium web elements to an array of protractor element finders
     resolved = resolved.map((webElement: any, i: number) => {
-      var elementFinder = ElementFinderSync.fromWebElement_(elements.browser_, webElement, locator);
-      //TODO: clean up
-      elementFinder.__psync_selection_args = args;
-      elementFinder.__psync_selection_ordinal = i;
+      const elementFinder = ElementFinderSync.fromWebElement_(elements.browser_, webElement, locator);
+
+      elementFinder.selectionArgs = args;
+      elementFinder.selectionOrdinal = i;
+
       return elementFinder;
     });
 
@@ -142,12 +143,10 @@ export function _getElements(
  * @returns true if there are no matching elements
  */
 export function assertElementDoesNotExist(selector: any, rootElement?: ElementFinderSync) {
-  var elements: any[] = [];
-
-  elements = _getElements({
-    selector: selector,
+  const elements = _getElements({
+    selector,
     shouldExist: false,
-    rootElement: rootElement,
+    rootElement,
     poll: true,
     requireVisible: false,
     single: false
@@ -166,12 +165,12 @@ export function assertElementDoesNotExist(selector: any, rootElement?: ElementFi
  * @returns {ElementFinder}
  */
 export function findVisible(selector: any, rootElement?: ElementFinderSync): ElementFinderSync {
-  var displayed = _getElements({
-    selector: selector,
+  const displayed = _getElements({
+    selector,
     shouldExist: true,
     single: true,
     requireVisible: true,
-    rootElement: rootElement,
+    rootElement,
     poll: true
   });
 
@@ -187,12 +186,12 @@ export function findVisible(selector: any, rootElement?: ElementFinderSync): Ele
  * @returns {ElementFinder[]}
  */
 export function findVisibles(selector: any, rootElement?: ElementFinderSync): ElementFinderSync[] {
-  var displayed = _getElements({
-    selector: selector,
+  const displayed = _getElements({
+    selector,
     shouldExist: true,
     single: false,
     requireVisible: true,
-    rootElement: rootElement,
+    rootElement,
     poll: true
   });
 
@@ -208,12 +207,12 @@ export function findVisibles(selector: any, rootElement?: ElementFinderSync): El
  * @returns {ElementFinder}
  */
 export function findElement(selector: any, rootElement?: ElementFinderSync): ElementFinderSync {
-  var elements = _getElements({
-    selector: selector,
+  const elements = _getElements({
+    selector,
     shouldExist: true,
     single: true,
     requireVisible: false,
-    rootElement: rootElement,
+    rootElement,
     poll: true
   });
 
@@ -230,12 +229,12 @@ export function findElement(selector: any, rootElement?: ElementFinderSync): Ele
  */
 
 export function findElements(selector: any, rootElement?: ElementFinderSync): ElementFinderSync[] {
-  var elements = _getElements({
-    selector: selector,
+  const elements = _getElements({
+    selector,
     shouldExist: true,
     single: false,
     requireVisible: false,
-    rootElement: rootElement,
+    rootElement,
     poll: true
   });
 

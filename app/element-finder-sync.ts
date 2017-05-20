@@ -1,18 +1,18 @@
 import * as ab from 'asyncblock';
+import { ElementFinder, ProtractorBrowser, ProtractorBy } from 'protractor';
+import { Locator } from 'protractor/built/locators';
+import { ILocation, ISize, IWebElementId, Key, WebElement } from 'selenium-webdriver';
 
-import {ElementFinder, ProtractorBrowser, ProtractorBy} from 'protractor';
-import { assertElementDoesNotExist, findVisible, findVisibles, findElement, findElements, _getElements } from './selection';
-import {ILocation, ISize, IWebElementId, Key, WebElement} from 'selenium-webdriver';
-import {Locator} from 'protractor/built/locators';
-import {exec} from './exec';
-import {browserSync} from './vars';
-import {autoRetryClick, CLICK_RETRY_INTERVAL, IMPLICIT_WAIT_MS} from './config';
-import {_polledWait} from './polled-wait';
-import {BrowserSync} from './browser-sync';
+import { BrowserSync } from './browser-sync';
+import { autoRetryClick, CLICK_RETRY_INTERVAL, IMPLICIT_WAIT_MS } from './config';
+import { exec } from './exec';
+import { polledWait } from './polled-wait';
+import { _getElements, assertElementDoesNotExist, findElement, findElements, findVisible, findVisibles  } from './selection';
+import { browserSync } from './vars';
 
 export class ElementFinderSync {
-  public __psync_selection_args: any;
-  public __psync_selection_ordinal: number;
+  public selectionArgs: any;
+  public selectionOrdinal: number;
 
   constructor(private element: ElementFinder) {
 
@@ -43,8 +43,8 @@ export class ElementFinderSync {
   }
 
   getSelectionPath() {
-    var path = '';
-    var args = this.__psync_selection_args;
+    let path = '';
+    const args = this.selectionArgs;
     if (args) {
       if (args.rootElement) {
         path += args.rootElement.getSelectionPath() + ' -> ';
@@ -56,18 +56,18 @@ export class ElementFinderSync {
         path += args.method + '(' + (args.arg || '') + ')';
       }
 
-      if (this.__psync_selection_ordinal > 0 || args.single === false) {
-        path += '[' + this.__psync_selection_ordinal + ']';
+      if (this.selectionOrdinal > 0 || args.single === false) {
+        path += '[' + this.selectionOrdinal + ']';
       }
     }
 
     return path;
-  };
+  }
 
   reselect(): ElementFinderSync {
-    var args = this.__psync_selection_args;
+    const args = this.selectionArgs;
     if (args) {
-      var elements: ElementFinderSync[];
+      let elements: ElementFinderSync[];
 
       if (args.selector) {
         console.log('(Protractor-sync): Re-selecting stale element: ' + this.getSelectionPath());
@@ -82,21 +82,21 @@ export class ElementFinderSync {
       }
 
       if (Array.isArray(elements)) {
-        return elements[this.__psync_selection_ordinal];
+        return elements[this.selectionOrdinal];
       } else {
         return elements;
       }
     } else {
       console.error('(Protractor-sync): Attempting to re-select stale element, but selection info is missing');
     }
-  };
+  }
 
   //Polled waiting
 
   waitUntil(condition: string) {
-    _polledWait(() => {
-      var val = this.element.browser_.executeScript(function (element: HTMLElement, condition: string) {
-        return (<any>window).$(element).is(condition);
+    polledWait(() => {
+      const val = this.element.browser_.executeScript((element: HTMLElement, _condition: string) => {
+        return (<any>window).$(element).is(_condition);
       }, this.element , condition);
 
       return {data: <any>null, keepPolling: !val};
@@ -108,7 +108,7 @@ export class ElementFinderSync {
   }
 
   waitUntilRemoved() {
-    _polledWait(() => {
+    polledWait(() => {
       return { data: <any>null, keepPolling: this.isPresent() };
     }, () => {
       throw new Error('Timed out(' + IMPLICIT_WAIT_MS + ') waiting for element to be removed');
@@ -142,16 +142,16 @@ export class ElementFinderSync {
   }
 
   click(): ElementFinderSync {
-    var startTime = new Date().getTime();
+    const startTime = new Date().getTime();
 
-    var attempt: any = () => {
+    const attempt: any = () => {
       try {
         exec(this.element.click());
       } catch (e) {
         if (autoRetryClick && /Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < IMPLICIT_WAIT_MS) {
           console.log('(Protractor-sync): Element (' + this.getSelectionPath() + ') was covered, retrying click.');
 
-          var flow = ab.getCurrentFlow();
+          const flow = ab.getCurrentFlow();
           flow.sync(setTimeout(flow.add(), CLICK_RETRY_INTERVAL)); //We don't need this to retry as quickly
 
           return attempt();
@@ -166,8 +166,8 @@ export class ElementFinderSync {
     return this;
   }
 
-  sendKeys(...var_args: Array<string | number>): ElementFinderSync {
-    this.runWithStaleDetection(() => exec(this.element.sendKeys.apply(this.element, var_args)));
+  sendKeys(...varArgs: Array<string | number>): ElementFinderSync {
+    this.runWithStaleDetection(() => exec(this.element.sendKeys.apply(this.element, varArgs)));
 
     return this;
   }
@@ -220,8 +220,8 @@ export class ElementFinderSync {
     return this.runWithStaleDetection(() => exec(this.element.isDisplayed()));
   }
 
-  takeScreenshot(opt_scroll?: boolean): string {
-    return this.runWithStaleDetection(() => exec(this.element.takeScreenshot(opt_scroll)));
+  takeScreenshot(optScroll?: boolean): string {
+    return this.runWithStaleDetection(() => exec(this.element.takeScreenshot(optScroll)));
   }
 
   getOuterHtml(): string {
@@ -243,15 +243,15 @@ export class ElementFinderSync {
   //JQuery methods
 
   executeJQueryElementMethod(method: string, arg?: any): any {
-    var attempt = () => {
-      return browserSync.executeScript(function (element: HTMLElement, method: string, arg: any) {
-        var $ = (<any>window).jQuery;
+    const attempt = () => {
+      return browserSync.executeScript((element: HTMLElement, _method: string, _arg: any) => {
+        const $ = (<any>window).jQuery;
 
         if (!$) {
           return '!!jquery not present!!';
         }
 
-        var result = arg ? $(element)[method](arg) : $(element)[method]();
+        const result = _arg ? $(element)[_method](_arg) : $(element)[_method]();
 
         if (result instanceof (<any>window).jQuery) {
           return result.toArray();
@@ -261,7 +261,7 @@ export class ElementFinderSync {
       }, this.element, method, arg);
     };
 
-    var result = this.runWithStaleDetection(() => attempt());
+    const result = this.runWithStaleDetection(() => attempt());
 
     if (result === '!!jquery not present!!') {
       throw Error('jQuery not present, unable to continue');
@@ -269,15 +269,15 @@ export class ElementFinderSync {
 
     if (Array.isArray(result)) {
       return result.map((webElement: any, i: number) => {
-        var elementFinder = ElementFinderSync.fromWebElement_(this.element.browser_, webElement);
+        const elementFinder = ElementFinderSync.fromWebElement_(this.element.browser_, webElement);
 
         //TODO: clean up
-        elementFinder.__psync_selection_args = {
+        elementFinder.selectionArgs = {
           rootElement: this,
-          method: method,
-          arg: arg
+          method,
+          arg
         };
-        elementFinder.__psync_selection_ordinal = i;
+        elementFinder.selectionOrdinal = i;
 
         return elementFinder;
       });
@@ -291,13 +291,13 @@ export class ElementFinderSync {
   }
 
   hasClass(className: string): boolean {
-    return this.runWithStaleDetection(() => exec(this.element.browser_.executeScript(function (element: HTMLElement, className: string) {
-      return element.classList.contains(className);
+    return this.runWithStaleDetection(() => exec(this.element.browser_.executeScript((element: HTMLElement, _className: string) => {
+      return element.classList.contains(_className);
     }, this.element, className)));
   }
 
   isFocused(): boolean {
-    return this.runWithStaleDetection(() => exec(this.element.browser_.executeScript(function(element: HTMLElement) {
+    return this.runWithStaleDetection(() => exec(this.element.browser_.executeScript((element: HTMLElement) => {
       return document.activeElement === element;
     }, this.element)));
   }
@@ -320,19 +320,19 @@ export class ElementFinderSync {
 
   outerWidth(includeMargin?: boolean) {
     return this.executeJQueryElementMethod('outerWidth', includeMargin);
-  };
+  }
 
   next(selector?: string): ElementFinderSync {
     return this.executeJQueryElementMethod('next', selector)[0];
-  };
+  }
 
   offset(): { top: number; left: number } {
     return this.executeJQueryElementMethod('offset');
-  };
+  }
 
   parent(selector?: string): ElementFinderSync {
     return this.executeJQueryElementMethod('parent', selector)[0];
-  };
+  }
 
   parents(selector?: string): ElementFinderSync[] {
     return this.executeJQueryElementMethod('parents', selector);
@@ -371,7 +371,7 @@ export class ElementFinderSync {
   }
 
   scrollIntoView(): ElementFinderSync {
-    this.runWithStaleDetection(() => browserSync.executeScript(function (element: HTMLElement) {
+    this.runWithStaleDetection(() => browserSync.executeScript((element: HTMLElement) => {
       element.scrollIntoView();
     }, this.element));
 

@@ -1,16 +1,15 @@
-import * as fs from 'fs';
-
 import * as ab from 'asyncblock';
+import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 
-import * as testUtil from './test_util';
 import * as protractorSync from '../../app/index';
-import { polledExpect, elementSync, browserSync, ElementFinderSync } from '../../app/index';
+import { browserSync, ElementFinderSync, elementSync, polledExpect } from '../../app/index';
+import * as testUtil from './test_util';
 
 protractorSync.configure({ implicitWaitMs: 500 });
 
-var TEST_AREA_ID = 'protractor_sync-test-area';
-var PNG_HEADER_BASE_64 = 'iVBORw0KGgo';
+const TEST_AREA_ID = 'protractor_sync-test-area';
+const PNG_HEADER_BASE_64 = 'iVBORw0KGgo';
 
 interface IAppendTestAreaOptions {
   style?: { [name: string]: string; };
@@ -18,22 +17,22 @@ interface IAppendTestAreaOptions {
 }
 
 function appendTestArea(options?: IAppendTestAreaOptions) {
-  browserSync.executeScript((id: string, options?: IAppendTestAreaOptions) => {
-    var existing = document.querySelector('#' + id);
+  browserSync.executeScript((id: string, _options?: IAppendTestAreaOptions) => {
+    const existing = document.querySelector('#' + id);
     if (existing) {
       existing.parentNode.removeChild(existing);
     }
 
-    var testArea = document.createElement('div');
+    const testArea = document.createElement('div');
     testArea.setAttribute('id', id);
 
-    if (options && options.innerHtml) {
-      testArea.innerHTML = options.innerHtml;
+    if (_options && _options.innerHtml) {
+      testArea.innerHTML = _options.innerHtml;
     }
 
-    if (options && options.style) {
-      Object.keys(options.style).forEach((item) => {
-        (<any>testArea.style)[item] = options.style[item];
+    if (_options && _options.style) {
+      Object.keys(_options.style).forEach((item) => {
+        (<any>testArea.style)[item] = _options.style[item];
       });
     }
 
@@ -42,10 +41,10 @@ function appendTestArea(options?: IAppendTestAreaOptions) {
 }
 
 function createTest(fn: Function, errorMsg?: string) {
-  return function(done: Function) {
+  return (done: Function) => {
     ab(() => {
       fn();
-    }, function(err: any) {
+    }, (err: any) => {
       if (errorMsg) {
         expect(err.message).toEqual(errorMsg);
       } else {
@@ -58,10 +57,10 @@ function createTest(fn: Function, errorMsg?: string) {
 
 describe('Protractor extensions', () => {
   describe('jQuery methods', () => {
-    var testArea: ElementFinderSync;
-    var testSpan: ElementFinderSync;
-    var testInput: ElementFinderSync;
-    var testMultilineInput: ElementFinderSync;
+    let testArea: ElementFinderSync;
+    let testSpan: ElementFinderSync;
+    let testInput: ElementFinderSync;
+    let testMultilineInput: ElementFinderSync;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
@@ -194,7 +193,7 @@ describe('Protractor extensions', () => {
         innerHtml: '<div class="target" style="margin-top: 500px; margin-bottom: 500px;">World</div>'
       });
 
-      var el = elementSync.findElement('#' + TEST_AREA_ID + ' .target');
+      const el = elementSync.findElement('#' + TEST_AREA_ID + ' .target');
       expect(el.parent().scrollTop()).toEqual(0);
       el.scrollIntoView();
       expect(el.parent().scrollTop()).toEqual(500);
@@ -202,7 +201,7 @@ describe('Protractor extensions', () => {
   });
 
   describe('Element finder methods', () => {
-    var testArea: ElementFinderSync;
+    let testArea: ElementFinderSync;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
@@ -287,7 +286,7 @@ describe('Protractor extensions', () => {
   });
 
   describe('assertElementDoesNotExist', () => {
-    var testArea: ElementFinderSync;
+    let testArea: ElementFinderSync;
 
     beforeAll(createTest(() => {
       //Make sure we are starting on a fresh page
@@ -332,7 +331,7 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element', createTest(() => {
-      var el = elementSync.findElement('.stale-test');
+      const el = elementSync.findElement('.stale-test');
 
       browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
@@ -344,7 +343,7 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element using findElements', createTest(() => {
-      var el = elementSync.findElements('.stale-test');
+      const el = elementSync.findElements('.stale-test');
 
       browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
@@ -356,8 +355,8 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element with a stale parent', createTest(() => {
-      var parent = elementSync.findElement('.stale-test');
-      var el = parent.findElement('.inner-stale');
+      const parent = elementSync.findElement('.stale-test');
+      const el = parent.findElement('.inner-stale');
 
       browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
@@ -369,9 +368,9 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element with two stale parents', createTest(() => {
-      var parent = elementSync.findElement('.stale-test');
-      var inner = parent.findElement('.inner-stale');
-      var el = inner.findElement('.inner-stale-2');
+      const parent = elementSync.findElement('.stale-test');
+      const inner = parent.findElement('.inner-stale');
+      const el = inner.findElement('.inner-stale-2');
 
       browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
@@ -383,7 +382,7 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element selected using next', createTest(() => {
-      var el = elementSync.findElement('.stale-test').next();
+      const el = elementSync.findElement('.stale-test').next();
 
       browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test-2').remove();
@@ -395,7 +394,7 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element selected using closest', createTest(() => {
-      var el = elementSync.findVisible('.inner-stale').closest('.stale-test');
+      const el = elementSync.findVisible('.inner-stale').closest('.stale-test');
 
       browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
@@ -407,7 +406,7 @@ describe('Protractor extensions', () => {
     }));
 
     it('re-selects a stale element selected using parents', createTest(() => {
-      var el = elementSync.findVisible('.inner-stale-2').parents()[1];
+      const el = elementSync.findVisible('.inner-stale-2').parents()[1];
 
       browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
@@ -419,7 +418,7 @@ describe('Protractor extensions', () => {
     }));
 
     it('waits to re-select a stale element', createTest(() => {
-      var el = elementSync.findElement('.stale-test');
+      const el = elementSync.findElement('.stale-test');
 
       browserSync.executeScript(() => {
         (<any>window).jQuery('.stale-test').remove();
@@ -435,9 +434,9 @@ describe('Protractor extensions', () => {
 
   describe('expect', () => {
     it('retries until the expectation passes', createTest(() => {
-      var counter = 1;
-      var spy = jasmine.createSpy('counter', () => true).and.callFake(() => 'test' + counter++);
-      var expectation = protractorSync.polledExpect(spy);
+      let counter = 1;
+      const spy = jasmine.createSpy('counter', () => true).and.callFake(() => 'test' + counter++);
+      const expectation = protractorSync.polledExpect(spy);
 
       expectation.toEqual('test5');
 
@@ -445,15 +444,15 @@ describe('Protractor extensions', () => {
     }));
 
     it('is also available as a global variable', createTest(() => {
-      var counter = 0;
+      let counter = 0;
 
       polledExpect(() => 'test' + counter++).toEqual('test5');
     }));
 
     it('works with not', createTest(() => {
-      var counter = 0;
-      var spy = jasmine.createSpy('counter', () => true).and.callFake(() => 'test' + counter++);
-      var expectation = protractorSync.polledExpect(spy).not;
+      let counter = 0;
+      const spy = jasmine.createSpy('counter', () => true).and.callFake(() => 'test' + counter++);
+      const expectation = protractorSync.polledExpect(spy).not;
 
       expectation.toEqual('test0');
 
@@ -461,9 +460,9 @@ describe('Protractor extensions', () => {
     }));
 
     it('works with the toBeGreaterThan matcher', createTest(() => {
-      var counter = 1;
-      var spy = jasmine.createSpy('counter', () => true).and.callFake(() => counter++);
-      var expectation = protractorSync.polledExpect(spy);
+      let counter = 1;
+      const spy = jasmine.createSpy('counter', () => true).and.callFake(() => counter++);
+      const expectation = protractorSync.polledExpect(spy);
 
       expectation.toBeGreaterThan(3);
 
@@ -471,10 +470,10 @@ describe('Protractor extensions', () => {
     }));
 
     it('works with multiple expectations', createTest(() => {
-      var counter = 1;
-      var spy = jasmine.createSpy('counter', () => true).and.callFake(() => counter++);
+      let counter = 1;
+      const spy = jasmine.createSpy('counter', () => true).and.callFake(() => counter++);
 
-      var expectation = protractorSync.polledExpect(spy);
+      let expectation = protractorSync.polledExpect(spy);
       expectation.toBeGreaterThan(3);
       expect(spy.calls.count()).toEqual(4);
       spy.calls.reset();
@@ -490,7 +489,7 @@ describe('Protractor extensions', () => {
     }));
 
     it('times out', createTest(() => {
-      var counter = 0;
+      let counter = 0;
 
       expect(() =>
         protractorSync.polledExpect(() => counter++, 100).toBeLessThan(0)
@@ -502,15 +501,15 @@ describe('Protractor extensions', () => {
       testUtil.injectjQuery();
       appendTestArea();
 
-      var testArea = elementSync.findElement('#' + TEST_AREA_ID);
-      var addClass = jasmine.createSpy('addClass').and.callFake(() => {
+      const testArea = elementSync.findElement('#' + TEST_AREA_ID);
+      const addClass = jasmine.createSpy('addClass').and.callFake(() => {
         browserSync.executeScript(() => {
           (<any>window).jQuery('#protractor_sync-test-area').addClass('expect-test');
         });
       });
 
-      var classCheck = jasmine.createSpy('classCheck').and.callFake(() => {
-        var hasClass = testArea.hasClass('expect-test');
+      const classCheck = jasmine.createSpy('classCheck').and.callFake(() => {
+        const hasClass = testArea.hasClass('expect-test');
         if (!hasClass) {
           addClass();
         }
@@ -553,15 +552,15 @@ describe('Protractor extensions', () => {
         '<div class="cov" style="height:200px; width: 200px; position: absolute; top: 0; left: 0; z-index: 1;"></div>'
       });
 
-      var consoleLog = console.log;
-      var count = 0;
+      const consoleLog = console.log;
+      let count = 0;
       spyOn(console, 'log').and.callFake(function(message: any) {
         if (/was covered, retrying click/.test(message)) {
           count++;
 
           if (count === 2) {
             browserSync.executeScript(() => {
-              var cover = document.querySelector('div.cov');
+              const cover = document.querySelector('div.cov');
               cover.parentNode.removeChild(cover);
             });
           } else if (count > 2) {
@@ -574,7 +573,7 @@ describe('Protractor extensions', () => {
         return consoleLog.apply(this, arguments);
       });
 
-      var button = elementSync.findVisible('button.covered').click();
+      const button = elementSync.findVisible('button.covered').click();
 
       expect((<any>console.log).calls.count()).toEqual(2);
       expect(button.getText()).toEqual('clicked');
@@ -611,20 +610,20 @@ describe('Protractor extensions', () => {
   describe('Window size', () => {
     it('resizes the window', createTest(() => {
       browserSync.get('data:,');
-      var viewportSize: any = browserSync.executeScript(function () {
+      const viewportSize: any = browserSync.executeScript(() => {
         return {
           height: window.document.documentElement.clientHeight,
           width: window.document.documentElement.clientWidth
         };
       });
 
-      var windowSize = browserSync.manage().window().getSize();
+      const windowSize = browserSync.manage().window().getSize();
 
       expect(windowSize.width).toBeGreaterThan(0);
       expect(windowSize.height).toBeGreaterThan(0);
 
       protractorSync.resizeViewport({ width: 400, height: 200 });
-      var newSize: any = browserSync.executeScript(function () {
+      let newSize: any = browserSync.executeScript(() => {
         return {
           height: window.document.documentElement.clientHeight,
           width: window.document.documentElement.clientWidth
@@ -635,7 +634,7 @@ describe('Protractor extensions', () => {
       expect(newSize.height).toEqual(200);
 
       protractorSync.resizeViewport(viewportSize);
-      newSize = browserSync.executeScript(function () {
+      newSize = browserSync.executeScript(() => {
         return {
           height: window.document.documentElement.clientHeight,
           width: window.document.documentElement.clientWidth

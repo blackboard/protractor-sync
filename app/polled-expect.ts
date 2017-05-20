@@ -22,7 +22,7 @@ export function polledExpect(func: Function, waitTimeMS?: number) {
   });
 
   Object.keys((<any>jasmine).matchers).forEach(key => {
-    matchers[key] = function(expected: any) {
+    matchers[key] = (expected: any) => {
       matcherCalled = true;
       let passed = false;
 
@@ -53,7 +53,7 @@ export function polledExpect(func: Function, waitTimeMS?: number) {
   });
 
   Object.defineProperty(matchers, 'not', {
-    get: function() {
+    get: () => {
       isNot = true;
 
       return matchers;

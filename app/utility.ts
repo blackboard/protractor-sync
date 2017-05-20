@@ -1,18 +1,19 @@
-import {browserSync} from './vars';
-import {ElementFinderSync} from './element-finder-sync';
-import * as path from 'path';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
-import {ISize, WebElement} from 'selenium-webdriver';
+import * as path from 'path';
+import { ISize, WebElement } from 'selenium-webdriver';
 
-export var DEFAULT_BREAKPOINT_WIDTH = 1366;
-export var DEFAULT_BREAKPOINT_HEIGHT = 1024;
+import { ElementFinderSync } from './element-finder-sync';
+import { browserSync } from './vars';
+
+const DEFAULT_BREAKPOINT_WIDTH = 1366;
+const DEFAULT_BREAKPOINT_HEIGHT = 1024;
 
 /**
  * Returns the active element on the page
  */
 export function getActiveElement() {
-  var active = browserSync.executeScript<WebElement>(function() {
+  const active = browserSync.executeScript<WebElement>(() => {
     return document.activeElement;
   });
 
@@ -20,17 +21,18 @@ export function getActiveElement() {
 }
 
 export function waitForNewWindow(action: Function, waitTimeMs?: number) {
-  var handlesBefore = browserSync.getAllWindowHandles();
-  var handles: string[];
+  const handlesBefore = browserSync.getAllWindowHandles();
+  let handles: string[];
 
   action();
 
   browserSync.waitFor(() => {
     handles = browserSync.getAllWindowHandles();
+
     return handles.length === handlesBefore.length + 1;
   }, waitTimeMs);
 
-  var newWindowHandle = handles[handles.length - 1];
+  const newWindowHandle = handles[handles.length - 1];
 
   browserSync.switchTo().window(newWindowHandle);
 
@@ -46,7 +48,7 @@ export function waitForNewWindow(action: Function, waitTimeMs?: number) {
  */
 export function takeScreenshot(filename: string) {
   if (filename) {
-    var basePath = path.dirname(filename);
+    const basePath = path.dirname(filename);
     if (!fs.existsSync(basePath)) {
       mkdirp.sync(basePath);
     }
@@ -70,19 +72,19 @@ function calculateDimension(dimension: number, window: number, viewport: number)
 }
 
 export function resizeViewport(size: { width?: number; height?: number; }) {
-  var windowSize = browserSync.manage().window().getSize();
-  var viewportSize = browserSync.executeScript<ISize>(() => {
+  const windowSize = browserSync.manage().window().getSize();
+  const viewportSize = browserSync.executeScript<ISize>(() => {
     return {
       height: window.document.documentElement.clientHeight,
       width: window.document.documentElement.clientWidth
     };
   });
 
-  var calcWidth = (width: number) => calculateDimension(width, windowSize.width, viewportSize.width);
-  var calcHeight = (height: number) => calculateDimension(height, windowSize.height, viewportSize.height);
+  const calcWidth = (width: number) => calculateDimension(width, windowSize.width, viewportSize.width);
+  const calcHeight = (height: number) => calculateDimension(height, windowSize.height, viewportSize.height);
 
-  var width = windowSize.width;
-  var height = windowSize.height;
+  let width = windowSize.width;
+  let height = windowSize.height;
 
   if (size) {
     width = calcWidth(size.width || DEFAULT_BREAKPOINT_WIDTH);
@@ -97,21 +99,21 @@ export function resizeViewport(size: { width?: number; height?: number; }) {
   browserSync.manage().window().setSize(width, height);
 }
 
-export var disallowExpect = (function () {
-  var ALLOWED_LOCATIONS = ['node_modules', 'protractor_sync.'];
+export const disallowExpect = (() => {
+  const ALLOWED_LOCATIONS = ['node_modules', 'protractor_sync.'];
 
   function disableMethod(object: any, method: string, extraInfo?: string) {
     if (object[method] == null) {
       throw new Error('Cannot disable ' + method + '(). It does not exist');
     }
 
-    var original = object[method];
-    object[method] = function () {
+    const original = object[method];
+    object[method] = function() {
       // We don't want to block access from protractor or selenium or the current file
-      var stack = (<any>new Error()).stack;
+      const stack = (<any>new Error()).stack;
 
       //First line is the error message, second line is where the error was created, third line is the caller
-      var secondFrame = stack.split('\n')[2];
+      const secondFrame = stack.split('\n')[2];
 
       if (ALLOWED_LOCATIONS.every(location => secondFrame.indexOf(location) < 0)) {
         throw new Error(method + '() has been disabled in this project! ' + (extraInfo || ''));
@@ -122,7 +124,7 @@ export var disallowExpect = (function () {
   }
 
   return () => {
-    var EXPECT_ADVICE = 'Use polledExpect instead of expect.';
+    const EXPECT_ADVICE = 'Use polledExpect instead of expect.';
 
     disableMethod(global, 'expect', EXPECT_ADVICE);
   };

@@ -8,6 +8,7 @@
     "sourceMap": true,
     "noLib": false,
     "noImplicitAny": true,
+    "noUnusedLocals": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
