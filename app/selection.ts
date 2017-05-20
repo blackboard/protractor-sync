@@ -1,7 +1,7 @@
 import * as ab from 'asyncblock';
 import { ElementArrayFinder, ElementFinder, ElementHelper, ProtractorBy } from 'protractor';
 
-import { autoReselectStaleElements, IMPLICIT_WAIT_MS } from './config';
+import { autoReselectStaleElements, implicitWaitMs } from './config';
 import { ElementFinderSync } from './element-finder-sync';
 import { polledWait } from './polled-wait';
 
@@ -132,7 +132,7 @@ export function _getElements(
     }
 
     return extractResult(filtered);
-  }, onTimeout, args.poll ? IMPLICIT_WAIT_MS : 0);
+  }, onTimeout, args.poll ? implicitWaitMs : 0);
 }
 
 /**

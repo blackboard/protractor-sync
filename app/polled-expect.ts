@@ -1,8 +1,8 @@
 import * as ab from 'asyncblock';
-import {IMPLICIT_WAIT_MS, RETRY_INTERVAL} from './config';
+import {implicitWaitMs, retryIntervalMs} from './config';
 
 export function polledExpect(func: Function, waitTimeMS?: number) {
-  const timeout = waitTimeMS || IMPLICIT_WAIT_MS;
+  const timeout = waitTimeMS || implicitWaitMs;
   const startTime = new Date().getTime();
   const matchers = Object.create(null);
   const flow = ab.getCurrentFlow();
@@ -37,7 +37,7 @@ export function polledExpect(func: Function, waitTimeMS?: number) {
 
         if (!passed) {
           if (new Date().getTime() - startTime <= timeout) {
-            setTimeout(flow.add(), RETRY_INTERVAL);
+            setTimeout(flow.add(), retryIntervalMs);
           } else {
             let message = result.message;
 

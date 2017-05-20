@@ -1,5 +1,5 @@
 import * as ab from 'asyncblock';
-import {IMPLICIT_WAIT_MS, RETRY_INTERVAL} from './config';
+import {implicitWaitMs, retryIntervalMs} from './config';
 
 /**
  * Executes a function repeatedly until it returns a value other than undefined. Waits RETRY_INTERVAL ms between function calls.
@@ -16,7 +16,7 @@ export function polledWait(
   waitTimeMs?: number
 ) {
   const startTime = new Date();
-  const timeout = waitTimeMs != null ? waitTimeMs : IMPLICIT_WAIT_MS;
+  const timeout = waitTimeMs != null ? waitTimeMs : implicitWaitMs;
   let result: any;
   const flow = ab.getCurrentFlow();
 
@@ -25,7 +25,7 @@ export function polledWait(
       result = fn();
 
       if (result.keepPolling) {
-        flow.sync(setTimeout(flow.add(), RETRY_INTERVAL)); //Wait a bit before checking again
+        flow.sync(setTimeout(flow.add(), retryIntervalMs)); //Wait a bit before checking again
       } else {
         break;
       }

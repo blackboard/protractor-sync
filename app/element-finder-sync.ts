@@ -6,7 +6,7 @@ import { Locator } from 'protractor/built/locators';
 import { ILocation, ISize, IWebElementId, Key, WebElement } from 'selenium-webdriver';
 
 import { BrowserSync } from './browser-sync';
-import { autoRetryClick, CLICK_RETRY_INTERVAL, IMPLICIT_WAIT_MS } from './config';
+import { autoRetryClick, clickRetryIntervalMs, implicitWaitMs } from './config';
 import { exec } from './exec';
 import { polledWait } from './polled-wait';
 import { _getElements, assertElementDoesNotExist, findElement, findElements, findVisible, findVisibles  } from './selection';
@@ -103,7 +103,7 @@ export class ElementFinderSync {
 
       return {data: <any>null, keepPolling: !val};
     }, () => {
-      throw new Error('Timed out(' + IMPLICIT_WAIT_MS + ') waiting for condition: ' + condition);
+      throw new Error('Timed out(' + implicitWaitMs + ') waiting for condition: ' + condition);
     });
 
     return this;
@@ -113,7 +113,7 @@ export class ElementFinderSync {
     polledWait(() => {
       return { data: <any>null, keepPolling: this.isPresent() };
     }, () => {
-      throw new Error('Timed out(' + IMPLICIT_WAIT_MS + ') waiting for element to be removed');
+      throw new Error('Timed out(' + implicitWaitMs + ') waiting for element to be removed');
     });
 
     return this;
@@ -150,11 +150,11 @@ export class ElementFinderSync {
       try {
         exec(this.element.click());
       } catch (e) {
-        if (autoRetryClick && /Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < IMPLICIT_WAIT_MS) {
+        if (autoRetryClick && /Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < implicitWaitMs) {
           console.log('(Protractor-sync): Element (' + this.getSelectionPath() + ') was covered, retrying click.');
 
           const flow = ab.getCurrentFlow();
-          flow.sync(setTimeout(flow.add(), CLICK_RETRY_INTERVAL)); //We don't need this to retry as quickly
+          flow.sync(setTimeout(flow.add(), clickRetryIntervalMs)); //We don't need this to retry as quickly
 
           return attempt();
         } else {
