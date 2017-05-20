@@ -3,7 +3,6 @@ import { ProtractorBrowser } from 'protractor';
 import { ILocation, ISize, IWebDriverOptionsCookie, Options, TargetLocator, Window } from 'selenium-webdriver';
 
 import { exec } from './exec';
-import { polledWait } from './polled-wait';
 
 export class BrowserSync {
   private readonly PAUSE_DEBUGGER_DELAY_MS = 500;

@@ -27,7 +27,7 @@ export function waitForNewWindow(action: Function, waitTimeMs?: number) {
 
   action();
 
-  browserSync.waitFor(() => {
+  waitFor(() => {
     handles = browserSync.getAllWindowHandles();
 
     return handles.length === handlesBefore.length + 1;
@@ -37,7 +37,7 @@ export function waitForNewWindow(action: Function, waitTimeMs?: number) {
 
   browserSync.switchTo().window(newWindowHandle);
 
-  browserSync.waitFor(() => {
+  waitFor(() => {
     return browserSync.getCurrentUrl() !== '';
   }, waitTimeMs);
 }
