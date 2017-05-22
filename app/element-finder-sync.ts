@@ -97,9 +97,7 @@ export class ElementFinderSync {
 
   waitUntil(condition: string) {
     polledWait(() => {
-      const val = this.element.browser_.executeScript((element: HTMLElement, _condition: string) => {
-        return (<any>window).$(element).is(_condition);
-      }, this.element , condition);
+      const val = this.is(condition);
 
       return {data: <any>null, keepPolling: !val};
     }, () => {
