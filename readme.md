@@ -16,23 +16,15 @@ Pre-reqs:
 * Protractor (or something like grunt-protractor-runner, which includes it)
 * asyncblock (`npm install asyncblock`)
 * jasmine (Comes with protractor. Other frameworks can be used, but some features only work with jasmine)
-* jQuery must be available in the web application being tested
 
 `npm install protractor-sync`
-
-In your code:
-
-```
-var protractorSync = require('protractor-sync');
-
-protractorSync.patch();
-protractorSync.disallowMethods({ expect: true });
-```
 
 # Examples
 
 ```
-var settings = element.findVisible('.settings'); //Finds exactly one visible element with a class of "settings"
+import { browserSync, elementSync, polledExpect } from 'protractor-sync';
+
+var settings = elementSync.findVisible('.settings'); //Finds exactly one visible element with a class of "settings"
 settings.findVisible('input.start-date').clear().sendKeys('1/1/2000');
 settings.findVisible('.save').scrollIntoView().click();
 
@@ -46,7 +38,7 @@ See test/protractor-sync_test.ts for more examples.
 
 # API
 
-## element
+## elementSync
 
 * **findVisible(locator | selector)** - Finds a single visible element on the page. If more than one visible element matches the selector,
   an error is thrown. If no visible elements match the selector, an error is thrown. Implicitly waits until there is exactly one
@@ -60,7 +52,7 @@ See test/protractor-sync_test.ts for more examples.
 * **assertElementDoesNotExist(locator | selector)** - Asserts that no elements matching the selector exist on the page. If an element matching
   the selector is found, an error is thrown. Implicitly waits until no elements matching the selector are found. (Errors will only be thrown after timeout.)
 
-## ElementFinder (instance methods on element)
+## ElementFinderSync (instance methods on element)
 
 * **findVisible(locator | selector)** - Finds a single visible instance of an element within this element. If more than one visible element matches the selector,
   an error is thrown. If no visible elements match the selector, an error is thrown. Implicitly waits until there is exactly one visible element.
@@ -96,37 +88,49 @@ See test/protractor-sync_test.ts for more examples.
 * **scrollIntoView()** - Scroll the page such that the top of the current element is at the top of the visible page.
 * **getSelectionPath()** - Retrieves information about how the element was selected
 
-## browser
+## browserSync
 
-* **waitFor(condition, waitTimeMS?)** - Waits for the condition function to return a truthy value. An exception will be raised if it times out.
+Wraps the `browser` object from protractor and synchronizes the following methods.
+
+* **executeScript(script, ...args)** - Executes the specified synchronous javascript in the browser.
+* **executeAsyncScript(script, ...args)** - Executes the specified async javascript in the browser.
+* **get(destination, timeoutMs)** - Loads the specified URL in the browser.
+* **getAllWindowHandles()** - Returns handles for all open browser windows.
+* **getWindowHandle()** - Returns the handle for the currently focused window.
+* **getCurrentUrl()** - Gets the URL of the currently focused window.
+* **close()** - Closes the current browser window.
+* **quit()** - Quits the current browser session.
+* **switchTo()** - Returns a TargetLocatorSync instance which can be used to focus other browser windows.
+* **manage()** - Returns an OptionsSync instance which can be used to manage cookies.
+* **takeScreenshot()** - Takes a screenshot.
+* **pause()** - Pauses the current control flow.
+* **debugger()** - Pauses the current control flow and allows debugging to occur in the browser.
 
 ## protractor-sync
 
-* **IMPLICIT_WAIT_MS** - The amount of time to wait before timing out operations which wait implicitly. Note: An implicit wait
-SHOULD NOT be set in selenium/protractor. Use this value instead. Default: 5 seconds.
-* **RETRY_INTERVAL** - The amount of time to wait before retrying operations which wait. Default: 10ms.
-* **CLICK_RETRY_INTERVAL** - The amount of time to wait before attempting to re-click a blocked element. Default: 200ms.
-* **autoReselectStaleElements** - A boolean value indicating whether stale elements should be automatically re-selected or not.
-* **autoRetryClick** - A boolean value indicating whether protractor-sync should attempt to automatically retry blocked clicks or not.
-* **patch()** - Apply patches to protractor, allowing "synchronous-style" tests to be written. Should be called once before any tests have run.
-* **disallowMethods(options)** - Restricts usage of underlying protractor methods, encouraging the use of protractor-sync and protractor-sync's preferred
-  style of test writing. Pass `{ expect: true }` to prevent the usage of `expect` (in favor of `polledExpect`).
+* **disallowExpect()** - Prevents jasmine's expect from being used (in favor of `polledExpect`)
 * **waitForNewWindow(action, waitTimeMs)** - Executes the action function, then waits for a new popup window to appear.
   The current window will be switched to the new window when it opens. Times out after waitTimeMs milliseconds.
 * **polledExpect(func, waitTimeMs?)** - Works like jasmine's "expect", but retries the function until it passes or times out.
 * **takeScreenshot(filename)** - Takes a screenshot and saves a .png file at the specified file path.
 * **resizeViewport(size: { width?: number; height?: number; })** - Resize the viewport (not the window) to the specified size.
-
+* **waitFor(condition, waitTimeMS?)** - Waits for the condition function to return a truthy value. An exception will be raised if it times out.
+* **configure(options)** - Allows configuration options to be specified
+    * **implicitWaitMs** - The amount of time to wait before timing out operations which wait implicitly. Note: An implicit wait SHOULD NOT be set in selenium/protractor. Use this value instead. Default: 5 seconds.
+    * **retryIntervalMs** - The amount of time to wait before retrying operations which wait. Default: 10ms.
+    * **clickRetryIntervalMs** - The amount of time to wait before attempting to re-click a blocked element. Default: 200ms.
+    * **autoReselectStaleElements** - A boolean value indicating whether stale elements should be automatically re-selected or not.
+    * **autoRetryClick** - A boolean value indicating whether protractor-sync should attempt to automatically retry blocked clicks or not.
+    
 # Tips
 
-* Do not set an implicit wait in protractor/selenium. Set protractorSync.IMPLICIT_WAIT_MS instead.
+* Do not set an implicit wait in protractor/selenium. Set an implicit wait time using protractorSync.configure instead.
 * Turn off protractor synchronization (browser.ignoreSynchronization = true;) for faster tests. You can also enable/disable it during portions of tests.
 * Always use findVisible, except for special situations where you want to select a hidden element.
-* If you must manually pass a waitTimeMS, set it as a multiple of the IMPLICIT_WAIT_TIME_MS so it will scale on slower machines.
+* If you must manually pass a waitTimeMS, set it as a multiple of the implicitWaitTimeMs so it will scale on slower machines.
 
 # Build tasks
 
-* `grunt shell:webdriverUpdate` - Install/update WebDriver
 * `npm start` - Builds the code and watches for changes
 * `npm test` - Builds the code, runs the linter and runs the test suite
 * `npm publish` - Publish a new version to NPM

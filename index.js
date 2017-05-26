@@ -1,1 +1,0 @@
-module.exports = require('./dist/protractor_sync').protractor_sync;

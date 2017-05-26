@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "alwaysStrict": true,
     "target": "es5",
     "module": "commonjs",
     "declaration": true,
@@ -7,6 +8,7 @@
     "sourceMap": true,
     "noLib": false,
     "noImplicitAny": true,
+    "noUnusedLocals": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",

@@ -1,13 +1,10 @@
-import ab = require('asyncblock');
-import assert = require('assert');
-import _protractorSync = require('../../../app/protractor_sync');
-
-var protractorSync = _protractorSync.protractor_sync;
+import * as assert from 'assert';
+import * as protractorSync from '../../../app/index';
 
 describe('disallowed methods, including expect', () => {
-  var _expect = (<any>global).expect;
+  const _expect = (<any>global).expect;
   beforeAll(() => {
-    protractorSync.disallowMethods({ expect: true });
+    protractorSync.disallowExpect();
   });
 
   afterAll(() => {
@@ -15,7 +12,7 @@ describe('disallowed methods, including expect', () => {
   });
 
   it('should prevent calling expect', () => {
-    var catchRan = false;
+    let catchRan = false;
 
     try {
       expect('test');
