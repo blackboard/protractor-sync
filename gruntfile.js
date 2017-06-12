@@ -1,5 +1,7 @@
 'use strict';
 var ab = require('asyncblock');
+var config = require('./test/config.js');
+
 if (ab.enableTransform(module)) {
   return;
 }
@@ -43,11 +45,11 @@ module.exports = function(grunt) {
 
     shell: {
       webdriverUpdate: {
-        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager update'
+        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '+config.chromedriverVersion
       },
 
       webdriverStart: {
-        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager start'
+        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '+config.chromedriverVersion
       }
     },
 
@@ -87,6 +89,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test', [
+    'shell:webdriverUpdate',
     'protractor:tests'
   ]);
 
