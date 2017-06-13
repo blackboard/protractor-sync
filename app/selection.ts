@@ -1,5 +1,5 @@
 import * as ab from 'asyncblock';
-import { ElementArrayFinder, ElementFinder, ElementHelper, ProtractorBy } from 'protractor';
+import { ElementArrayFinder, ElementFinder, protractor, ProtractorBy } from 'protractor';
 
 import { autoReselectStaleElements, implicitWaitMs } from './config';
 import { ElementFinderSync } from './element-finder-sync';
@@ -80,7 +80,7 @@ export function _getElements(
     if (args.rootElement) {
       elements = (args.rootElement.getElementFinder() as ElementFinder).all(locator);
     } else {
-      elements = ((global as any).element as ElementHelper).all(locator);
+      elements = protractor.element.all(locator);
     }
 
     //Force the elements to resolve immediately (we want to make sure elements selected with findElement are present before continuing)

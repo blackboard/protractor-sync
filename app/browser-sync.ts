@@ -7,60 +7,60 @@ import { exec } from './exec';
 export class BrowserSync {
   private readonly PAUSE_DEBUGGER_DELAY_MS = 500;
 
-  constructor(private browser: ProtractorBrowser) {
+  constructor(private _getBrowser: () => ProtractorBrowser) {
 
   }
 
   getBrowser() {
-    return this.browser;
+    return this._getBrowser();
   }
 
   executeScript<T>(script: string | Function, ...varArgs: any[]): T {
-    return exec(this.browser.executeScript.apply(this.browser, arguments));
+    return exec(this.getBrowser().executeScript.apply(this.getBrowser(), arguments));
   }
 
   executeAsyncScript<T>(script: string | Function, ...varArgs: any[]): T {
-    return exec(this.browser.executeAsyncScript.apply(this.browser, arguments));
+    return exec(this.getBrowser().executeAsyncScript.apply(this.getBrowser(), arguments));
   }
 
   get(destination: string, timeout?: number) {
-    return exec(this.browser.get(destination, timeout));
+    return exec(this.getBrowser().get(destination, timeout));
   }
 
   getAllWindowHandles(): string[] {
-    return exec(this.browser.getAllWindowHandles());
+    return exec(this.getBrowser().getAllWindowHandles());
   }
 
   getWindowHandle(): string {
-    return exec(this.browser.getWindowHandle());
+    return exec(this.getBrowser().getWindowHandle());
   }
 
   getCurrentUrl(): string {
-    return exec(this.browser.getCurrentUrl());
+    return exec(this.getBrowser().getCurrentUrl());
   }
 
   close() {
-    return exec(this.browser.close());
+    return exec(this.getBrowser().close());
   }
 
   quit() {
-    return exec(this.browser.quit());
+    return exec(this.getBrowser().quit());
   }
 
   switchTo() {
-    return new TargetLocatorSync(this.browser.switchTo());
+    return new TargetLocatorSync(this.getBrowser().switchTo());
   }
 
   manage() {
-    return new OptionsSync(this.browser.manage());
+    return new OptionsSync(this.getBrowser().manage());
   }
 
   takeScreenshot(): string {
-    return exec(this.browser.takeScreenshot());
+    return exec(this.getBrowser().takeScreenshot());
   }
 
   pause(): any {
-    const result = this.browser.pause();
+    const result = this.getBrowser().pause();
 
     const flow = ab.getCurrentFlow();
     if (flow) {
@@ -72,7 +72,7 @@ export class BrowserSync {
   }
 
   debugger(): any {
-    const result = this.browser.debugger();
+    const result = this.getBrowser().debugger();
 
     const flow = ab.getCurrentFlow();
     if (flow) {
