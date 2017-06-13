@@ -13,7 +13,7 @@ Protractor-sync builds on protractor and provides:
 
 Pre-reqs:
 
-* Protractor (or something like grunt-protractor-runner, which includes it)
+* [Protractor](http://www.protractortest.org/#/) (follow the setup instructions)
 * asyncblock (`npm install asyncblock`)
 * jasmine (Comes with protractor. Other frameworks can be used, but some features only work with jasmine)
 
