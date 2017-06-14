@@ -18,6 +18,7 @@ Pre-reqs:
 * jasmine (Comes with protractor. Other frameworks can be used, but some features only work with jasmine)
 
 `npm install protractor-sync`
+* Update webdriver (`grunt shell:webdriverUpdate`)
 
 # Examples
 
