@@ -8,6 +8,7 @@ Protractor-sync builds on protractor and provides:
 * Automatic stale element re-selection (if a stale element is encountered, try to re-select it based on its original selector)
 * Automatic blocked click retrying
 * Chaining (e.g. `elementFinder.clear().sendKeys('text')``)
+* Allows 'try/catch' syntax for straightforward error handling
 
 # Installation
 
