@@ -2,9 +2,9 @@ import * as ab from 'asyncblock';
 import { ProtractorBrowser } from 'protractor';
 import { ILocation, ISize, IWebDriverOptionsCookie, Options, TargetLocator, Window } from 'selenium-webdriver';
 
-import {ElementFinderSync} from './element-finder-sync';
+import { ElementFinderSync } from './element-finder-sync';
 import { exec } from './exec';
-import {elementSync} from './vars';
+import { elementSync } from './vars';
 
 export class BrowserSync {
   private readonly PAUSE_DEBUGGER_DELAY_MS = 500;
@@ -96,7 +96,7 @@ export class TargetLocatorSync {
   }
 
   frame(nameOrElement: ElementFinderSync | string): void {
-    let frameElement: ElementFinderSync = <ElementFinderSync>nameOrElement;
+    let frameElement = <ElementFinderSync>nameOrElement;
 
     if (typeof nameOrElement === 'string') {
       frameElement = elementSync.findElement('[name=' + nameOrElement + ']');
