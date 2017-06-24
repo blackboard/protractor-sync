@@ -651,21 +651,12 @@ describe('Protractor extensions', () => {
 
   describe('Browser sync', () => {
 
-    it('switches to a new frame using frame name', createTest(() => {
+    it('switches to a new frame', createTest(() => {
       browserSync.get('data:,');
       appendTestArea({
         innerHtml: '<div class="element-outside-iframe"></div><iframe name="test-iframe" src="about:blank"></iframe>'
       });
-      browserSync.switchTo().frame('test-iframe');
-      elementSync.findElement('.element-outside-iframe'); // won't be found b/c we have switched to the iframe
-    }, 'No instances of (.element-outside-iframe) were found'));
-
-    it('switches to a new frame using frame element', createTest(() => {
-      browserSync.get('data:,');
-      appendTestArea({
-        innerHtml: '<div class="element-outside-iframe"></div><iframe name="test-iframe" src="about:blank"></iframe>'
-      });
-      browserSync.switchTo().frame(elementSync.findElement('iframe'));
+      browserSync.switchTo().frame(elementSync.findElement('[name="test-iframe"]'));
       elementSync.findElement('.element-outside-iframe'); // won't be found b/c we have switched to the iframe
     }, 'No instances of (.element-outside-iframe) were found'));
   });

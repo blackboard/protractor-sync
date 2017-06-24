@@ -4,7 +4,6 @@ import { ILocation, ISize, IWebDriverOptionsCookie, Options, TargetLocator, Wind
 
 import { ElementFinderSync } from './element-finder-sync';
 import { exec } from './exec';
-import { elementSync } from './vars';
 
 export class BrowserSync {
   private readonly PAUSE_DEBUGGER_DELAY_MS = 500;
@@ -95,13 +94,7 @@ export class TargetLocatorSync {
     exec(this.targetLocator.window(nameOrHandle));
   }
 
-  frame(nameOrElement: ElementFinderSync | string): void {
-    let frameElement = <ElementFinderSync>nameOrElement;
-
-    if (typeof nameOrElement === 'string') {
-      frameElement = elementSync.findElement('[name=' + nameOrElement + ']');
-    }
-
+  frame(frameElement: ElementFinderSync): void {
     exec(this.targetLocator.frame(frameElement.getElementFinder().getWebElement()));
   }
 
