@@ -199,10 +199,10 @@ describe('Protractor extensions', () => {
       browserSync.get('data:,');
 
       appendTestArea({
-        innerHtml: '<div class="div-with-text">Some Text In The Div</div>'
+        innerHtml: '<div class="div-with-text">Some <b>HTML</b> In The Div</div>'
       });
 
-      expect(elementSync.findVisible('.div-with-text').getInnerHtml()).toBe('Some Text In The Div');
+      expect(elementSync.findVisible('.div-with-text').getInnerHtml()).toBe('Some <b>HTML</b> In The Div');
 
     }));
 
