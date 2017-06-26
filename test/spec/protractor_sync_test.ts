@@ -194,6 +194,29 @@ describe('Protractor extensions', () => {
       el.scrollIntoView();
       expect(el.parent().scrollTop()).toEqual(500);
     }));
+
+    it('innerHTML', createTest(() => {
+      //Make sure we are starting on a fresh page
+      browserSync.get('data:,');
+
+      appendTestArea({
+        innerHtml: '<div class="div-with-text">Some <b>HTML</b> In The Div</div>'
+      });
+
+      expect(elementSync.findVisible('.div-with-text').getInnerHtml()).toBe('Some <b>HTML</b> In The Div');
+
+    }));
+
+    it('outerHTML', createTest(() => {
+      //Make sure we are starting on a fresh page
+      browserSync.get('data:,');
+
+      appendTestArea({
+        innerHtml: '<div class="div-with-text">Some Text In The Div</div>'
+      });
+
+      expect(elementSync.findVisible('.div-with-text').getOuterHtml()).toBe('<div class="div-with-text">Some Text In The Div</div>');
+    }));
   });
 
   describe('Element finder methods', () => {

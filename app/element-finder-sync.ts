@@ -225,11 +225,11 @@ export class ElementFinderSync {
   }
 
   getOuterHtml(): string {
-    return this.runWithStaleDetection(() => exec(this.element.getOuterHtml()));
+    return this.runWithStaleDetection(() => exec(browserSync.executeScript('return arguments[0].outerHTML;', this.element)));
   }
 
   getInnerHtml(): string {
-    return this.runWithStaleDetection(() => exec(this.element.getInnerHtml()));
+    return this.runWithStaleDetection(() => exec(browserSync.executeScript('return arguments[0].innerHTML;', this.element)));
   }
 
   serialize(): IWebElementId {
