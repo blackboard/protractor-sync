@@ -693,4 +693,16 @@ describe('Protractor extensions', () => {
       expect(newSize.height).toEqual(viewportSize.height);
     }));
   });
+
+  describe('Browser sync', () => {
+
+    it('switches to a new frame', createTest(() => {
+      browserSync.get('data:,');
+      appendTestArea({
+        innerHtml: '<div class="element-outside-iframe"></div><iframe name="test-iframe" src="about:blank"></iframe>'
+      });
+      browserSync.switchTo().frame(elementSync.findElement('[name="test-iframe"]'));
+      elementSync.findElement('.element-outside-iframe'); // won't be found b/c we have switched to the iframe
+    }, 'No instances of (.element-outside-iframe) were found'));
+  });
 });

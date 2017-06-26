@@ -2,6 +2,7 @@ import * as ab from 'asyncblock';
 import { ProtractorBrowser } from 'protractor';
 import { ILocation, ISize, IWebDriverOptionsCookie, Options, TargetLocator, Window } from 'selenium-webdriver';
 
+import { ElementFinderSync } from './element-finder-sync';
 import { exec } from './exec';
 
 export class BrowserSync {
@@ -91,6 +92,10 @@ export class TargetLocatorSync {
 
   window(nameOrHandle: string): void {
     exec(this.targetLocator.window(nameOrHandle));
+  }
+
+  frame(frameElement: ElementFinderSync): void {
+    exec(this.targetLocator.frame(frameElement.getElementFinder().getWebElement()));
   }
 
   defaultContent() {
