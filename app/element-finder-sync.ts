@@ -1,7 +1,7 @@
 import * as ab from 'asyncblock';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ElementFinder, ProtractorBrowser, ProtractorBy } from 'protractor';
+import { ElementFinder, ProtractorBrowser } from 'protractor';
 import { Locator } from 'protractor/built/locators';
 import { ILocation, ISize, IWebElementId, Key, WebElement } from 'selenium-webdriver';
 
@@ -20,23 +20,23 @@ export class ElementFinderSync {
 
   }
 
-  findVisible(selector: string | ProtractorBy) {
+  findVisible(selector: string | Locator) {
     return findVisible(selector, this);
   }
 
-  findVisibles(selector: string | ProtractorBy) {
+  findVisibles(selector: string | Locator) {
     return findVisibles(selector, this);
   }
 
-  findElement(selector: string | ProtractorBy) {
+  findElement(selector: string | Locator) {
     return findElement(selector, this);
   }
 
-  findElements(selector: string | ProtractorBy) {
+  findElements(selector: string | Locator) {
     return findElements(selector, this);
   }
 
-  assertElementDoesNotExist(selector: string | ProtractorBy) {
+  assertElementDoesNotExist(selector: string | Locator) {
     return assertElementDoesNotExist(selector, this);
   }
 

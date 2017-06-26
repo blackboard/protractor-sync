@@ -2,6 +2,7 @@ import * as ab from 'asyncblock';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 
+import { by } from 'protractor';
 import * as protractorSync from '../../app/index';
 import { browserSync, ElementFinderSync, elementSync, polledExpect } from '../../app/index';
 
@@ -208,7 +209,8 @@ describe('Protractor extensions', () => {
                    '<span class="duplicate-selector">Span 2</span>' +
                    '<span class="duplicate-selector">Span 3</span>' +
                    '<span class="duplicate-selector not-visible" style="display:none">Span 4</span>' +
-                   '<span class="invisible not-visible" style="display:none">Span 5</span>'
+                   '<span class="invisible not-visible" style="display:none">Span 5</span>' +
+                   '<a>Link Text</a>'
       });
 
       testArea = elementSync.findElement('#' + TEST_AREA_ID);
@@ -230,6 +232,10 @@ describe('Protractor extensions', () => {
       it('throws an error if more than one element was found', createTest(() => {
         testArea.findElement('.duplicate-selector');
       }, 'More than one instance of (.duplicate-selector) was found!'));
+
+      it('accepts a Locator', createTest(() => {
+        testArea.findElement(by.linkText('Link Text'));
+      }));
     });
 
     describe('findVisible', () => {
@@ -244,6 +250,10 @@ describe('Protractor extensions', () => {
       it('throws an error if the element found was not visible', createTest(() => {
         testArea.findVisible('.invisible');
       }, 'No visible instances of (.invisible) were found'));
+
+      it('accepts a Locator', createTest(() => {
+        testArea.findVisible(by.linkText('Link Text'));
+      }));
     });
 
     describe('findElements', () => {
@@ -262,6 +272,10 @@ describe('Protractor extensions', () => {
       it('throws an error if no elements were found', createTest(() => {
         testArea.findElements('.not-found');
       }, 'No instances of (.not-found) were found'));
+
+      it('accepts a Locator', createTest(() => {
+        testArea.findElements(by.linkText('Link Text'));
+      }));
     });
 
     describe('findVisibles', () => {
@@ -276,6 +290,10 @@ describe('Protractor extensions', () => {
       it('throws an error if no visible elements were found', createTest(() => {
         testArea.findVisibles('.invisible');
       }, 'No visible instances of (.invisible) were found'));
+
+      it('accepts a Locator', createTest(() => {
+        testArea.findVisibles(by.linkText('Link Text'));
+      }));
     });
 
   });
@@ -300,6 +318,10 @@ describe('Protractor extensions', () => {
 
     it('does not throw an error if the element does not exist', createTest(() => {
       testArea.assertElementDoesNotExist('.does-not-exist');
+    }));
+
+    it('accepts a Locator', createTest(() => {
+      testArea.assertElementDoesNotExist(by.buttonText('button does not exist'));
     }));
   });
 
