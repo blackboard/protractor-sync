@@ -4,3 +4,5 @@ export { BrowserSync, TargetLocatorSync, OptionsSync, WindowSync } from './brows
 export { polledExpect } from './polled-expect';
 export { configure } from './config';
 export { getActiveElement, waitForNewWindow, takeScreenshot, resizeViewport, disallowExpect, waitFor } from './utility';
+export { By } from 'protractor';
+export { Key } from 'selenium-webdriver';
