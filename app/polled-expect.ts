@@ -1,5 +1,6 @@
 import * as ab from 'asyncblock';
 import { implicitWaitMs, retryIntervalMs } from './config';
+import { exec } from './exec';
 
 export function polledExpect(func: Function, waitTimeMS?: number) {
   const timeout = waitTimeMS || implicitWaitMs;
@@ -27,7 +28,7 @@ export function polledExpect(func: Function, waitTimeMS?: number) {
       let passed = false;
 
       do {
-        const actual = func();
+        const actual = exec(func());
         const result = (<any>jasmine).matchers[key]((<any>jasmine).matchersUtil, null).compare(actual, expected);
         passed = result.pass;
 
