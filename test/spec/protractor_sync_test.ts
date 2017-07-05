@@ -266,6 +266,12 @@ describe('Protractor extensions', () => {
         testArea.findVisible('.visible-element');
       }));
 
+      it('works with polledExpect regardless of element finder type', createTest(() => {
+        polledExpect(() => testArea.findElement('.visible-element').getElementFinder().getWebElement().isDisplayed()).toEqual(true);
+        polledExpect(() => testArea.findElement('.visible-element').isDisplayed()).toEqual(true);
+        polledExpect(() => testArea.findElement('.visible-element').getElementFinder().isDisplayed()).toEqual(true);
+      }));
+
       it('throws an error if more than one element was found', createTest(() => {
         testArea.findVisible('.duplicate-selector');
       }, 'More than one visible instance of (.duplicate-selector) was found!'));
