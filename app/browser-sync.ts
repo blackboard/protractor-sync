@@ -1,5 +1,5 @@
 import * as ab from 'asyncblock';
-import { ProtractorBrowser } from 'protractor';
+import { ProtractorBrowser, Runner } from 'protractor';
 import { ILocation, ISize, IWebDriverOptionsCookie, Options, TargetLocator, Window } from 'selenium-webdriver';
 
 import { ElementFinderSync } from './element-finder-sync';
@@ -82,6 +82,29 @@ export class BrowserSync {
     }
 
     return result;
+  }
+
+  forkNewDriverInstance(useSameUrl?: boolean, copyMockModules?: boolean, copyConfigUpdates?: boolean) {
+    const newBrowser = this.getBrowser().forkNewDriverInstance(useSameUrl, copyMockModules, copyConfigUpdates);
+
+    const waitForAngularEnabled = this.waitForAngularEnabled();
+
+    //Use the runner class to reset global variables after spawning the new instance
+    const runner = new Runner(this.getProcessedConfig());
+    runner.setupGlobals_(newBrowser);
+
+    //By default the new browser will wait for angular, so we need to manually carry over the setting
+    newBrowser.waitForAngularEnabled(waitForAngularEnabled);
+
+    return this;
+  }
+
+  getProcessedConfig() {
+    return exec(this.getBrowser().getProcessedConfig());
+  }
+
+  waitForAngularEnabled(enabled?: boolean) {
+    return exec(this.getBrowser().waitForAngularEnabled(enabled));
   }
 }
 
