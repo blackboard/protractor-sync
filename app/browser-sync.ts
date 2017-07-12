@@ -84,7 +84,7 @@ export class BrowserSync {
     return result;
   }
 
-  forkNewDriverInstance(useSameUrl?: boolean, copyMockModules?: boolean, copyConfigUpdates?: boolean) {
+  forkAndSwitchToNewDriverInstance(useSameUrl?: boolean, copyMockModules?: boolean, copyConfigUpdates?: boolean) {
     const newBrowser = this.getBrowser().forkNewDriverInstance(useSameUrl, copyMockModules, copyConfigUpdates);
 
     const waitForAngularEnabled = this.waitForAngularEnabled();
