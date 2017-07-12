@@ -179,6 +179,17 @@ describe('Protractor extensions', () => {
     }));
   });
 
+  describe('Fork new driver instance', () => {
+    it('forks a new browser', createTest(() => {
+      const originalBrowser = browserSync.getBrowser();
+      browserSync.forkNewDriverInstance();
+
+      expect(browserSync.getBrowser()).not.toBe(originalBrowser);
+
+      originalBrowser.quit(); //The rest of the tests will carry on in the new browser window
+    }));
+  });
+
   describe('Other element finder extensions', () => {
     it('can scroll to an element', createTest(() => {
       //Make sure we are starting on a fresh page
