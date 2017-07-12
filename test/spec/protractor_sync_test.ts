@@ -182,7 +182,7 @@ describe('Protractor extensions', () => {
   describe('Fork new driver instance', () => {
     it('forks a new browser', createTest(() => {
       const originalBrowser = browserSync.getBrowser();
-      browserSync.forkNewDriverInstance();
+      browserSync.forkAndSwitchToNewDriverInstance();
 
       expect(browserSync.getBrowser()).not.toBe(originalBrowser);
 
