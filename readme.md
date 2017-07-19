@@ -3,7 +3,7 @@
 Protractor-sync builds on protractor and provides:
 
 * Synchronous-style test writing (using fibers, behind the scenes)
-* Polling mechanisms for testing asynchronous apps (polledExpect, elementFinder.waitUntil & .waitUntilRemoved, browser.waitFor)
+* Polling mechanisms for testing asynchronous apps (polledExpect, elementFinderSync.waitUntil & .waitUntilRemoved, browserSync.waitFor)
 * JQuery methods such as `hasClass`, `closest`, and `is`
 * Automatic stale element re-selection (if a stale element is encountered, try to re-select it based on its original selector)
 * Automatic blocked click retrying
@@ -26,17 +26,24 @@ Pre-reqs:
 ```
 import { browserSync, elementSync, polledExpect } from 'protractor-sync';
 
-var settings = elementSync.findVisible('.settings'); //Finds exactly one visible element with a class of "settings"
-settings.findVisible('input.start-date').clear().sendKeys('1/1/2000');
-settings.findVisible('.save').scrollIntoView().click();
+describe('The date field', () => {
 
-settings.waitUntilRemoved();
+    it('should set a new date', () => {
 
-polledExpect(function() { return element.findVisible('div.start-date').getText(); }).toEqual('1/1/2000');
-//With ES6/Typescript: polledExpect(() => element.findVisible('div.start-date').getText()).toEqual('1/1/2000');
+        var settings = elementSync.findVisible('.settings'); //Finds exactly one visible element with a class of "settings"
+        settings.findVisible('input.start-date').clear().sendKeys('1/1/2000');
+        settings.findVisible('.save').scrollIntoView().click();
+    
+        settings.waitUntilRemoved();
+        
+        polledExpect(function() { return element.findVisible('div.start-date').getText(); }).toEqual('1/1/2000');
+        //With ES6/Typescript: polledExpect(() => element.findVisible('div.start-date').getText()).toEqual('1/1/2000');
+    });
+
+});
 ```
 
-See test/protractor-sync_test.ts for more examples.
+See test/spec/protractor-sync_test.ts for more examples.
 
 # API
 
