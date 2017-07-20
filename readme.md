@@ -3,7 +3,7 @@
 Protractor-sync builds on protractor and provides:
 
 * Synchronous-style test writing (using fibers, behind the scenes)
-* Polling mechanisms for testing asynchronous apps (polledExpect, elementFinderSync.waitUntil & .waitUntilRemoved, browserSync.waitFor)
+* Polling mechanisms for testing asynchronous apps (polledExpect, elementFinderSync.waitUntil & .waitUntilRemoved, waitFor)
 * JQuery methods such as `hasClass`, `closest`, and `is`
 * Automatic stale element re-selection (if a stale element is encountered, try to re-select it based on its original selector)
 * Automatic blocked click retrying
