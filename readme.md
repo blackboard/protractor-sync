@@ -149,14 +149,3 @@ Wraps the `browser` object from protractor and synchronizes the following method
 * `npm publish` - Publish a new version to NPM
 
 This project will automatically build, lint and test when pushing code to a remote repository.
-
-# How to publish a new version to NPM
-
-* Checkout/pull develop
-* Verify the version in package.json is set to the correct version for this release, if not increment and commit it
-    * This should normally be completed at the end of the publishing steps
-* Create a tag, for example: `git tag v1.0.1; git push --tags`
-* `npm login` with the *blackboard* NPM account
-* Run `npm publish`
-* Check npmjs.com to verify the publish was successful
-* Increment version # in package.json (use semantic versioning) and commit
