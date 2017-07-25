@@ -560,7 +560,8 @@ describe('Protractor extensions', () => {
       expect(() =>
         protractorSync.polledExpect(() => expectationMethodCheckCount++, 100).toBeLessThan(0)
       ).toThrowError(/Expected \d+ to be less than 0\./);
-      expect(expectationMethodCheckCount).toEqual(10);
+      expect(expectationMethodCheckCount).toBeGreaterThan(9);
+      expect(expectationMethodCheckCount).toBeLessThan(12);
     }));
 
     it('works in conjunction with element finders', createTest(() => {
