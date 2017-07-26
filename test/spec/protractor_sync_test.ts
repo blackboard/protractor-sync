@@ -4,6 +4,8 @@ import * as mkdirp from 'mkdirp';
 
 import { by } from 'protractor';
 import * as protractorSync from '../../app/index';
+const heapdump = require('heapdump');
+
 import { browserSync, ElementFinderSync, elementSync, polledExpect } from '../../app/index';
 
 protractorSync.configure({ implicitWaitMs: 500 });
@@ -45,9 +47,13 @@ function createTest(fn: Function, errorMsg?: string) {
     ab(() => {
       fn();
     }, (err: any) => {
+      console.log('caught an error');
+      heapdump.writeSnapshot('/Users/mwhitsitt/heaps/afterFailure.heapsnapshot');
+
       if (errorMsg) {
         expect(err.message).toEqual(errorMsg);
       } else {
+
         expect(err && err.stack || err || undefined).toBeUndefined();
       }
       done();
@@ -86,6 +92,16 @@ describe('Protractor extensions', () => {
       testSpan = elementSync.findVisible('.test-span');
       testInput = elementSync.findVisible('input');
       testMultilineInput = elementSync.findVisible('textarea');
+    }));
+
+    it('causes large heap snapshot on error', createTest(() => {
+      heapdump.writeSnapshot('/Users/mwhitsitt/heaps/beforeFailure.heapsnapshot');
+      polledExpect(() => { return false; }).toBe(true);
+    }));
+
+    it('causes same size heap snapshot on error', createTest(() => {
+      heapdump.writeSnapshot('/Users/mwhitsitt/heaps/beforeFailure.heapsnapshot');
+      expect(false).toBe(true);
     }));
 
     it('Finds the closest element matching the selector', createTest(() => {
