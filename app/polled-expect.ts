@@ -38,7 +38,7 @@ export function polledExpect(func: Function, waitTimeMS?: number) {
 
         if (!passed) {
           if (new Date().getTime() - startTime <= timeout) {
-            setTimeout(flow.add(), retryIntervalMs);
+            flow.sync(setTimeout(flow.add(), retryIntervalMs));
           } else {
             let message = result.message;
 

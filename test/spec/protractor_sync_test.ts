@@ -555,11 +555,13 @@ describe('Protractor extensions', () => {
     }));
 
     it('times out', createTest(() => {
-      let counter = 0;
+      let expectationMethodCheckCount = 0;
 
       expect(() =>
-        protractorSync.polledExpect(() => counter++, 100).toBeLessThan(0)
+        protractorSync.polledExpect(() => expectationMethodCheckCount++, 100).toBeLessThan(0)
       ).toThrowError(/Expected \d+ to be less than 0\./);
+      expect(expectationMethodCheckCount).toBeGreaterThan(8);
+      expect(expectationMethodCheckCount).toBeLessThan(12);
     }));
 
     it('works in conjunction with element finders', createTest(() => {
