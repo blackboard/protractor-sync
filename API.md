@@ -203,7 +203,8 @@ Util methods that stand alone as part of Protractor-sync.
 
 Simple example usage:
 ````
-import {polledExpect} from 'protractor-sync';
+import {configure, polledExpect} from 'protractor-sync';
+configure({implicitWaitMS: 1000});
 polledExpect(() => myValue).toBe(true);
 ````
 

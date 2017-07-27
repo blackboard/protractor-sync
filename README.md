@@ -1,13 +1,13 @@
 # What is this?
 
-Protractor-sync builds on protractor and provides:
+Protractor-sync builds on Protractor and provides:
 
 * Synchronous-style test writing (using fibers, behind the scenes)
 * Polling mechanisms for testing asynchronous apps (polledExpect, elementFinderSync.waitUntil & .waitUntilRemoved, waitFor)
 * JQuery methods such as `hasClass`, `closest`, and `is`
 * Automatic stale element re-selection (if a stale element is encountered, try to re-select it based on its original selector)
-* Automatic blocked click retrying
-* Chaining (e.g. `elementFinder.clear().sendKeys('text')`)
+* Automatic blocked click retrying (if another element would receive the click, keep retrying until timeout expires)
+* Chaining (e.g. `myElement.clear().sendKeys('text')`)
 * Allows 'try/catch' syntax for straightforward error handling
 
 # Installation
@@ -16,10 +16,12 @@ Pre-reqs:
 
 * Protractor (or something like grunt-protractor-runner, which includes it)
 * asyncblock (`npm install asyncblock`)
-* jasmine (Comes with protractor. Other frameworks can be used, but some features only work with jasmine)
+* Jasmine (Comes with Protractor. Other frameworks can be used, but some features only work with Jasmine)
 
-`npm install protractor-sync`
-* Update webdriver (`grunt shell:webdriverUpdate`)
+Installation steps:
+
+1. `npm install protractor-sync`
+1. Update webdriver (`grunt shell:webdriverUpdate`)
 
 # Example
 
@@ -47,7 +49,7 @@ See test/spec/protractor-sync_test.ts for more examples.
 
 # How to contribute
  
-Thanks you for your interest in protractor-sync.  In lieu of a formal styleguide, take care to maintain the existing coding style. Please add tests for any new or changed functionality. 
+Thanks you for your interest in Protractor-sync.  In lieu of a formal style guide, take care to maintain the existing coding style. Please add tests for any new or changed functionality.
 
 # API
 
@@ -55,9 +57,9 @@ See API.md
 
 # Tips
 
-* Do not set an implicit wait in protractor/selenium. Set an implicit wait time using protractorSync.configure instead.
-* Turn off protractor synchronization (browser.ignoreSynchronization = true;) for faster tests. You can also enable/disable it during portions of tests.
-* Always use findVisible, except for special situations where you want to select a hidden element.
+* Do not set an implicit wait in Protractor/selenium. Set an implicit wait time using protractorSync.configure instead.
+* Turn off Protractor synchronization (`browserSync.getBrowser().waitForAngularEnabled(false);`) for faster tests. You can also enable/disable it during portions of tests.
+* Always use `findVisible`, except for special situations where you want to select a hidden element.
 * If you must manually pass a waitTimeMS, set it as a multiple of the implicitWaitTimeMs so it will scale on slower machines.
 
 # Build tasks
