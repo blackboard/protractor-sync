@@ -177,6 +177,14 @@ describe('Protractor extensions', () => {
     it('Can get an element\'s scrollTop', createTest(() => {
       expect(testSpan.scrollTop()).toEqual(0);
     }));
+
+    it('Can move the mouse', createTest(() => {
+      browserSync.getBrowser().actions().mouseMove(testArea.findVisible('.test-span-2').getElementFinder().getWebElement()).perform();
+    }));
+
+    it('Can move the mouse using browserSync.actions()', createTest(() => {
+      browserSync.actions().mouseMove(testArea.findVisible('.test-span-2').getWebElement()).perform();
+    }));
   });
 
   describe('Fork new driver instance', () => {
@@ -277,10 +285,16 @@ describe('Protractor extensions', () => {
         testArea.findVisible('.visible-element');
       }));
 
-      it('works with polledExpect regardless of element finder type', createTest(() => {
+      it('automatically resolves promises returned with polledExpect Protractor and Selenium methods', createTest(() => {
         polledExpect(() => testArea.findElement('.visible-element').getElementFinder().getWebElement().isDisplayed()).toEqual(true);
-        polledExpect(() => testArea.findElement('.visible-element').isDisplayed()).toEqual(true);
+      }));
+
+      it('automatically resolves promises returned with polledExpect Protractor methods', createTest(() => {
         polledExpect(() => testArea.findElement('.visible-element').getElementFinder().isDisplayed()).toEqual(true);
+      }));
+
+      it('works with polled Expect and protractorSync element finder methods on its own', createTest(() => {
+        polledExpect(() => testArea.findElement('.visible-element').isDisplayed()).toEqual(true);
       }));
 
       it('throws an error if more than one element was found', createTest(() => {
