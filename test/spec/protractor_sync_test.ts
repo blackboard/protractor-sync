@@ -278,12 +278,6 @@ describe('Protractor extensions', () => {
       it('accepts a Locator', createTest(() => {
         testArea.findElement(by.linkText('Link Text'));
       }));
-    });
-
-    describe('findVisible', () => {
-      it('finds a visible element', createTest(() => {
-        testArea.findVisible('.visible-element');
-      }));
 
       it('automatically resolves promises returned with polledExpect Protractor and Selenium methods', createTest(() => {
         polledExpect(() => testArea.findElement('.visible-element').getElementFinder().getWebElement().isDisplayed()).toEqual(true);
@@ -295,6 +289,12 @@ describe('Protractor extensions', () => {
 
       it('works with polled Expect and protractorSync element finder methods on its own', createTest(() => {
         polledExpect(() => testArea.findElement('.visible-element').isDisplayed()).toEqual(true);
+      }));
+    });
+
+    describe('findVisible', () => {
+      it('finds a visible element', createTest(() => {
+        testArea.findVisible('.visible-element');
       }));
 
       it('throws an error if more than one element was found', createTest(() => {
