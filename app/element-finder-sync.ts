@@ -176,6 +176,10 @@ export class ElementFinderSync {
     return this.runWithStaleDetection(() => exec(this.element.getTagName()));
   }
 
+  getWebElement() {
+    return exec(this.getElementFinder().getWebElement());
+  }
+
   getCssValue(cssStyleProperty: string): string {
     return this.runWithStaleDetection(() => exec(this.element.getCssValue(cssStyleProperty)));
   }

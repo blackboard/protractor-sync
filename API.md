@@ -102,6 +102,7 @@ let text = myRootElement.getText();
 * **getText()**
 * **getSize()**
 * **getLocation()**
+* **getWebElement()**
 * **isEnabled()**
 * **isSelected()**
 * **submit()**
@@ -137,7 +138,7 @@ Simple example usage:
 import {browserSync} from 'protractor-sync';
 browserSync.pause();
 ````
-
+* **actions()** - Creates a sequence of user actions
 * **executeScript(script, ...args)** - Executes the specified synchronous javascript in the browser.
 * **executeAsyncScript(script, ...args)** - Executes the specified async javascript in the browser.
 * **get(destination, timeoutMs)** - Loads the specified URL in the browser.

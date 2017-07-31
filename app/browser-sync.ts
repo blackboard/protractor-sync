@@ -48,6 +48,10 @@ export class BrowserSync {
     return exec(this.getBrowser().quit());
   }
 
+  actions() {
+    return exec(this.getBrowser().actions());
+  }
+
   switchTo() {
     return new TargetLocatorSync(this.getBrowser().switchTo());
   }
