@@ -1,6 +1,6 @@
 {
   "name": "protractor-sync",
-  "version": "5.1.13",
+  "version": "5.1.14",
   "description": "Protractor 5.x wrapper adding synchronous, polled selectors and expectations",
   "keywords": [
     "e2e",
