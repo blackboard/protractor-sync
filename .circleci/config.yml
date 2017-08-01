@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/node:7.10
+      - image: circleci/node:7.10-browsers
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -18,15 +18,6 @@ jobs:
 
     steps:
       - checkout
-
-      - run:
-          name: Install System Deps
-          comment: apt-get install xvfb
-
-      - run:
-          name: Running X virtual framebuffer
-          command: Xvfb -ac :99 -screen 0 1280x1024x16 +extension RANDR > /dev/null 2>&1
-          background: true
 
       # Download and cache dependencies
       - restore_cache:
@@ -42,8 +33,4 @@ jobs:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
 
-      - run:
-          name: Run Tests
-          command: |
-            export DISPLAY=:99
-            npm test
+      - run: npm test
