@@ -1,8 +1,27 @@
 {
   "name": "protractor-sync",
-  "version": "5.1.13",
-  "description": "Synchronous, polled selectors and expectations in Protractor 5.x",
+  "version": "5.1.14",
+  "description": "Protractor 5.x wrapper adding synchronous, polled selectors and expectations",
+  "keywords": [
+    "e2e",
+    "protractor",
+    "selenium",
+    "test",
+    "webdriver"
+  ],
   "homepage": "",
+  "bugs": {
+    "url": "https://github.com/blackboard/protractor-sync/issues"
+  },
+  "contributors": [
+    "Chris Scribner",
+    "Eric Sherman",
+    "Jeremy Casto",
+    "John Purcell",
+    "Ken Hill",
+    "Mindy Whitsitt",
+    "Pavel Karoukin"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/blackboard/protractor-sync.git"

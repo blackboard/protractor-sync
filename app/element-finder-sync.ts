@@ -176,6 +176,10 @@ export class ElementFinderSync {
     return this.runWithStaleDetection(() => exec(this.element.getTagName()));
   }
 
+  getWebElement() {
+    return exec(this.getElementFinder().getWebElement());
+  }
+
   getCssValue(cssStyleProperty: string): string {
     return this.runWithStaleDetection(() => exec(this.element.getCssValue(cssStyleProperty)));
   }
@@ -224,6 +228,8 @@ export class ElementFinderSync {
     return this.runWithStaleDetection(() => exec(this.element.takeScreenshot(optScroll)));
   }
 
+  //Extras
+
   getOuterHtml(): string {
     return this.runWithStaleDetection(() => exec(browserSync.executeScript('return arguments[0].outerHTML;', this.element)));
   }
@@ -238,6 +244,26 @@ export class ElementFinderSync {
 
   getId(): string {
     return this.runWithStaleDetection(() => exec(this.element.getId()));
+  }
+
+  scrollIntoView(): ElementFinderSync {
+    this.runWithStaleDetection(() => browserSync.executeScript((element: HTMLElement) => {
+      element.scrollIntoView();
+    }, this.element));
+
+    return this;
+  }
+
+  sendEnterKey(): ElementFinderSync {
+    this.sendKeys(Key.ENTER);
+
+    return this;
+  }
+
+  sendTabKey(): ElementFinderSync {
+    this.sendKeys(Key.TAB);
+
+    return this;
   }
 
   //JQuery methods
@@ -369,32 +395,12 @@ export class ElementFinderSync {
     return this.executeJQueryElementMethod('prop', name);
   }
 
-  sendEnterKey(): ElementFinderSync {
-    this.sendKeys(Key.ENTER);
-
-    return this;
-  }
-
-  sendTabKey(): ElementFinderSync {
-    this.sendKeys(Key.TAB);
-
-    return this;
-  }
-
   scrollLeft(): number {
     return this.executeJQueryElementMethod('scrollLeft');
   }
 
   scrollTop(): number {
     return this.executeJQueryElementMethod('scrollTop');
-  }
-
-  scrollIntoView(): ElementFinderSync {
-    this.runWithStaleDetection(() => browserSync.executeScript((element: HTMLElement) => {
-      element.scrollIntoView();
-    }, this.element));
-
-    return this;
   }
 
   private runWithStaleDetection<T>(func: () => T): T {
