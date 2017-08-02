@@ -705,7 +705,7 @@ describe('Protractor extensions', () => {
       expect(windowSize.width).toBeGreaterThan(0);
       expect(windowSize.height).toBeGreaterThan(0);
 
-      protractorSync.resizeViewport({ width: 400, height: 200 });
+      protractorSync.resizeViewport({ width: 550, height: 200 });
       let newSize: any = browserSync.executeScript(() => {
         return {
           height: window.document.documentElement.clientHeight,
@@ -713,7 +713,7 @@ describe('Protractor extensions', () => {
         };
       });
 
-      expect(newSize.width).toEqual(400);
+      expect(newSize.width).toEqual(550);
       expect(newSize.height).toEqual(200);
 
       protractorSync.resizeViewport(viewportSize);
