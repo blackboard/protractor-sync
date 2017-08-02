@@ -700,8 +700,6 @@ describe('Protractor extensions', () => {
 
       const windowSize = browserSync.manage().window().getSize();
 
-      console.log('Window size: ', windowSize);
-
       expect(windowSize.width).toBeGreaterThan(0);
       expect(windowSize.height).toBeGreaterThan(0);
 
