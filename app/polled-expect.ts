@@ -2,7 +2,7 @@ import * as ab from 'asyncblock';
 import { implicitWaitMs, retryIntervalMs } from './config';
 import { exec } from './exec';
 
-export function polledExpect(func: Function, waitTimeMS?: number) {
+export function polledExpect(func: Function, waitTimeMS?: number): jasmine.Matchers<any> {
   const timeout = waitTimeMS || implicitWaitMs;
   const startTime = new Date().getTime();
   const matchers = Object.create(null);
