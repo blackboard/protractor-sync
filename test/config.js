@@ -1,3 +1,3 @@
 module.exports = {
-	chromedriverVersion: '2.29'
+	chromedriverVersion: '2.33'
 };
