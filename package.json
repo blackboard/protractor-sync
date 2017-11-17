@@ -33,7 +33,6 @@
     "node": ">=6.9.x"
   },
   "dependencies": {
-    "@types/mkdirp": "0.3.29",
     "asyncblock": "^2.2.11",
     "jquery": "^2.2.4",
     "mkdirp": "0.3.0",
@@ -42,6 +41,7 @@
   },
   "devDependencies": {
     "@types/jasmine": "2.5.47",
+    "@types/mkdirp": "0.3.29",
     "@types/node": "6.0.69",
     "grunt": "0.4.5",
     "grunt-cli": "^1.2.0",
