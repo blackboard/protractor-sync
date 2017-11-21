@@ -1,6 +1,6 @@
 {
   "name": "protractor-sync",
-  "version": "5.1.15",
+  "version": "5.1.16",
   "description": "Protractor 5.x wrapper adding synchronous, polled selectors and expectations",
   "keywords": [
     "e2e",
@@ -35,6 +35,7 @@
   "dependencies": {
     "asyncblock": "^2.2.11",
     "jquery": "^2.2.4",
+    "mkdirp": "0.3.0",
     "protractor": "^5.1.2",
     "webdriver-manager": "^12.0.6"
   },
@@ -55,7 +56,6 @@
     "jasmine-reporters": "2.1.1",
     "jasmine-spec-reporter": "2.4.0",
     "load-grunt-tasks": "3.5.2",
-    "mkdirp": "0.3.0",
     "tslint": "5.2.0",
     "typescript": "2.3.0"
   },
