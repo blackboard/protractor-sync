@@ -33,7 +33,7 @@
     "node": ">=6.9.x"
   },
   "dependencies": {
-    "asyncblock": "^2.2.11",
+    "asyncblock": "^2.2.12",
     "jquery": "^2.2.4",
     "mkdirp": "0.3.0",
     "protractor": "^5.1.2"
