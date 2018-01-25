@@ -1,8 +1,7 @@
 import * as ab from 'asyncblock';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ElementFinder, ProtractorBrowser } from 'protractor';
-import { Locator } from 'protractor/built/locators';
+import { ElementFinder, Locator, ProtractorBrowser } from 'protractor';
 import { ILocation, ISize, IWebElementId, Key, WebElement } from 'selenium-webdriver';
 
 import { BrowserSync } from './browser-sync';
