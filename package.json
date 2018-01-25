@@ -1,6 +1,6 @@
 {
   "name": "protractor-sync",
-  "version": "5.1.17",
+  "version": "5.1.18",
   "description": "Protractor 5.x wrapper adding synchronous, polled selectors and expectations",
   "keywords": [
     "e2e",
@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "asyncblock": "^2.2.12",
-    "jquery": "^2.2.4",
+    "jquery": "3.3.1",
     "mkdirp": "0.3.0",
     "protractor": "^5.1.2"
   },
