@@ -1,11 +1,10 @@
 import * as ab from 'asyncblock';
 import * as fs from 'fs';
-import * as path from 'path';
 import { ElementFinder, Locator, ProtractorBrowser } from 'protractor';
 import { ILocation, ISize, IWebElementId, Key, WebElement } from 'selenium-webdriver';
 
 import { BrowserSync } from './browser-sync';
-import { autoRetryClick, clickRetryIntervalMs, implicitWaitMs } from './config';
+import { autoRetryClick, clickRetryIntervalMs, implicitWaitMs, jQueryLocation } from './config';
 import { exec } from './exec';
 import { polledWait } from './polled-wait';
 import { _getElements, assertElementDoesNotExist, findElement, findElements, findVisible, findVisibles  } from './selection';
@@ -319,7 +318,7 @@ export class ElementFinderSync {
     });
 
     if (!jQuery) {
-      const jquerySource = fs.readFileSync(path.join(__dirname, '../../../node_modules/jquery/dist/jquery.js'), 'utf8');
+      const jquerySource = fs.readFileSync(jQueryLocation, 'utf8');
 
       browserSync.executeScript((_jquerySource: string) => {
         /* tslint:disable-next-line:no-eval */
