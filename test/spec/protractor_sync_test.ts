@@ -622,6 +622,10 @@ describe('Protractor extensions', () => {
         jasmine.clock().uninstall();
       }
     }));
+
+    it('can check for null', () => {
+      polledExpect(() => <any>null).toBeNull();
+    });
   });
 
   describe('Clicking an element', () => {
