@@ -131,8 +131,14 @@ export const disallowExpect = (() => {
   };
 })();
 
-export function waitFor(condition: () => boolean, waitTimeMs?: number) {
-  polledWait(() => {
-    return { data: <any>null, keepPolling: !condition() };
+export function waitFor<T>(condition: () => boolean | {data: T, keepPolling: boolean}, waitTimeMs?: number): T {
+  return polledWait(() => {
+    const result = condition();
+
+    if (typeof result === 'boolean') {
+      return { data: <any>null, keepPolling: !condition() };
+    } else {
+      return result;
+    }
   }, null, waitTimeMs);
 }

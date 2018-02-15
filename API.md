@@ -220,7 +220,8 @@ polledExpect(() => myValue).toBe(true);
 * **polledExpect(func, waitTimeMs?)** - Works like jasmine's "expect", but retries the function until it passes or times out.
 * **resizeViewport(size: { width?: number; height?: number; })** - Resize the viewport (not the window) to the specified size.
 * **takeScreenshot(filename)** - Takes a screenshot and saves a .png file at the specified file path.
-* **waitFor(condition, waitTimeMS?)** - Waits for the condition function to return a truthy value. An exception will be raised if it times out.
+* **waitFor(condition: () => boolean, waitTimeMS?)** - Waits for the condition function to return a truthy value. An exception will be raised if it times out.
+* **waitFor<T>(condition: () => { data: T, keepPolling: boolean })** - Waits fo the condition function to return { keepPolling: false } and returns the data element. An exception will be raised if it times out.
 * **waitForNewWindow(action, waitTimeMs)** - Executes the action function, then waits for a new popup window to appear.
   The current window will be switched to the new window when it opens. Times out after waitTimeMs milliseconds.
 
