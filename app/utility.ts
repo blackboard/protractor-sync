@@ -136,7 +136,7 @@ export function waitFor<T>(condition: () => boolean | {data: T, keepPolling: boo
     const result = condition();
 
     if (typeof result === 'boolean') {
-      return { data: <any>null, keepPolling: !condition() };
+      return { data: <any>null, keepPolling: !result };
     } else {
       return result;
     }
