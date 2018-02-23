@@ -4,7 +4,7 @@ import * as mkdirp from 'mkdirp';
 
 import { by } from 'protractor';
 import * as protractorSync from '../../app/index';
-import { browserSync, ElementFinderSync, elementSync, polledExpect } from '../../app/index';
+import { browserSync, ElementFinderSync, elementSync, polledExpect, waitFor } from '../../app/index';
 
 protractorSync.configure({ implicitWaitMs: 500 });
 
@@ -509,6 +509,36 @@ describe('Protractor extensions', () => {
       });
 
       expect(el.hasClass('second')).toEqual(true);
+    }));
+  });
+
+  describe('waitFor', () => {
+    let testArea: ElementFinderSync;
+
+    beforeAll(createTest(() => {
+      //Make sure we are starting on a fresh page
+      browserSync.get('data:,');
+
+      appendTestArea({
+        innerHtml: '<span class="wait-for-test">test</span>'
+      });
+
+      testArea = elementSync.findElement('#' + TEST_AREA_ID);
+    }));
+
+    it('returns the element that was being waited on', createTest(() => {
+      const element = waitFor(() => {
+        const waitingFor = testArea.findVisibles('.wait-for-test');
+
+        return { data: waitingFor[0], keepPolling: waitingFor.length === 0 };
+      });
+
+      expect(element instanceof ElementFinderSync).toBe(true);
+      expect(element.hasClass('wait-for-test')).toBe(true);
+    }));
+
+    it('works when the condition returns a boolean as well', createTest(() => {
+      waitFor(() => testArea.findVisibles('.wait-for-test').length > 0);
     }));
   });
 
