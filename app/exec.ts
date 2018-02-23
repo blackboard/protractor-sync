@@ -3,7 +3,7 @@ import { ElementFinder } from 'protractor';
 import { ElementFinderSync } from './element-finder-sync';
 
 export function exec(obj: any) {
-  if (obj.then) {
+  if (obj && obj.then) {
     const flow = ab.getCurrentFlow();
 
     if (flow == null) {
