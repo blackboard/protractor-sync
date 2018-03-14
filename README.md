@@ -2,7 +2,7 @@
 
 Protractor-sync builds on Protractor and provides:
 
-* Synchronous-style test writing (using fibers, behind the scenes)
+* Synchronous-style test writing (using fibers, behind the scenes) allowing all commands to execute immediately.
 * Polling mechanisms for testing asynchronous apps (polledExpect, elementFinderSync.waitUntil & .waitUntilRemoved, waitFor)
 * JQuery methods such as `hasClass`, `closest`, and `is`
 * Automatic stale element re-selection (if a stale element is encountered, try to re-select it based on its original selector)
@@ -26,22 +26,43 @@ Installation steps:
 # Example
 
 ```
-import { browserSync, elementSync, polledExpect } from 'protractor-sync';
+import * as ab from 'asyncblock';
+import { browserSync, configure, elementSync, polledExpect} from '../../app/index';
 
-describe('The date field', () => {
+configure({ implicitWaitMs: 500 });
 
-    it('should set a new date', () => {
-
-        var settings = elementSync.findVisible('.settings'); //Finds exactly one visible element with a class of "settings"
-        settings.findVisible('input.start-date').clear().sendKeys('1/1/2000');
-        settings.findVisible('.save').scrollIntoView().click();
-    
-        settings.waitUntilRemoved();
-        
-        polledExpect(function() { return element.findVisible('div.start-date').getText(); }).toEqual('1/1/2000');
-        //With ES6/Typescript: polledExpect(() => element.findVisible('div.start-date').getText()).toEqual('1/1/2000');
+function createTest(fn: Function, errorMsg?: string) {
+  return (done: Function) => {
+    ab(() => {
+      fn();
+    }, (err: any) => {
+      if (errorMsg) {
+        expect(err.message).toEqual(errorMsg);
+      } else {
+        expect(err && err.stack || err || undefined).toBeUndefined();
+      }
+      done();
     });
+  };
+}
 
+describe('Google Translate', () => {
+  const googleTranslateUrl = 'https://translate.google.com/';
+
+  it('does not show the clear button when no text exists in the source field', createTest(() => {
+    browserSync.get(googleTranslateUrl);
+
+    const rootElement = elementSync.findVisible('#gt-src-c');
+    polledExpect(() => rootElement.findElement('.clear-button').isDisplayed()).toEqual(false);
+  }));
+
+  it('does show the clear button after entering text in the source field', createTest(() => {
+    browserSync.get(googleTranslateUrl);
+
+    const rootElement = elementSync.findVisible('#gt-src-c');
+    rootElement.findVisible('textarea#source').clear().sendKeys('12345');
+    polledExpect(() => rootElement.findElement('.clear-button').isDisplayed()).toEqual(true);
+  }));
 });
 ```
 
@@ -53,7 +74,7 @@ Thanks you for your interest in Protractor-sync.  In lieu of a formal style guid
 
 # API
 
-See API.md
+See [API.md](API.md)
 
 # Tips
 
