@@ -17,12 +17,12 @@ jobs:
       # This makes sure Chrome is always up to date in your test suite
       # On average this adds about 10 seconds to your build suite
       # Be sure to use Ubuntu 14.04 (Trusty) in the CircleCI's OS setting (Settings > Build Environment)
-      dependencies:
-        pre:
-          - curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          - sudo dpkg -i google-chrome.deb
-          - sudo sed -i 's|HERE/chrome\"|HERE/chrome\" --disable-setuid-sandbox|g' /opt/google/chrome/google-chrome
-          - rm google-chrome.deb
+      #dependencies:
+      #  pre:
+      #    - curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      #    - sudo dpkg -i google-chrome.deb
+      #    - sudo sed -i 's|HERE/chrome\"|HERE/chrome\" --disable-setuid-sandbox|g' /opt/google/chrome/google-chrome
+      #    - rm google-chrome.deb
 
     working_directory: ~/repo
 
