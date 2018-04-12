@@ -14,20 +14,9 @@ jobs:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/mongo:3.4.4
 
-      # This makes sure Chrome is always up to date in your test suite
-      # On average this adds about 10 seconds to your build suite
-      # Be sure to use Ubuntu 14.04 (Trusty) in the CircleCI's OS setting (Settings > Build Environment)
-      #dependencies:
-      #  pre:
-      #    - curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-      #    - sudo dpkg -i google-chrome.deb
-      #    - sudo sed -i 's|HERE/chrome\"|HERE/chrome\" --disable-setuid-sandbox|g' /opt/google/chrome/google-chrome
-      #    - rm google-chrome.deb
-
     working_directory: ~/repo
 
     steps:
-
       - checkout
 
       # Download and cache dependencies
@@ -36,6 +25,14 @@ jobs:
           - v1-dependencies-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
+
+      #Always install the latest Chrome before we start our tests.
+      - run:
+          command: |
+            - curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            - sudo dpkg -i google-chrome.deb
+            - sudo sed -i 's|HERE/chrome\"|HERE/chrome\" --disable-setuid-sandbox|g' /opt/google/chrome/google-chrome
+            - rm google-chrome.deb
 
       - run: npm install
 
