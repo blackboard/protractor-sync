@@ -9,6 +9,14 @@ if (ab.enableTransform(module)) {
 module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
+  grunt.registerTask('webdriverUpdateWithPinnedChromedriver', function() {
+    //ensures correct pinned ChromeDriver in config.js exists, otherwise fetch it.
+    if (!grunt.file.exists('./node_modules/webdriver-manager/selenium/chromedriver_' + config.chromedriverVersion)) {
+      console.log('Chromedriver ' + config.chromedriverVersion + ' not found. Running shell:webdriverUpdate.');
+      grunt.task.run('shell:webdriverUpdate');
+    }
+  });
+
   grunt.initConfig({
     clean: {
       build: 'build',
@@ -89,7 +97,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test', [
-    'shell:webdriverUpdate',
+    'webdriverUpdateWithPinnedChromedriver',
     'protractor:tests'
   ]);
 
