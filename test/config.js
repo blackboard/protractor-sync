@@ -1,4 +1,7 @@
 module.exports = {
-	chromedriverVersion: '2.37'
-
+	webdriverBinaries: {
+        'chromedriverVersion': 'chromedriver_2.37',
+        'geckoVersion': 'latest',
+        'standaloneVersion': 'latest'
+    }
 };
