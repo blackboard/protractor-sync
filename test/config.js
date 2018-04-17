@@ -1,7 +1,7 @@
 module.exports = {
-	webdriverBinaries: {
-        'chromedriverVersion': 'chromedriver_2.37',
-        'geckoVersion': 'latest',
-        'standaloneVersion': 'latest'
+	webdriverComponents: {
+        'chromedriver': '2.37',
+        'geckodriver': 'v0.20.1',
+        'selenium-server-standalone': '3.11.0'
     }
 };
