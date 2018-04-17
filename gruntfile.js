@@ -111,7 +111,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test', [
-    'webdriverUpdateWithPinnedChromedriver',
+    'webdriverUpdateIfNeeded',
     'protractor:tests'
   ]);
 
