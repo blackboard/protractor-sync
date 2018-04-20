@@ -26,7 +26,6 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      #Always install the latest Chrome before we start our tests.
 			- run: #STABLE
   			name: Install Chromedriver latest version
   			command: |
