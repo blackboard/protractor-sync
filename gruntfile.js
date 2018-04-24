@@ -9,6 +9,25 @@ if (ab.enableTransform(module)) {
 module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
+  grunt.registerTask('webdriverUpdateIfNeeded', function() {
+    //ensures correct pinned Webdriver binaries in config.js exists, otherwise fetch them.
+    const webdriverComponentsDirectory = './node_modules/webdriver-manager/selenium/';
+    var needToRunShellWebdriverUpdate = false;
+
+    for ( var component in config.webdriverComponents ) {
+      var version = config.webdriverComponents[component];
+      if ( !grunt.file.exists(webdriverComponentsDirectory + component + '*' + version + '*') ) {
+        needToRunShellWebdriverUpdate = true;
+        break;
+      }
+    };
+
+    if (needToRunShellWebdriverUpdate) {
+      console.log('One ore more selenium binaries not found. Running shell:webdriverUpdate.');
+      grunt.task.run('shell:webdriverUpdate');
+    }
+  });
+
   grunt.initConfig({
     clean: {
       build: 'build',
@@ -45,11 +64,14 @@ module.exports = function(grunt) {
 
     shell: {
       webdriverUpdate: {
-        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '+config.chromedriverVersion
+        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager update' +
+        ' --versions.chrome '+config.webdriverComponents['chromedriver'] +
+        ' --versions.gecko '+config.webdriverComponents['geckodriver'] +
+        ' --versions.standalone '+config.webdriverComponents['selenium-server-standalone']
       },
 
       webdriverStart: {
-        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '+config.chromedriverVersion
+        command: 'node ./node_modules/webdriver-manager/bin/webdriver-manager start'
       }
     },
 
@@ -89,7 +111,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test', [
-    'shell:webdriverUpdate',
+    'webdriverUpdateIfNeeded',
     'protractor:tests'
   ]);
 

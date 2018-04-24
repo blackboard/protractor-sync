@@ -21,7 +21,6 @@ Pre-reqs:
 Installation steps:
 
 1. `npm install protractor-sync`
-1. Update webdriver (`grunt shell:webdriverUpdate`)
 
 # Example
 
@@ -86,7 +85,7 @@ See [API.md](API.md)
 # Build tasks
 
 * `npm start` - Builds the code and watches for changes
-* `npm test` - Builds the code, runs the linter and runs the test suite
+* `npm test` - Builds the code, runs the linter, updates Webdriver if needed, and runs the test suite
 * `npm publish` - Publish a new version to NPM
 
 This project will automatically build, lint and test when pushing code to a remote repository.
