@@ -13,12 +13,10 @@ const DEFAULT_BREAKPOINT_HEIGHT = 1024;
 /**
  * Returns the active element on the page
  */
-export function getActiveElement() {
-  const active = browserSync.executeScript<WebElement>(() => {
+export function getActiveElement(): ElementFinderSync {
+  return browserSync.executeScript<ElementFinderSync>(() => {
     return document.activeElement;
   });
-
-  return ElementFinderSync.fromWebElement_(browserSync.getBrowser(), active);
 }
 
 export function waitForNewWindow(action: Function, waitTimeMs?: number) {
@@ -141,4 +139,43 @@ export function waitFor<T>(condition: () => boolean | {data: T, keepPolling: boo
       return result;
     }
   }, null, waitTimeMs);
+}
+
+export function deepCloneAndTransform(obj: any, transformer: (val: any) => any): any {
+  if (obj == null) {
+    return transformer(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => deepCloneAndTransform(item, transformer));
+  } else if (obj.constructor && (obj.constructor === Object || obj.constructor == null)) {
+    // Plain object
+    return Object.keys(obj).reduce((clone, key) => {
+      clone[key] = deepCloneAndTransform(obj[key], transformer);
+
+      return clone;
+    }, Object.create(null));
+  } else {
+    return transformer(obj);
+  }
+}
+
+export function transformElementFinderSyncToWebElementIn(obj: any): any {
+  return deepCloneAndTransform(obj, (arg) => {
+    if (arg instanceof ElementFinderSync) {
+      return arg.getWebElement();
+    } else {
+      return arg;
+    }
+  });
+}
+
+export function transformWebElementToElementFinderSyncIn(obj: any): any {
+  return deepCloneAndTransform(obj, (arg) => {
+    if (arg instanceof WebElement) {
+      return ElementFinderSync.fromWebElement_(browserSync.getBrowser(), arg);
+    } else {
+      return arg;
+    }
+  });
 }

@@ -228,12 +228,31 @@ export class ElementFinderSync {
 
   //Extras
 
+  querySelector(selector: string): ElementFinderSync | undefined {
+    return this.runWithStaleDetection(() =>
+      browserSync.executeScript<ElementFinderSync | undefined>(
+        (element: HTMLElement, _selector: string) => element.querySelector(_selector), this, selector
+      )
+    ) || undefined;
+  }
+
+  querySelectorAll(selector: string): ElementFinderSync[] {
+    return this.runWithStaleDetection(() =>
+      browserSync.executeScript<ElementFinderSync[]>(
+        (element: HTMLElement, _selector: string) => element.querySelectorAll(_selector), this, selector
+    ));
+  }
+
   getOuterHtml(): string {
-    return this.runWithStaleDetection(() => exec(browserSync.executeScript('return arguments[0].outerHTML;', this.element)));
+    return this.runWithStaleDetection(() =>
+      browserSync.executeScript<string>((element: HTMLElement) => element.outerHTML, this)
+    );
   }
 
   getInnerHtml(): string {
-    return this.runWithStaleDetection(() => exec(browserSync.executeScript('return arguments[0].innerHTML;', this.element)));
+    return this.runWithStaleDetection(() =>
+      browserSync.executeScript<string>((element: HTMLElement) => element.innerHTML, this)
+    );
   }
 
   serialize(): IWebElementId {
@@ -247,7 +266,7 @@ export class ElementFinderSync {
   scrollIntoView(): ElementFinderSync {
     this.runWithStaleDetection(() => browserSync.executeScript((element: HTMLElement) => {
       element.scrollIntoView();
-    }, this.element));
+    }, this));
 
     return this;
   }
@@ -284,7 +303,7 @@ export class ElementFinderSync {
         } else {
           return result;
         }
-      }, this.element, method, arg);
+      }, this, method, arg);
     };
 
     const result = this.runWithStaleDetection(() => attempt());
@@ -294,9 +313,7 @@ export class ElementFinderSync {
     }
 
     if (Array.isArray(result)) {
-      return result.map((webElement: any, i: number) => {
-        const elementFinder = ElementFinderSync.fromWebElement_(this.element.browser_, webElement);
-
+      return result.map((elementFinder: ElementFinderSync, i: number) => {
         //TODO: clean up
         elementFinder.selectionArgs = {
           rootElement: this,
@@ -334,15 +351,15 @@ export class ElementFinderSync {
   }
 
   hasClass(className: string): boolean {
-    return this.runWithStaleDetection(() => exec(this.element.browser_.executeScript((element: HTMLElement, _className: string) => {
+    return this.runWithStaleDetection(() => browserSync.executeScript<boolean>((element: HTMLElement, _className: string) => {
       return element.classList.contains(_className);
-    }, this.element, className)));
+    }, this, className));
   }
 
   isFocused(): boolean {
-    return this.runWithStaleDetection(() => exec(this.element.browser_.executeScript((element: HTMLElement) => {
+    return this.runWithStaleDetection(() => browserSync.executeScript<boolean>((element: HTMLElement) => {
       return document.activeElement === element;
-    }, this.element)));
+    }, this));
   }
 
   innerHeight(): number {

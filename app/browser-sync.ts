@@ -4,6 +4,7 @@ import { ILocation, ISize, IWebDriverOptionsCookie, Options, TargetLocator, Wind
 
 import { ElementFinderSync } from './element-finder-sync';
 import { exec } from './exec';
+import { transformElementFinderSyncToWebElementIn, transformWebElementToElementFinderSyncIn } from './utility';
 
 export class BrowserSync {
   private readonly PAUSE_DEBUGGER_DELAY_MS = 500;
@@ -17,11 +18,17 @@ export class BrowserSync {
   }
 
   executeScript<T>(script: string | Function, ...varArgs: any[]): T {
-    return exec(this.getBrowser().executeScript.apply(this.getBrowser(), arguments));
+    const transformed = transformElementFinderSyncToWebElementIn(varArgs);
+    const result = exec(this.getBrowser().executeScript.apply(this.getBrowser(), [script].concat(transformed)));
+
+    return transformWebElementToElementFinderSyncIn(result);
   }
 
   executeAsyncScript<T>(script: string | Function, ...varArgs: any[]): T {
-    return exec(this.getBrowser().executeAsyncScript.apply(this.getBrowser(), arguments));
+    const transformed = transformElementFinderSyncToWebElementIn(varArgs);
+    const result = exec(this.getBrowser().executeAsyncScript.apply(this.getBrowser(), [script].concat(transformed)));
+
+    return transformWebElementToElementFinderSyncIn(result);
   }
 
   get(destination: string, timeout?: number) {
