@@ -146,8 +146,10 @@ export class ElementFinderSync {
       try {
         exec(this.element.click());
       } catch (e) {
-        if (autoRetryClick && /Other element would receive the click/.test(e.message) && new Date().getTime() - startTime < implicitWaitMs) {
-          console.log('(Protractor-sync): Element (' + this.getSelectionPath() + ') was covered, retrying click.');
+        //Unfortunately there's no way to detect this except for checking the string contents.
+        const isClickError = /Element is not clickable at point/.test(e.message) || /Other element would receive the click/.test(e.message);
+        if (autoRetryClick && isClickError && new Date().getTime() - startTime < implicitWaitMs) {
+          console.log('(Protractor-sync): Element (' + this.getSelectionPath() + ') was covered or unclickable, retrying click.');
 
           const flow = ab.getCurrentFlow();
           flow.sync(setTimeout(flow.add(), clickRetryIntervalMs)); //We don't need this to retry as quickly

@@ -387,7 +387,9 @@ describe('Protractor extensions', () => {
                    '    <div class="inner-stale-2 ' + extraClass +  '">test</div>' +
                    '  </div>' +
                    '</div>' +
-                   '<div class="stale-test-2 ' + extraClass + '">test</div>'
+                   '<div class="stale-test-2 ' + extraClass + '">test</div>' +
+                   '<div class="stale-test-3 ' + extraClass + '" style="display:none">test</div>' +
+                   '<div class="stale-test-3 ' + extraClass + '">test</div>'
       });
     }
 
@@ -509,6 +511,19 @@ describe('Protractor extensions', () => {
       });
 
       expect(el.hasClass('second')).toEqual(true);
+    }));
+
+    it('re-selects the 2nd visible element', createTest(() => {
+        const el = elementSync.findVisible('.stale-test-3');
+
+        browserSync.executeScript(() => {
+            const stale = document.querySelector('.stale-test');
+            stale.parentNode.removeChild(stale);
+        });
+
+        appendStaleTestArea('second');
+
+        expect(el.hasClass('second')).toEqual(true);
     }));
   });
 
@@ -670,7 +685,7 @@ describe('Protractor extensions', () => {
       const consoleLog = console.log;
       let count = 0;
       spyOn(console, 'log').and.callFake(function(message: any) {
-        if (/was covered, retrying click/.test(message)) {
+        if (/was covered or unclickable, retrying click/.test(message)) {
           count++;
 
           if (count === 2) {
