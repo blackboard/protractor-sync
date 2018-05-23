@@ -141,14 +141,14 @@ export function waitFor<T>(condition: () => boolean | {data: T, keepPolling: boo
   }, null, waitTimeMs);
 }
 
-export function deepCloneAndTransform(obj: any, transformer: (val: any) => any): any {
+function deepCloneAndTransform(obj: any, transformer: (val: any) => any): any {
   if (obj == null) {
     return transformer(obj);
   }
 
   if (Array.isArray(obj)) {
     return obj.map((item) => deepCloneAndTransform(item, transformer));
-  } else if (obj.constructor && (obj.constructor === Object || obj.constructor == null)) {
+  } else if (obj.constructor === Object || obj.constructor == null) {
     // Plain object
     return Object.keys(obj).reduce((clone, key) => {
       clone[key] = deepCloneAndTransform(obj[key], transformer);
