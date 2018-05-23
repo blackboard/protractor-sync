@@ -122,6 +122,8 @@ The recommended approach is to call the equivalent Protractor-sync method on the
 * **getInnerHtml()** - Returns this element's innerHTML
 * **getOuterHtml()** - Returns this element's outerHTML
 * **getSelectionPath()** - Retrieves information about how the element was selected
+* **querySelector(selector)** - Selects an element within this element using the browser's native querySelector API.
+* **querySelectorAll(selector)** - Selects multiple elements within this element using the browser's native querySelectorAll API.
 * **reselect()** - Attempt to select this element again using the original selection path. Mainly used in automatic reselection.
 * **scrollIntoView()** - Scroll the page such that the top of the current element is at the top of the visible page.
 * **sendEnter()** - Convenience method to send the ENTER key to this element
