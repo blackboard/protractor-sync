@@ -685,7 +685,7 @@ describe('Protractor extensions', () => {
       const consoleLog = console.log;
       let count = 0;
       spyOn(console, 'log').and.callFake(function(message: any) {
-        if (/was covered, retrying click/.test(message)) {
+        if (/was covered or unclickable, retrying click/.test(message)) {
           count++;
 
           if (count === 2) {
