@@ -127,6 +127,11 @@ export function _getElements(
           }
         }
       });
+
+      //If elements were removed due to visibility then the list needs to be re-indexed.
+      filtered.forEach((elementFinder, i) => {
+        elementFinder.selectionOrdinal = i;
+      });
     } else {
       filtered = resolved;
     }
