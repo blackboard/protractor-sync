@@ -231,18 +231,40 @@ export class ElementFinderSync {
   //Extras
 
   querySelector(selector: string): ElementFinderSync | undefined {
-    return this.runWithStaleDetection(() =>
+    const selectedElement = this.runWithStaleDetection(() =>
       browserSync.executeScript<ElementFinderSync | undefined>(
         (element: HTMLElement, _selector: string) => element.querySelector(_selector), this, selector
       )
     ) || undefined;
+
+    if (selectedElement) {
+      selectedElement.selectionArgs = {
+        rootElement: this,
+        method: 'querySelector',
+        arg: selector,
+        single: true
+      };
+    }
+
+    return selectedElement;
   }
 
   querySelectorAll(selector: string): ElementFinderSync[] {
-    return this.runWithStaleDetection(() =>
+    const selectedElements = this.runWithStaleDetection(() =>
       browserSync.executeScript<ElementFinderSync[]>(
         (element: HTMLElement, _selector: string) => element.querySelectorAll(_selector), this, selector
     ));
+
+    selectedElements.forEach((element, i) => {
+      element.selectionArgs = {
+        rootElement: this,
+        method: 'querySelectorAll',
+        arg: selector
+      };
+      element.selectionOrdinal = i;
+    });
+
+    return selectedElements;
   }
 
   getOuterHtml(): string {

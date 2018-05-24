@@ -72,6 +72,9 @@ export function _getElements(
   }
 
   const flow = ab.getCurrentFlow();
+  if (flow == null) {
+    throw new Error('asyncblock context could not be found. Please make sure protractor-sync is being called from within an asyncblock.');
+  }
 
   return polledWait(() => {
     let elements: ElementArrayFinder;

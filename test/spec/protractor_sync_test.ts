@@ -385,6 +385,10 @@ describe('Protractor extensions', () => {
         innerHtml: '<div class="stale-test ' + extraClass + '">' +
                    '  <div class="inner-stale ' + extraClass + '">' +
                    '    <div class="inner-stale-2 ' + extraClass +  '">test</div>' +
+                   '    <div class="inner-stale-3 ' + extraClass +  '">' +
+                   '    <div class="inner-stale-3 ' + extraClass +  '">' +
+                   '  </div>' +
+                   '  </div>' +
                    '  </div>' +
                    '</div>' +
                    '<div class="stale-test-2 ' + extraClass + '">test</div>' +
@@ -437,7 +441,6 @@ describe('Protractor extensions', () => {
       });
 
       appendStaleTestArea('second');
-
       expect(el.getText()).toEqual('test');
     }));
 
@@ -524,6 +527,37 @@ describe('Protractor extensions', () => {
         appendStaleTestArea('second');
 
         expect(el.hasClass('second')).toEqual(true);
+    }));
+
+    it('re-selects a stale element selected by querySelector', createTest(() => {
+      const el = elementSync.findVisible('.inner-stale');
+      const inner2 = el.querySelector('.inner-stale-2');
+
+      browserSync.executeScript(() => {
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
+      });
+
+      appendStaleTestArea('second');
+
+      expect(inner2.hasClass('second')).toEqual(true);
+    }));
+
+    it('re-selects a stale element selected by querySelectorAll', createTest(() => {
+      const el = elementSync.findVisible('.inner-stale');
+      const inner3 = el.querySelectorAll('.inner-stale-3');
+
+      browserSync.executeScript(() => {
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
+      });
+
+      appendStaleTestArea('second');
+
+      inner3.forEach((element) => {
+          expect(element.hasClass('second')).toEqual(true);
+        });
+
     }));
   });
 
@@ -818,5 +852,13 @@ describe('Protractor extensions', () => {
 
       expect(container.querySelectorAll('.not-found')).toEqual([]);
     }));
+  });
+
+  describe('asyncblock context error', () => {
+    it('throws an error when run outside an asyncblock context', () => {
+      expect(() => { elementSync.findVisible('body'); }).toThrowError(
+        'asyncblock context could not be found. Please make sure protractor-sync is being called from within an asyncblock.'
+      );
+    });
   });
 });
