@@ -510,6 +510,34 @@ describe('Protractor extensions', () => {
 
       expect(el.hasClass('second')).toEqual(true);
     }));
+
+    it('re-selects a stale element selected by querySelector', createTest(() => {
+      const el = elementSync.findVisible('.inner-stale');
+      const inner2 = el.querySelector('.inner-stale-2');
+
+      browserSync.executeScript(() => {
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
+      });
+
+      appendStaleTestArea('second');
+
+      expect(inner2.hasClass('second')).toEqual(true);
+    }));
+
+    it('re-selects a stale element selected by querySelectorAll', createTest(() => {
+      const el = elementSync.findVisible('.inner-stale');
+      const inner2 = el.querySelectorAll('.inner-stale-2');
+
+      browserSync.executeScript(() => {
+        const stale = document.querySelector('.stale-test');
+        stale.parentNode.removeChild(stale);
+      });
+
+      appendStaleTestArea('second');
+
+      expect(inner2[0].hasClass('second')).toEqual(true);
+    }));
   });
 
   describe('waitFor', () => {
