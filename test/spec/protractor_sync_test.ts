@@ -853,4 +853,12 @@ describe('Protractor extensions', () => {
       expect(container.querySelectorAll('.not-found')).toEqual([]);
     }));
   });
+
+  describe('asyncblock context error', () => {
+    it('throws an error when run outside an asyncblock context', () => {
+      expect(() => { elementSync.findVisible('body'); }).toThrowError(
+        'asyncblock context could not be found. Please make sure protractor-sync is being called from within an asyncblock.'
+      );
+    });
+  });
 });
