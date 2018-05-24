@@ -385,6 +385,10 @@ describe('Protractor extensions', () => {
         innerHtml: '<div class="stale-test ' + extraClass + '">' +
                    '  <div class="inner-stale ' + extraClass + '">' +
                    '    <div class="inner-stale-2 ' + extraClass +  '">test</div>' +
+                   '    <div class="inner-stale-3 ' + extraClass +  '">' +
+                   '    <div class="inner-stale-3 ' + extraClass +  '">' +
+                   '  </div>' +
+                   '  </div>' +
                    '  </div>' +
                    '</div>' +
                    '<div class="stale-test-2 ' + extraClass + '">test</div>' +
@@ -437,7 +441,6 @@ describe('Protractor extensions', () => {
       });
 
       appendStaleTestArea('second');
-
       expect(el.getText()).toEqual('test');
     }));
 
@@ -542,7 +545,7 @@ describe('Protractor extensions', () => {
 
     it('re-selects a stale element selected by querySelectorAll', createTest(() => {
       const el = elementSync.findVisible('.inner-stale');
-      const inner2 = el.querySelectorAll('.inner-stale-2');
+      const inner3 = el.querySelectorAll('.inner-stale-3');
 
       browserSync.executeScript(() => {
         const stale = document.querySelector('.stale-test');
@@ -551,7 +554,10 @@ describe('Protractor extensions', () => {
 
       appendStaleTestArea('second');
 
-      expect(inner2[0].hasClass('second')).toEqual(true);
+      inner3.forEach((element) => {
+          expect(element.hasClass('second')).toEqual(true);
+        });
+
     }));
   });
 
