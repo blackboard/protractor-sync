@@ -14,13 +14,11 @@ Protractor-sync builds on Protractor and provides:
 
 Pre-reqs:
 
-* Protractor (or something like grunt-protractor-runner, which includes it)
+* Protractor 5.3 or higher (or something like grunt-protractor-runner, which includes it)
 * asyncblock (`npm install asyncblock`)
 * Jasmine (Comes with Protractor. Other frameworks can be used, but some features only work with Jasmine)
 
-Installation steps:
-
-1. `npm install protractor-sync`
+Install: `npm install protractor-sync`
 
 # Example
 
