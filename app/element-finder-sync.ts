@@ -448,12 +448,15 @@ export class ElementFinderSync {
         return func();
       } catch (e) {
         if (e.name === 'StaleElementReferenceError') {
-          this.element = this.reselect().getElementFinder();
+          const reselected = this.reselect();
+          if (reselected) {
+            this.element = reselected.getElementFinder();
 
-          return attempt();
-        } else {
-          throw e;
+            return attempt();
+          }
         }
+
+        throw e;
       }
     };
 
