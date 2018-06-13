@@ -525,6 +525,13 @@ describe('Protractor extensions', () => {
 
         expect(el.hasClass('second')).toEqual(true);
     }));
+
+    it('throws a reasonable error when the stale element cannot be reselected', createTest(() => {
+      const el = elementSync.findVisible('.stale-test-3');
+      appendTestArea({ innerHtml: '' });
+
+      expect(() => el.isDisplayed()).toThrowError('No visible instances of (.stale-test-3) were found');
+    }));
   });
 
   describe('waitFor', () => {
