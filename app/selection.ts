@@ -3,6 +3,7 @@ import { ElementArrayFinder, ElementFinder, protractor, ProtractorBy } from 'pro
 
 import { autoReselectStaleElements, implicitWaitMs } from './config';
 import { ElementFinderSync } from './element-finder-sync';
+import { exec } from './exec';
 import { polledWait } from './polled-wait';
 
 /**
@@ -118,7 +119,9 @@ export function _getElements(
     if (args.requireVisible) {
       filtered = resolved.filter((element: ElementFinderSync) => {
         try {
-          return element.isDisplayed();
+          // This code uses the base protractor's isDisplayed method to avoid automatic stale element selection so
+          // stale element exceptions can be handled here instead of automatically trying to re-select.
+          return exec(element.getWebElement().isDisplayed());
         } catch (e) {
           //If the element has been removed from the DOM between when it was selected and now,
           //don't treat it as an error and fail the test.
