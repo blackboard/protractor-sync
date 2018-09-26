@@ -79,9 +79,6 @@ export function resizeViewport(size: { width?: number; height?: number; }) {
     };
   });
 
-  console.log('window size', windowSize);
-  console.log('viewport size', viewportSize);
-
   const calcWidth = (width: number) => calculateDimension(width, windowSize.width, viewportSize.width);
   const calcHeight = (height: number) => calculateDimension(height, windowSize.height, viewportSize.height);
 
@@ -97,8 +94,6 @@ export function resizeViewport(size: { width?: number; height?: number; }) {
     // No size set and width is wider than the minimum.  We can return early without resizing the browser
     return;
   }
-
-  console.log('resizing to height:', height, 'width:', width);
 
   browserSync.manage().window().setSize(width, height);
 }
