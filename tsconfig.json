@@ -13,7 +13,8 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "outDir": "build/develop",
-    "typeRoots" : ["./node_modules/@types", "./typings"]
+    "typeRoots" : ["./node_modules/@types", "./typings"],
+    "lib": ["es6", "dom"]
   },
   "exclude": [
     "node_modules",

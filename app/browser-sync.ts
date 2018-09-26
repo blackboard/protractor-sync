@@ -142,8 +142,8 @@ export class OptionsSync {
 
   }
 
-  addCookie(name: string, value: string, optPath?: string, optDomain?: string, optIsSecure?: boolean, optExpiry?: number | Date) {
-    exec(this.options.addCookie(name, value, optPath, optDomain, optIsSecure, optExpiry));
+  addCookie(options: IWebDriverOptionsCookie) {
+    exec(this.options.addCookie(options));
   }
 
   deleteAllCookies() {
