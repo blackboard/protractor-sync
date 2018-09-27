@@ -104,6 +104,8 @@ export class BrowserSync {
     const runner = new Runner(this.getProcessedConfig());
     runner.setupGlobals_(newBrowser);
 
+    exec(newBrowser.ready);
+
     //By default the new browser will wait for angular, so we need to manually carry over the setting
     newBrowser.waitForAngularEnabled(waitForAngularEnabled);
 
