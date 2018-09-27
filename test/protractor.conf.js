@@ -7,6 +7,8 @@ exports.config = {
 
   // ----- How to setup Selenium -----
 
+  SELENIUM_PROMISE_MANAGER: false,
+
   // Do not start a Selenium Standalone sever - only run this using chrome.
   directConnect: true,
   chromeDriver: '../node_modules/webdriver-manager/selenium/chromedriver_'+config.webdriverComponents['chromedriver'],
