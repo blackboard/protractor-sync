@@ -1,7 +1,7 @@
 module.exports = {
 	webdriverComponents: {
-        'chromedriver': '2.37',
-        'geckodriver': 'v0.20.1',
+        'chromedriver': '75.0.3770.140',
+        'geckodriver': 'v0.24.0',
         'selenium-server-standalone': '3.11.0'
     }
 };
