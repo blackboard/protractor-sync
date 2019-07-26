@@ -1,6 +1,6 @@
 {
   "name": "protractor-sync",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "description": "Protractor 5.x wrapper adding synchronous, polled selectors and expectations",
   "keywords": [
     "e2e",
@@ -30,24 +30,24 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "engines": {
-    "node": ">=6.9.x"
+    "node": ">=10.16.x"
   },
   "dependencies": {
     "asyncblock": "^2.2.12",
-    "jquery": "3.3.1",
+    "jquery": ">=3.4.0",
     "mkdirp": "0.3.0"
   },
   "devDependencies": {
     "@types/jasmine": "2.5.47",
     "@types/mkdirp": "0.3.29",
-    "@types/node": "6.0.69",
-    "grunt": "0.4.5",
+    "@types/node": "10.14.13",
+    "grunt": "^1.0.4",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-copy": "1.0.0",
     "grunt-protractor-runner": "5.0.0",
     "grunt-shell": "2.1.0",
-    "grunt-ts": "6.0.0-beta.15",
+    "grunt-ts": "^6.0.0-beta.22",
     "grunt-tslint": "5.0.1",
     "husky": "0.13.3",
     "in-publish": "2.0.0",

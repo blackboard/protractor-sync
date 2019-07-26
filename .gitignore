@@ -1,6 +1,5 @@
 # Shared between gitignore/npmignore
 
-package-lock.json
 yarn.lock
 npm-debug.log
 .idea/
