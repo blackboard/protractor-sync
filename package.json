@@ -30,7 +30,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "engines": {
-    "node": ">=6.9.x"
+    "node": ">=10.16.x"
   },
   "dependencies": {
     "asyncblock": "^2.2.12",
@@ -40,7 +40,7 @@
   "devDependencies": {
     "@types/jasmine": "2.5.47",
     "@types/mkdirp": "0.3.29",
-    "@types/node": "6.0.69",
+    "@types/node": "10.14.13",
     "grunt": "^1.0.4",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-clean": "1.0.0",
